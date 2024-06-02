@@ -32,11 +32,12 @@ in
     ../../config/swaync.nix
     ../../config/waybar.nix
     ../../config/wlogout.nix
-  ];
+    ../../config/gammastep.nix
+];
 
   # Define Settings For Xresources
   xresources.properties = {
-    "Xcursor.size" = 24;
+    "Xcursor.size" = 64;
   };
 
   # Place Files Inside Home Directory
@@ -97,7 +98,7 @@ in
     enable = true;
     userName = "${gitUsername}";
     userEmail = "${gitEmail}";
-  };
+ };
 
   # Create XDG Dirs
   xdg = {
@@ -105,6 +106,7 @@ in
       enable = true;
       createDirectories = true;
     };
+
   };
 
   dconf.settings = {
@@ -120,8 +122,12 @@ in
     x11.enable = true;
     package = pkgs.bibata-cursors;
     name = "Bibata-Modern-Ice";
-    size = 24;
+    size = 64;
   };
+
+ # home.sessionVariables = {
+ #   LIBGL_DRIVERS_PATH = "${pkgs.libglvnd}/lib/libGL.so";
+ # };
 
   # Theme GTK
   gtk = {
@@ -157,6 +163,7 @@ in
     };
   };
 
+
   # Scripts
   home.packages = [
     (import ../../scripts/emopicker9000.nix { inherit pkgs; })
@@ -181,6 +188,7 @@ in
       inherit host;
     })
   ];
+  
 
   programs = {
     gh.enable = true;
@@ -262,6 +270,7 @@ in
         })
       '';
     };
+
     kitty = {
       enable = true;
       package = pkgs.kitty;
@@ -270,6 +279,7 @@ in
       settings = {
         scrollback_lines = 2000;
         wheel_scroll_min_lines = 1;
+        wheel_scroll_multiplier = "5.0";
         window_padding_width = 4;
         confirm_os_window_close = 0;
         background_opacity = "0.9";

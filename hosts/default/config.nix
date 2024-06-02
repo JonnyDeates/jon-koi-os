@@ -5,6 +5,7 @@
   inputs,
   username,
   options,
+  lib,
   ...
 }:
 
@@ -100,8 +101,14 @@
     };
   };
 
-  nixpkgs.config.allowUnfree = true;
-
+  nixpkgs.config = {
+  allowUnfree = true;
+  allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"
+    "steam-original"
+    "steam-run"
+  ];
+};
   users = {
     mutableUsers = true;
   };
@@ -118,7 +125,6 @@
       killall
       git
       cmatrix
-      lolcat
       neofetch
       htop
       libvirt
@@ -135,7 +141,6 @@
       lm_sensors
       pciutils
       socat
-      cowsay
       ripgrep
       lsd
       lshw
@@ -160,13 +165,13 @@
       swww
       grim
       slurp
+      keepassxc
       gnome.file-roller
       swaynotificationcenter
       imv
       transmission-gtk
       distrobox
       mpv
-      gimp
       obs-studio
       rustup
       audacity
@@ -176,10 +181,21 @@
       font-awesome
       spotify
       neovide
+      r2modman
+      # mesa-demos
+       libglvnd
+       libdrm
+       # steam
+       steam-run
+      #vulkan-tools
+       vulkan-loader
+      #vulkan-validation-layers 
+      gammastep
       (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
       sugar.sddm-sugar-dark # Name: sugar-dark
       tokyo-night # Name: tokyo-night-sddm
       pkgs.libsForQt5.qt5.qtgraphicaleffects
+      pkgs.pkgsi686Linux.steam
     ];
 
   environment.variables = {
@@ -191,18 +207,24 @@
   services = {
     xserver = {
       enable = true;
-      displayManager.sddm = {
-        enable = true;
-        autoNumlock = true;
-        wayland.enable = true;
-        theme = "sugar-dark";
-      };
+      #displayManager.sddm = {
+       # enable = true;
+       # autoNumlock = true;
+       # wayland.enable = true;
+       # theme = "sugar-dark";
+      #};
       desktopManager.cinnamon.enable = false;
       xkb = {
         layout = "us";
         variant = "";
       };
     };
+    displayManager.sddm = {
+      enable = true;
+      wayland.enable = true;
+      theme = "sugar-dark";
+      autoNumlock = true;
+      };
     smartd = {
       enable = true;
       autodetect = true;
@@ -217,6 +239,8 @@
       nssmdns4 = true;
       openFirewall = true;
     };
+   gvfs.enable = true;
+   udisks2.enable = true;
     ipp-usb.enable = true;
     syncthing = {
       enable = false;
@@ -232,6 +256,7 @@
     };
     rpcbind.enable = true;
     nfs.server.enable = true;
+    blueman.enable = true;
   };
   systemd.services.flatpak-repo = {
     wantedBy = [ "multi-user.target" ];
@@ -240,6 +265,8 @@
       flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     '';
   };
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
   hardware.sane = {
     enable = true;
     extraBackends = [ pkgs.sane-airscan ];
@@ -303,7 +330,7 @@
     driSupport = true;
     driSupport32Bit = true;
   };
-
+  
   # Extra Module Options
   drivers.amdgpu.enable = true;
   drivers.nvidia.enable = false;
