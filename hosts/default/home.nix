@@ -33,6 +33,7 @@ in
     ../../config/waybar.nix
     ../../config/wlogout.nix
     ../../config/gammastep.nix
+    ../../config/hyprpaper.nix
 ];
 
   # Define Settings For Xresources
@@ -156,7 +157,7 @@ in
   # Theme QT -> GTK
   qt = {
     enable = true;
-    platformTheme = "gtk";
+    platformTheme.name = "gtk";
     style = {
       name = "adwaita-dark";
       package = pkgs.adwaita-qt;
@@ -188,7 +189,6 @@ in
       inherit host;
     })
   ];
-  
 
   programs = {
     gh.enable = true;
@@ -209,6 +209,8 @@ in
         rust-analyzer
         nodePackages.bash-language-server
         yaml-language-server
+        nodePackages.typescript
+        nodePackages.typescript-language-server
         pyright
         marksman
       ];

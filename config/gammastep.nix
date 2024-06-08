@@ -13,7 +13,7 @@
       provider = "manual";
       temperature = {
         day = 6500;
-        night = 3000;
+        night = 2500;
       };
       settings = {
         general = {

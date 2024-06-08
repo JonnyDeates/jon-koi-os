@@ -19,7 +19,9 @@
     ../../modules/intel-drivers.nix
     ../../modules/vm-guest-services.nix
     ../../modules/local-hardware-clock.nix
-  ];
+    ../../aliases/system-bash-aliases.nix
+    ../../aliases/git-aliases.nix
+];
 
   # Kernel
   boot.kernelPackages = pkgs.linuxPackages;
@@ -161,8 +163,7 @@
       nh
       nixfmt-rfc-style
       discord
-      libvirt
-      swww
+      hyprpaper
       grim
       slurp
       keepassxc
@@ -185,8 +186,17 @@
       # mesa-demos
        libglvnd
        libdrm
+       libwebp
+       hyprlang
+       pango
+       cairo
+       wayland
+       wayland-protocols
+       file
        # steam
        steam-run
+       nodejs_22
+       nodePackages.pnpm
       #vulkan-tools
        vulkan-loader
       #vulkan-validation-layers 
@@ -197,11 +207,6 @@
       pkgs.libsForQt5.qt5.qtgraphicaleffects
       pkgs.pkgsi686Linux.steam
     ];
-
-  environment.variables = {
-    ZANEYOS_VERSION = "2.1";
-    ZANEYOS = "true";
-  };
 
   # Services to start
   services = {
@@ -258,12 +263,14 @@
     nfs.server.enable = true;
     blueman.enable = true;
   };
-  systemd.services.flatpak-repo = {
-    wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.flatpak ];
-    script = ''
+  systemd.services = {
+    flatpak-repo = {
+      wantedBy = [ "multi-user.target" ];
+      path = [ pkgs.flatpak ];
+      script = ''
       flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    '';
+      '';
+    };
   };
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;

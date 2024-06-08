@@ -23,7 +23,10 @@ with lib;
   wayland.windowManager.hyprland = {
     enable = true;
     xwayland.enable = true;
-    systemd.enable = true;
+    systemd = {
+      enable = true;
+      variables = [ "--all" ];
+    };
     plugins = [
       # hyprplugins.hyprtrails
     ];
@@ -47,14 +50,14 @@ with lib;
                 env = MOZ_ENABLE_WAYLAND, 1
                 exec-once = dbus-update-activation-environment --systemd --all
                 exec-once = systemctl --user import-environment QT_QPA_PLATFORMTHEME WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
-                exec-once = killall -q swww;sleep .5 && swww init
                 exec-once = killall -q waybar;sleep .5 && waybar
                 exec-once = killall -q swaync;sleep .5 && swaync
                 exec-once = nm-applet --indicator
                 exec-once = lxqt-policykit-agent
-                exec-once = swww img /home/${username}/Pictures/Wallpapers/zaney-wallpaper.jpg
+                exec-once = hyprpapr
                 monitor=,preferred,auto,1
                 ${extraMonitorSettings}
+                
                 general {
                   gaps_in = 6
                   gaps_out = 8
