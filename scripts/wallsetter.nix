@@ -27,7 +27,7 @@ pkgs.writeShellScriptBin "wallsetter" ''
       notify-send -t 9000 "Not enough images found after shuffling. Exiting Wallsetter."
       exit 1
     fi
-    if [ "''${#IMAGES[@]}" -lt 1 ]; then
+    if [ "''${#IMAGES_PORTAIT[@]}" -lt 1 ]; then
       notify-send -t 9000 "Not enough images found after shuffling. Exiting Wallsetter."
       exit 1
     fi
@@ -40,17 +40,28 @@ pkgs.writeShellScriptBin "wallsetter" ''
     echo "Image 3: $IMG3"
 
     hyprctl hyprpaper preload "$IMG1"
+
+    sleep 0.5
+
     hyprctl hyprpaper wallpaper DP-1, "$IMG1"
 
     sleep 0.5
 
     hyprctl hyprpaper preload "$IMG2"
+    
+    sleep 0.5
+
     hyprctl hyprpaper wallpaper DP-2, "$IMG2"
 
     sleep 0.5
 
     hyprctl hyprpaper preload "$IMG3"
+    
+    sleep 0.5
+    
     hyprctl hyprpaper wallpaper DP-3, "$IMG3"
+
+    sleep 1
 
     hyprctl hyprpaper unload all
   else
