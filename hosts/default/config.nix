@@ -91,6 +91,11 @@
       enableSSHSupport = true;
     };
     virt-manager.enable = true;
+    gamemode = {
+      enable = true;
+      settings.general.inhibit_screensaver = 0;
+
+    };
     steam = {
       enable = true;
       gamescopeSession.enable = true;
@@ -111,6 +116,7 @@
     "steam-run"
   ];
 };
+
   users = {
     mutableUsers = true;
   };
@@ -212,12 +218,6 @@
   services = {
     xserver = {
       enable = true;
-      #displayManager.sddm = {
-       # enable = true;
-       # autoNumlock = true;
-       # wayland.enable = true;
-       # theme = "sugar-dark";
-      #};
       desktopManager.cinnamon.enable = false;
       xkb = {
         layout = "us";
@@ -272,6 +272,7 @@
       '';
     };
   };
+  
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
   hardware.sane = {
@@ -349,7 +350,6 @@
   drivers.intel.enable = false;
   vm.guest-services.enable = false;
   local.hardware-clock.enable = false;
-
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];

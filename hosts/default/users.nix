@@ -20,6 +20,7 @@ in
         "wheel"
         "libvirtd"
         "scanner"
+        "gamemode"
         "lp"
         "video"
       ];
