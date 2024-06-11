@@ -206,6 +206,7 @@
       #vulkan-tools
        vulkan-loader
       #vulkan-validation-layers 
+      jetbrains.idea-ultimate
       gammastep
       (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
       sugar.sddm-sugar-dark # Name: sugar-dark
