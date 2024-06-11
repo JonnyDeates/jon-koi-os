@@ -13,41 +13,47 @@
   imports = [
     ./hardware.nix
     ./users.nix
-    ../../modules/amd-drivers.nix
-    ../../modules/nvidia-drivers.nix
-    ../../modules/nvidia-prime-drivers.nix
-    ../../modules/intel-drivers.nix
+    ../../modules/drivers/amd-drivers.nix
+    ../../modules/drivers/nvidia-drivers.nix
+    ../../modules/drivers/nvidia-prime-drivers.nix
+    ../../modules/drivers/intel-drivers.nix
     ../../modules/vm-guest-services.nix
     ../../modules/local-hardware-clock.nix
+    ../../modules/stylix.nix
+    ../../modules/fonts.nix
     ../../aliases/system-bash-aliases.nix
     ../../aliases/git-aliases.nix
 ];
 
-  # Kernel
-  boot.kernelPackages = pkgs.linuxPackages;
-  # boot.kernelPackages = pkgs.linuxPackages_zen;
-
-  # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernel.sysctl = {
-    "vm.max_map_count" = 2147483642;
+ boot = {
+    # Kernel
+    kernelPackages = pkgs.linuxPackages_zen;
+    # This is for OBS Virtual Cam Support
+    kernelModules = [ "v4l2loopback" ];
+    extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
+    # Needed For Some Steam Games
+    kernel.sysctl = {
+      "vm.max_map_count" = 2147483642;
+    };
+    # Bootloader.
+    loader.systemd-boot.enable = true;
+    loader.efi.canTouchEfiVariables = true;
+    # Make /tmp a tmpfs
+    tmp = {
+      useTmpfs = false;
+      tmpfsSize = "30%";
+    };
+    # Appimage Support
+    binfmt.registrations.appimage = {
+      wrapInterpreterInShell = false;
+      interpreter = "${pkgs.appimage-run}/bin/appimage-run";
+      recognitionType = "magic";
+      offset = 0;
+      mask = ''\xff\xff\xff\xff\x00\x00\x00\x00\xff\xff\xff'';
+      magicOrExtension = ''\x7fELF....AI\x02'';
+    };
+    plymouth.enable = true;
   };
-  boot.tmp.useTmpfs = false;
-  boot.tmp.tmpfsSize = "30%";
-  boot.binfmt.registrations.appimage = {
-    wrapInterpreterInShell = false;
-    interpreter = "${pkgs.appimage-run}/bin/appimage-run";
-    recognitionType = "magic";
-    offset = 0;
-    mask = ''\xff\xff\xff\xff\x00\x00\x00\x00\xff\xff\xff'';
-    magicOrExtension = ''\x7fELF....AI\x02'';
-  };
-
-  # This is for OBS Virtual Cam Support - v4l2loopback setup
-  boot.kernelModules = [ "v4l2loopback" ];
-  boot.extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
-
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
@@ -76,12 +82,77 @@
   };
 
   programs = {
-    hyprland = {
-      enable = true;
-      package = inputs.hyprland.packages.${pkgs.system}.hyprland;
-      xwayland.enable = true;
-    };
     firefox.enable = true;
+    starship = {
+          enable = true;
+          settings = {
+            add_newline = false;
+            buf = {
+              symbol = " ";
+            };
+            c = {
+              symbol = " ";
+            };
+            directory = {
+              read_only = " 󰌾";
+            };
+            docker_context = {
+              symbol = " ";
+            };
+            fossil_branch = {
+              symbol = " ";
+            };
+            git_branch = {
+              symbol = " ";
+            };
+            golang = {
+              symbol = " ";
+            };
+            hg_branch = {
+              symbol = " ";
+            };
+            hostname = {
+              ssh_symbol = " ";
+            };
+            lua = {
+              symbol = " ";
+            };
+            memory_usage = {
+              symbol = "󰍛 ";
+            };
+            meson = {
+              symbol = "󰔷 ";
+            };
+            nim = {
+              symbol = "󰆥 ";
+            };
+            nix_shell = {
+              symbol = " ";
+            };
+            nodejs = {
+              symbol = " ";
+            };
+            ocaml = {
+              symbol = " ";
+            };
+            package = {
+              symbol = "󰏗 ";
+            };
+            python = {
+              symbol = " ";
+            };
+            rust = {
+              symbol = " ";
+            };
+            swift = {
+              symbol = " ";
+            };
+            zig = {
+              symbol = " ";
+            };
+          };
+        };
+
     dconf.enable = true;
     seahorse.enable = true;
     fuse.userAllowOther = true;
@@ -94,7 +165,6 @@
     gamemode = {
       enable = true;
       settings.general.inhibit_screensaver = 0;
-
     };
     steam = {
       enable = true;
@@ -110,11 +180,11 @@
 
   nixpkgs.config = {
   allowUnfree = true;
-  allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "steam"
-    "steam-original"
-    "steam-run"
-  ];
+#  allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+#    "steam"
+#    "steam-original"
+#    "steam-run"
+#  ];
 };
 
   users = {
@@ -122,18 +192,15 @@
   };
 
   environment.systemPackages =
-    let
-      sugar = pkgs.callPackage ../../pkgs/sddm-sugar-dark.nix { };
-      tokyo-night = pkgs.libsForQt5.callPackage ../../pkgs/sddm-tokyo-night.nix { };
-    in
     with pkgs;
     [
       vim
       wget
       killall
+      eza
       git
       cmatrix
-      neofetch
+      fastfetch
       htop
       libvirt
       lxqt.lxqt-policykit
@@ -142,7 +209,6 @@
       unzip
       unrar
       libnotify
-      eza
       v4l-utils
       ydotool
       wl-clipboard
@@ -156,9 +222,6 @@
       meson
       gnumake
       ninja
-      symbola
-      noto-fonts-color-emoji
-      material-icons
       brightnessctl
       virt-viewer
       swappy
@@ -185,69 +248,81 @@
       pavucontrol
       tree
       protonup-qt
-      font-awesome
       spotify
       neovide
+      hyprpicker
+      swww
+      ffmpeg
+      greetd.tuigreet
       r2modman
       # mesa-demos
-       libglvnd
-       libdrm
-       libwebp
-       hyprlang
-       pango
-       cairo
-       wayland
-       wayland-protocols
-       file
-       # steam
+      # libdrm
        steam-run
-       nodejs_22
-       nodePackages.pnpm
-      #vulkan-tools
-       vulkan-loader
-      #vulkan-validation-layers 
+       #vulkan-tools
+      # vulkan-loader
+      #vulkan-validation-layers
+
+      nodejs_22
+      nodePackages.pnpm
       jetbrains.idea-ultimate
       gammastep
-      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
-      sugar.sddm-sugar-dark # Name: sugar-dark
-      tokyo-night # Name: tokyo-night-sddm
       pkgs.libsForQt5.qt5.qtgraphicaleffects
-      pkgs.pkgsi686Linux.steam
+
+      bat
+      duf
+      inxi
+      ncdu
+      starship
     ];
 
   # Services to start
   services = {
     xserver = {
-      enable = true;
-      desktopManager.cinnamon.enable = false;
+      enable = false;
       xkb = {
         layout = "us";
         variant = "";
       };
     };
-    displayManager.sddm = {
-      enable = true;
-      wayland.enable = true;
-      theme = "sugar-dark";
-      autoNumlock = true;
-      };
+        greetd = {
+          enable = true;
+          vt = 3;
+          settings = {
+            default_session = {
+              # Wayland Desktop Manager is installed only for user ryan via home-manager!
+              user = username;
+              # .wayland-session is a script generated by home-manager, which links to the current wayland compositor(sway/hyprland or others).
+              # with such a vendor-no-locking script, we can switch to another wayland compositor without modifying greetd's config here.
+              # command = "$HOME/.wayland-session"; # start a wayland session directly without a login manager
+              command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd Hyprland"; # start Hyprland with a TUI login manager
+            };
+          };
+        };
+
     smartd = {
-      enable = true;
+      enable = false;
       autodetect = true;
     };
     libinput.enable = true;
+    fstrim.enable = false;
+    gvfs.enable = true;
     openssh.enable = true;
     flatpak.enable = false;
-    printing.enable = true;
+    printing = {
+        enable = true;
+        drivers = [
+          # pkgs.hplipWithPlugin
+        ];
+    };
     gnome.gnome-keyring.enable = true;
     avahi = {
       enable = true;
       nssmdns4 = true;
       openFirewall = true;
     };
-   gvfs.enable = true;
-   udisks2.enable = true;
-    ipp-usb.enable = true;
+   tumbler.enable = true;
+   # udisks2.enable = true;
+   ipp-usb.enable = true;
     syncthing = {
       enable = false;
       user = "${username}";
@@ -260,19 +335,31 @@
       alsa.support32Bit = true;
       pulse.enable = true;
     };
-    rpcbind.enable = true;
-    nfs.server.enable = true;
+    rpcbind.enable = false;
+    nfs.server.enable = false;
     blueman.enable = true;
   };
-  systemd.services = {
-    flatpak-repo = {
-      wantedBy = [ "multi-user.target" ];
-      path = [ pkgs.flatpak ];
-      script = ''
+  systemd.services.flatpak-repo = {
+    path = [ pkgs.flatpak ];
+    script = ''
       flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-      '';
-    };
+    '';
   };
+
+  xdg.portal = {
+   enable = true;
+    wlr.enable = true;
+    extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+      pkgs.xdg-desktop-portal
+    ];
+   configPackages = [
+      pkgs.xdg-desktop-portal-gtk
+      pkgs.xdg-desktop-portal-hyprland
+      pkgs.xdg-desktop-portal
+    ];
+  };
+
   
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
@@ -283,6 +370,7 @@
   };
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
+
   # Enable sound with pipewire.
   sound.enable = true;
   hardware.pulseaudio.enable = false;
@@ -306,6 +394,12 @@
       }
     })
   '';
+  security.pam.services.swaylock = {
+    text = ''
+      auth include login
+    '';
+  };
+
 
   # Optimization settings and garbage collection automation
   nix = {

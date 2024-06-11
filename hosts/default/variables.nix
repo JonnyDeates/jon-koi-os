@@ -3,9 +3,6 @@
   gitUsername = "JonnyDeates";
   gitEmail = "jonnydeates@gmail.com";
 
-  # Base16 Theme
-  theme = "synth-midnight-dark";
-
   # Hyprland Settings
   borderAnim = false; # Enable / Disable Hyprland Border Animation
   extraMonitorSettings = "monitor = DP-1, 2560x1440@144Hz, auto, 1 

@@ -6,7 +6,9 @@
     bash = {
       shellAliases = {
        gs = "git status";
-       yeet = "git push --force";
+       gc = "git checkout";
+       yeet = "git push --force-with-lease";
+       YEET = "git push --force";
        poosh = "git push";
        yoink = "git pull";
       };
