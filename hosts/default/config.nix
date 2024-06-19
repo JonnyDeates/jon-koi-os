@@ -271,7 +271,6 @@
       bat
       duf
       inxi
-      ncdu
       starship
     ];
 

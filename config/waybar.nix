@@ -57,7 +57,7 @@ with lib;
           max-length = 22;
           separate-outputs = false;
           rewrite = {
-            "" = " 🙈 No Windows? ";
+            "" = "Idle";
           };
         };
         "memory" = {
@@ -119,20 +119,20 @@ with lib;
         };
         "custom/startmenu" = {
           tooltip = false;
-          format = "";
+          format = "👾";
           # exec = "rofi -show drun";
           on-click = "sleep 0.1 && rofi-launcher";
         };
         "custom/hyprbindings" = {
           tooltip = false;
-          format = "󱕴";
+          format = "❓";
           on-click = "sleep 0.1 && list-hypr-bindings";
         };
         "idle_inhibitor" = {
           format = "{icon}";
           format-icons = {
-            activated = "";
-            deactivated = "";
+            activated = "👍";
+            deactivated = "👎";
           };
           tooltip = "true";
         };
@@ -140,13 +140,13 @@ with lib;
           tooltip = false;
           format = "{icon} {}";
           format-icons = {
-            notification = "<span foreground='red'><sup></sup></span>";
+            notification = "<span foreground='red'><sup>+</sup></span>";
             none = "";
-            dnd-notification = "<span foreground='red'><sup></sup></span>";
+            dnd-notification = "<span foreground='red'><sup>+</sup></span>";
             dnd-none = "";
-            inhibited-notification = "<span foreground='red'><sup></sup></span>";
+            inhibited-notification = "<span foreground='red'><sup>+</sup></span>";
             inhibited-none = "";
-            dnd-inhibited-notification = "<span foreground='red'><sup></sup></span>";
+            dnd-inhibited-notification = "<span foreground='red'><sup>+</sup></span>";
             dnd-inhibited-none = "";
           };
           return-type = "json";
