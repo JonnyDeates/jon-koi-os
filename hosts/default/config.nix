@@ -23,6 +23,8 @@
     ../../modules/fonts.nix
     ../../aliases/system-bash-aliases.nix
     ../../aliases/git-aliases.nix
+    ../../aliases/quit-aliases.nix
+    ../../aliases/gaming-aliases.nix
 ];
 
  boot = {
@@ -166,12 +168,12 @@
       enable = true;
       settings.general.inhibit_screensaver = 0;
     };
-    steam = {
-      enable = true;
-      gamescopeSession.enable = true;
-      remotePlay.openFirewall = true;
-      dedicatedServer.openFirewall = true;
-    };
+#    steam = {
+#      enable = true;
+#      gamescopeSession.enable = true;
+#      remotePlay.openFirewall = true;
+#      dedicatedServer.openFirewall = true;
+#    };
     thunar = {
       enable = true;
       plugins = with pkgs.xfce; [ thunar-archive-plugin thunar-volman ];
@@ -236,10 +238,10 @@
       grim
       slurp
       keepassxc
-      gnome.file-roller
+      pkgs.file-roller
       swaynotificationcenter
       imv
-      transmission-gtk
+      transmission_4-gtk
       distrobox
       mpv
       obs-studio
@@ -257,7 +259,7 @@
       r2modman
       # mesa-demos
       # libdrm
-       steam-run
+#       steam-run
        #vulkan-tools
       # vulkan-loader
       #vulkan-validation-layers
@@ -267,17 +269,23 @@
       jetbrains.idea-ultimate
       gammastep
       pkgs.libsForQt5.qt5.qtgraphicaleffects
-
+      pkgs.ledger-live-desktop
+      pkgs.gnome-disk-utility
       bat
       duf
       inxi
       starship
+      docker-compose
+
+      pipewire
+      wireplumber
     ];
 
   # Services to start
   services = {
     xserver = {
-      enable = false;
+      enable = true;
+      videoDrivers = [ "kvm-amd" ];
       xkb = {
         layout = "us";
         variant = "";
@@ -306,7 +314,7 @@
     fstrim.enable = false;
     gvfs.enable = true;
     openssh.enable = true;
-    flatpak.enable = false;
+    flatpak.enable = true;
     printing = {
         enable = true;
         drivers = [
@@ -320,7 +328,7 @@
       openFirewall = true;
     };
    tumbler.enable = true;
-   # udisks2.enable = true;
+   udisks2.enable = true;
    ipp-usb.enable = true;
     syncthing = {
       enable = false;
@@ -333,6 +341,17 @@
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
+
+
+      wireplumber.extraConfig = {
+  "monitor.bluez.properties" = {
+      "bluez5.enable-sbc-xq" = true;
+      "bluez5.enable-msbc" = true;
+      "bluez5.enable-hw-volume" = true;
+      "bluez5.roles" = [ "hsp_hs" "hsp_ag" "hfp_hf" "hfp_ag" ];
+  };
+};
+
     };
     rpcbind.enable = false;
     nfs.server.enable = false;
@@ -369,9 +388,8 @@
   };
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
-
+hardware.xpadneo.enable = true;
   # Enable sound with pipewire.
-  sound.enable = true;
   hardware.pulseaudio.enable = false;
 
   # Security / Polkit
@@ -419,20 +437,16 @@
   };
 
   # Virtualization / Containers
+  virtualisation.docker.enable = true;
   virtualisation.libvirtd.enable = true;
   virtualisation.podman = {
     enable = true;
-    dockerCompat = true;
+#    dockerCompat = true;
     defaultNetwork.settings.dns_enabled = true;
   };
 
   # OpenGL
-  hardware.opengl = {
-    enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
-  };
-  
+
   # Extra Module Options
   drivers.amdgpu.enable = true;
   drivers.nvidia.enable = false;
@@ -448,7 +462,6 @@
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

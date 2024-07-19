@@ -56,7 +56,6 @@ in
     fill_shape=false
   '';
 
-
   # Install & Configure Git
   programs.git = {
     enable = true;
@@ -106,8 +105,6 @@ in
     platformTheme.name = "gtk3";
   };
 
-
-
   # Scripts
   home.packages = [
     (import ../../scripts/emopicker9000.nix { inherit pkgs; })
@@ -153,7 +150,18 @@ in
       };
     };
   };
+  xresources.properties = {
+    "Xcursor.size" = 64;
+  };
 
+ # Configure Cursor Theme
+  home.pointerCursor = {
+    gtk.enable = false;
+    x11.enable = true;
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Ice";
+    size = 64;
+  };
 
   programs = {
     gh.enable = true;
@@ -189,7 +197,7 @@ in
       '';
       initExtra = ''
         fastfetch
-        if [ -f $HOME/.bashrc-personal ]; then
+        if [ -f $HOME/.bashrc-personalR ]; then
           source $HOME/.bashrc-personal
         fi
       '';

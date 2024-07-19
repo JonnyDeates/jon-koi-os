@@ -18,7 +18,7 @@ in
     services.xserver.videoDrivers = [ "amdgpu" ];
     # OpenGL
     hardware = {
-      opengl = {
+      graphics = {
         enable = true;
       ## amdvlk: an open-source Vulkan driver from AMD
       extraPackages = [ pkgs.amdvlk ];

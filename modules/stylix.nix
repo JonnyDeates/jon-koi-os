@@ -27,9 +27,9 @@
     #   base0F = "56526e";
     # };
     polarity = "dark";
-    cursor.package = pkgs.bibata-cursors;
-    cursor.name = "Bibata-Modern-Ice";
-    cursor.size = 64;
+    #cursor.package = pkgs.bibata-cursors;
+    #cursor.name = "Bibata-Modern-Ice";
+    #cursor.size = 32;
     fonts = {
       monospace = {
         package = pkgs.nerdfonts.override { fonts = [ "JetBrainsMono" ]; };

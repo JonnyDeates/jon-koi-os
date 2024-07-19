@@ -17,7 +17,14 @@
     { device = "/dev/disk/by-uuid/a56d2645-af86-4b76-9a7e-1d6b45464c3e";
       fsType = "ext4";
     };
-
+#  fileSystems."/run/media/Game Disc" =
+#    { device = "/dev/disk/by-uuid/cec6e902-c1ee-4f40-9398-51e259c6546e";
+#      fsType = "ext4";
+#    };
+#    fileSystems."/run/media/Locked Storage" = {
+#      device= "/dev/disk/by-uuid/26ECC06DECC03937";
+#      fsType = "ext4";
+#    };
   fileSystems."/boot" =
     { device = "/dev/disk/by-uuid/EBB3-0EDE";
       fsType = "vfat";

@@ -40,12 +40,15 @@ with lib;
                 env = XDG_SESSION_TYPE, wayland
                 env = XDG_SESSION_DESKTOP, Hyprland
                 env = GDK_BACKEND, wayland, x11
+                env = GTK_IM_MODULE=wayland
                 env = CLUTTER_BACKEND, wayland
                 env = QT_QPA_PLATFORM=wayland;xcb
                 env = QT_WAYLAND_DISABLE_WINDOWDECORATION, 1
                 env = QT_AUTO_SCREEN_SCALE_FACTOR, 1
                 env = SDL_VIDEODRIVER, x11
                 env = MOZ_ENABLE_WAYLAND, 1
+                env = HYPRCURSOR_THEME,Bibata-Modern-Ice
+                env = HYPRCURSOR_SIZE,64
                 exec-once = dbus-update-activation-environment --systemd --all
                 exec-once = systemctl --user import-environment QT_QPA_PLATFORMTHEME WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
                 exec-once = killall -q swww;sleep .5 && swww init
@@ -71,6 +74,8 @@ with lib;
                            kb_layout = us
                            kb_options = grp:alt_shift_toggle
                            kb_options=caps:super
+                           numlock_by_default=true
+                           scroll_factor=0.7
                            follow_mouse = 1
                            touchpad {
                              natural_scroll = false
@@ -145,7 +150,7 @@ with lib;
                           bind = ${modifier},S,exec,screenshootin
                           bind = ${modifier},D,exec,discord
                           bind = ${modifier},O,exec,obs
-                          bind = ${modifier},C,exec,hyprpicker
+                          bind = ${modifier},C,exec,hyprpicker -a
                           bind = ${modifier},G,exec,gimp
                           bind = ${modifier}SHIFT,G,exec,godot4
                           bind = ${modifier},T,exec,thunar

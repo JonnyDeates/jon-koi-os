@@ -18,6 +18,7 @@ in
       extraGroups = [
         "networkmanager"
         "wheel"
+        "docker"
         "libvirtd"
         "scanner"
         "gamemode"
