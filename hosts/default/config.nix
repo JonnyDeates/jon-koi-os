@@ -256,7 +256,7 @@
       swww
       ffmpeg
       greetd.tuigreet
-      r2modman
+#      r2modman
       # mesa-demos
       # libdrm
        steam-run
@@ -270,7 +270,7 @@
       pkgs.libsForQt5.qt5.qtgraphicaleffects
       pkgs.ledger-live-desktop
       pkgs.gnome-disk-utility
-      pkgs.unetbootin
+      pkgs.jetbrains.idea-ultimate
       bat
       duf
       inxi
