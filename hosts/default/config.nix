@@ -168,12 +168,12 @@
       enable = true;
       settings.general.inhibit_screensaver = 0;
     };
-    # steam = {
-   #   enable = true;
-    #    gamescopeSession.enable = true;
-    #   remotePlay.openFirewall = true;
-    #  dedicatedServer.openFirewall = true;
-    #};
+#     steam = {
+#      enable = true;
+#        gamescopeSession.enable = true;
+#       remotePlay.openFirewall = true;
+#      dedicatedServer.openFirewall = true;
+#    };
     thunar = {
       enable = true;
       plugins = with pkgs.xfce; [ thunar-archive-plugin thunar-volman ];
@@ -182,11 +182,11 @@
 
   nixpkgs.config = {
   allowUnfree = true;
-  allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      # "steam"
-      #"steam-original"
-    "steam-run"
-  ];
+#  allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+#       "steam"
+#      "steam-original"
+#    "steam-run"
+#  ];
 };
 
   users = {
@@ -256,10 +256,10 @@
       swww
       ffmpeg
       greetd.tuigreet
-#      r2modman
+      r2modman
       # mesa-demos
       # libdrm
-       steam-run
+#       steam-run
        #vulkan-tools
       # vulkan-loader
       #vulkan-validation-layers

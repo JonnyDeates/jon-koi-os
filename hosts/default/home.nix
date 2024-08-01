@@ -55,7 +55,10 @@ in
     early_exit=true
     fill_shape=false
   '';
-
+#home.file.".local/share/flatpak/overrides/com.valvesoftware.Steam".text = ''
+#  [Context]
+#  filesystems=/mnt/game_disc
+#'';
   # Install & Configure Git
   programs.git = {
     enable = true;
@@ -187,6 +190,10 @@ in
              inactive_tab_font_style bold
            '';
     };
+    starship = {
+        enable = true;
+        package = pkgs.starship;
+    };
     bash = {
       enable = true;
       enableCompletion = true;
@@ -197,7 +204,7 @@ in
       '';
       initExtra = ''
         fastfetch
-        if [ -f $HOME/.bashrc-personalR ]; then
+        if [ -f $HOME/.bashrc-personal ]; then
           source $HOME/.bashrc-personal
         fi
       '';
