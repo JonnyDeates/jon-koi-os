@@ -193,6 +193,11 @@
     mutableUsers = true;
   };
 
+environment.variables = {
+                HSA_OVERRIDE_GFX_VERSION = "11.0.0";
+                 AMD_VULKAN_ICD = "RADV";
+};
+
   environment.systemPackages =
     with pkgs;
     [
@@ -271,6 +276,7 @@
       pkgs.ledger-live-desktop
       pkgs.gnome-disk-utility
       pkgs.jetbrains.idea-ultimate
+      remmina
       bat
       duf
       inxi
@@ -285,7 +291,6 @@
   services = {
     xserver = {
       enable = true;
-      videoDrivers = [ "kvm-amd" ];
       xkb = {
         layout = "us";
         variant = "";

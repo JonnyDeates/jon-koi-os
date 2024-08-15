@@ -47,6 +47,10 @@ with lib;
                 env = QT_AUTO_SCREEN_SCALE_FACTOR, 1
                 env = SDL_VIDEODRIVER, x11
                 env = MOZ_ENABLE_WAYLAND, 1
+                env = HIP_VISIBLE_DEICES, 1
+                env = HSA_OVERRIDE_GFX_VERSION, 11.0.0
+                env = CUDA_VISIBLE_DEVICES, 1
+                env = HSA_ENABLE_SDMA, 0
                 env = HYPRCURSOR_THEME,Bibata-Modern-Ice
                 env = HYPRCURSOR_SIZE,64
                 exec-once = dbus-update-activation-environment --systemd --all
