@@ -265,24 +265,28 @@ environment.variables = {
       # mesa-demos
       # libdrm
 #       steam-run
-       #vulkan-tools
       # vulkan-loader
       #vulkan-validation-layers
+##      brave
+      gperftools
+      vulkan-tools
 
+      legendary-gl
       nodejs_22
       nodePackages.pnpm
       gammastep
-      pkgs.libsForQt5.qt5.qtgraphicaleffects
-      pkgs.ledger-live-desktop
-      pkgs.gnome-disk-utility
-      pkgs.jetbrains.idea-ultimate
+      libsForQt5.qt5.qtgraphicaleffects
+      ledger-live-desktop
+      gnome-disk-utility
+      jetbrains.idea-ultimate
       remmina
       bat
       duf
       inxi
       starship
       docker-compose
-    
+    xboxdrv
+
       pipewire
       wireplumber
     ];
@@ -384,8 +388,20 @@ environment.variables = {
   };
 
   
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+    settings = {
+      General = {
+        ControllerMode = "dual";
+        FastConnectable = "true";
+        Experimental = "true";
+      };
+           Policy = {
+              AutoEnable = "true";
+            };
+    };
+  };
   hardware.sane = {
     enable = true;
     extraBackends = [ pkgs.sane-airscan ];
