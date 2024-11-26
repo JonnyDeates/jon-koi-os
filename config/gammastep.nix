@@ -1,4 +1,12 @@
-{ pkgs, ... }:
+{ pkgs, lib, username, ... }:
+with lib;
+
+let
+  gammastartScript = pkgs.writeShellScriptBin "gammastart" ''
+    sleep 0.1
+    gammastep -c ~/.config/gammastep/config.ini
+  '';
+in
 {
   home.packages = with pkgs; [
     gammastep
@@ -25,4 +33,24 @@
         };
       };
     };
+
+systemd.user = {
+    services.gammastep = lib.mkDefault {
+      enable = true;
+
+      Unit = {
+        Description = "Start gammastep to adjust display color temperature";
+        After = ["graphical-session.target"];
+      };
+
+      Service = {
+        Type = "simple";
+        ExecStart = "${gammastartScript}";
+        Restart = "on-failure";
+        User = username;
+        Environment = "DISPLAY=:0";  # Set display environment for X11, modify if needed for Wayland
+        WorkingDirectory = "/home/${username}";
+      };
+    };
+  };
 }
