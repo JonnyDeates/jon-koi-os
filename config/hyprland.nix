@@ -55,6 +55,7 @@ with lib;
                 env = HSA_ENABLE_SDMA, 0
                 env = HYPRCURSOR_THEME,Bibata-Modern-Ice
                 env = HYPRCURSOR_SIZE,64
+                env = XCURSOR_SIZE,64
                 exec-once = dbus-update-activation-environment --systemd --all
                 exec-once = systemctl --user import-environment QT_QPA_PLATFORMTHEME WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
                 exec-once = killall -q swww;sleep .5 && swww init
@@ -166,7 +167,6 @@ with lib;
                           bind = ${modifier}SHIFT,I,togglesplit,
                           bind = ${modifier},F,fullscreen,
                           bind = ${modifier}SHIFT,F,togglefloating,
-                          bind = ${modifier}SHIFT,C,exit,
                           bind = ${modifier}SHIFT,left,movewindow,l
                           bind = ${modifier}SHIFT,right,movewindow,r
                           bind = ${modifier}SHIFT,up,movewindow,u

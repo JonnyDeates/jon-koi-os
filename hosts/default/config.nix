@@ -27,6 +27,7 @@
     ../../aliases/gaming-aliases.nix
 ];
 
+
  boot = {
     # Kernel
     kernelPackages = pkgs.linuxPackages_zen;
@@ -270,6 +271,7 @@ environment.variables = {
 ##      brave
       gperftools
       vulkan-tools
+      keymapp
 
       legendary-gl
       nodejs_22
@@ -412,6 +414,9 @@ environment.variables = {
 hardware.xpadneo.enable = true;
   # Enable sound with pipewire.
   hardware.pulseaudio.enable = false;
+
+  hardware.ledger.enable = true;
+  hardware.keyboard.zsa.enable = true;
 
   # Security / Polkit
   security.rtkit.enable = true;

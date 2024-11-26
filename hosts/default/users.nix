@@ -23,6 +23,7 @@ in
         "scanner"
         "gamemode"
         "lp"
+        "plugdev"
         "video"
       ];
       shell = pkgs.bash;

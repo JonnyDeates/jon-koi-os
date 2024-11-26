@@ -123,6 +123,7 @@ in
       inherit pkgs;
       inherit host;
     })
+    (import ../../scripts/gammastep.nix { inherit pkgs; })
   ];
 
 

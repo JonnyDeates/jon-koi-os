@@ -39,6 +39,8 @@ pkgs.writeShellScriptBin "wallsetter" ''
     echo "Image 2: $IMG2"
     echo "Image 3: $IMG3"
 
+    sleep 2
+
     hyprctl hyprpaper preload "$IMG1"
 
     sleep 0.5
