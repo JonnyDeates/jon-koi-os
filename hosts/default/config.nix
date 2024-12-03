@@ -86,6 +86,7 @@
 
   programs = {
     firefox.enable = true;
+    adb.enable = true;
     starship = {
           enable = true;
           settings = {
@@ -179,6 +180,8 @@
       enable = true;
       plugins = with pkgs.xfce; [ thunar-archive-plugin thunar-volman ];
     };
+
+    appimage.binfmt = true;
   };
 
   nixpkgs.config = {
@@ -288,6 +291,9 @@ environment.variables = {
       starship
       docker-compose
     xboxdrv
+    prusa-slicer
+    blender
+    usbutils
 
       pipewire
       wireplumber
@@ -421,6 +427,7 @@ hardware.xpadneo.enable = true;
   # Security / Polkit
   security.rtkit.enable = true;
   security.polkit.enable = true;
+  security.pam.services.hyprlock = {};
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
       if (
@@ -437,12 +444,6 @@ hardware.xpadneo.enable = true;
       }
     })
   '';
-  security.pam.services.swaylock = {
-    text = ''
-      auth include login
-    '';
-  };
-
 
   # Optimization settings and garbage collection automation
   nix = {
@@ -487,8 +488,12 @@ hardware.xpadneo.enable = true;
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
 
+  # Or disable the firewall altogether.
+  networking.firewall = {
+  enable = true;
+  interfaces."enp15s0u2".allowedTCPPortRanges = [ {from = 0; to = 65534;} ];
+  };
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave

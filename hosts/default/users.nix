@@ -10,6 +10,7 @@ let
   inherit (import ./variables.nix) gitUsername;
 in
 {
+users.groups.adbusers = {};
   users.users = {
     "${username}" = {
       homeMode = "755";
@@ -23,8 +24,9 @@ in
         "scanner"
         "gamemode"
         "lp"
-        "plugdev"
+        "adbusers"
         "video"
+        "plugdev"
       ];
       shell = pkgs.bash;
       ignoreShellProgramCheck = true;
