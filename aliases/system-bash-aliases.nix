@@ -6,11 +6,11 @@
     bash = {
       shellAliases = {
        build-os = "sudo nixos-rebuild switch --flake /home/jonkoi/jon-koi-os#default";
-       upgrade-os = "nix flake update /home/jonkoi/jon-koi-os";
-       trash-os = "sudo nixos-collect-garbage --delete-older-than 14d";
+       upgrade-os = "nix flake update --flake ~/jon-koi-os/flake.nix";
 
        gammastop = "systemctl --user stop gammastep";
        gammastart = "systemctl --user start gammastep";
+       restartDeskThing = "system --user restart deskThingService";
       };
     };
   };
