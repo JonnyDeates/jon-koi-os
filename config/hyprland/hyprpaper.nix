@@ -6,7 +6,7 @@
 }:
 with lib;
 let 
-  wallsetterScript = import ../scripts/wallsetter.nix { inherit pkgs username; };
+  wallsetterScript = import ../../scripts/wallsetter.nix { inherit pkgs username; };
 in
 {
   services.hyprpaper = {

@@ -15,18 +15,19 @@ in
 
   # Import Program Configurations
   imports = [
-    ../../config/hyprland.nix
+    ../../config/hyprland/hyprland.nix
     ../../config/emoji.nix
-    ../../config/neovim.nix
+    ../../config/nvim/neovim.nix
     ../../config/rofi/rofi.nix
     ../../config/rofi/config-emoji.nix
     ../../config/rofi/config-long.nix
     ../../config/swaync.nix
     ../../config/waybar.nix
-    ../../config/wlogout.nix
+    ../../config/wlogout/wlogout.nix
     ../../config/gammastep.nix
-    ../../config/hyprpaper.nix
-    ../../config/hyprlock.nix
+    ../../config/hyprland/hyprpaper.nix
+    ../../config/hyprland/hypridle.nix
+    ../../config/hyprland/hyprlock.nix
     ../../config/deskthing.nix
 ];
 
@@ -125,35 +126,9 @@ in
       inherit pkgs;
       inherit host;
     })
+    pkgs.hypridle
   ];
 
-
-  services = {
-    hypridle = {
-      settings = {
-        general = {
-          after_sleep_cmd = "hyprctl dispatch dpms on";
-          ignore_dbus_inhibit = false;
-          lock_cmd = "hyprlock";
-          starship = {
-            enable = true;
-            package = pkgs.starship;
-          };
-        };
-        listener = [
-          {
-            timeout = 900;
-            on-timeout = "hyprlock";
-          }
-          {
-            timeout = 1200;
-            on-timeout = "hyprctl dispatch dpms off";
-            on-resume = "hyprctl dispatch dpms on";
-          }
-        ];
-      };
-    };
-  };
   xresources.properties = {
     "Xcursor.size" = 64;
   };
