@@ -291,7 +291,6 @@ environment.variables = {
       inxi
       starship
       docker-compose
-    xboxdrv
     prusa-slicer
     blender
     usbutils
@@ -355,6 +354,7 @@ environment.variables = {
       dataDir = "/home/${username}";
       configDir = "/home/${username}/.config/syncthing";
     };
+    pulseaudio.enable = false;
     pipewire = {
       enable = true;
       alsa.enable = true;
@@ -421,7 +421,7 @@ environment.variables = {
   hardware.logitech.wireless.enableGraphical = true;
 hardware.xpadneo.enable = true;
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+
 
   hardware.ledger.enable = true;
   hardware.keyboard.zsa.enable = true;
