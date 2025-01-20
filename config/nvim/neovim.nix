@@ -61,20 +61,20 @@
         set noemoji
       '';
       extraLuaConfig = ''
-        ${builtins.readFile ./nvim/options.lua}
-        ${builtins.readFile ./nvim/keymaps.lua}
-        ${builtins.readFile ./nvim/plugins/alpha.lua}
-        ${builtins.readFile ./nvim/plugins/autopairs.lua}
-        ${builtins.readFile ./nvim/plugins/auto-save.lua}
-        ${builtins.readFile ./nvim/plugins/auto-session.lua}
-        ${builtins.readFile ./nvim/plugins/comment.lua}
-        ${builtins.readFile ./nvim/plugins/cmp.lua}
-        ${builtins.readFile ./nvim/plugins/lsp.lua}
-        ${builtins.readFile ./nvim/plugins/nvim-tree.lua}
-        ${builtins.readFile ./nvim/plugins/telescope.lua}
-        ${builtins.readFile ./nvim/plugins/todo-comments.lua}
-        ${builtins.readFile ./nvim/plugins/treesitter.lua}
-        ${builtins.readFile ./nvim/plugins/toggleterm.lua}
+        ${builtins.readFile ./options.lua}
+        ${builtins.readFile ./keymaps.lua}
+        ${builtins.readFile ./plugins/alpha.lua}
+        ${builtins.readFile ./plugins/autopairs.lua}
+        ${builtins.readFile ./plugins/auto-save.lua}
+        ${builtins.readFile ./plugins/auto-session.lua}
+        ${builtins.readFile ./plugins/comment.lua}
+        ${builtins.readFile ./plugins/cmp.lua}
+        ${builtins.readFile ./plugins/lsp.lua}
+        ${builtins.readFile ./plugins/nvim-tree.lua}
+        ${builtins.readFile ./plugins/telescope.lua}
+        ${builtins.readFile ./plugins/todo-comments.lua}
+        ${builtins.readFile ./plugins/treesitter.lua}
+        ${builtins.readFile ./plugins/toggleterm.lua}
         require("ibl").setup()
         require("bufferline").setup{}
         require("lualine").setup({

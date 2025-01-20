@@ -272,6 +272,7 @@ environment.variables = {
       # vulkan-loader
       #vulkan-validation-layers
 ##      brave
+       vipsdisp
       gperftools
       vulkan-tools
       keymapp
@@ -294,6 +295,7 @@ environment.variables = {
     prusa-slicer
     blender
     usbutils
+    antimicrox
 
       pipewire
       wireplumber
@@ -358,15 +360,15 @@ environment.variables = {
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
+      jack.enable = true;
 
-
-      wireplumber.extraConfig = {
-  "monitor.bluez.properties" = {
-      "bluez5.enable-sbc-xq" = true;
-      "bluez5.enable-msbc" = true;
-      "bluez5.enable-hw-volume" = true;
-      "bluez5.roles" = [ "hsp_hs" "hsp_ag" "hfp_hf" "hfp_ag" ];
-  };
+      wireplumber.extraConfig.bluetoothEnhancements = {
+                               "monitor.bluez.properties" = {
+                                   "bluez5.enable-sbc-xq" = true;
+                                   "bluez5.enable-msbc" = true;
+                                   "bluez5.enable-hw-volume" = true;
+                                   "bluez5.roles" = [ "hsp_hs" "hsp_ag" "hfp_hf" "hfp_ag" ];
+                               };
 };
 
     };
@@ -444,7 +446,12 @@ hardware.xpadneo.enable = true;
       }
     })
   '';
-
+  security.sudo.extraRules = [
+  {
+    users = ["jonkoi"]; groups = [1006];
+    commands = [ {command = "/run/current-system/sw/bin/adb"; options = ["SETENV" "NOPASSWD"]; }];
+  }
+  ];
   # Optimization settings and garbage collection automation
   nix = {
     settings = {

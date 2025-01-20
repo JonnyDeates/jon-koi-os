@@ -4,9 +4,10 @@ with lib;
 let
   deskThingStartScript = pkgs.writeShellScriptBin "deskThingStart" ''
     sleep 0.1
-    adb reboot
-    sleep 0.3
-    appimage-run ~/Applications/deskthing-linux-0.9.3-setup.AppImage
+    sudo adb reboot
+    sleep 0.1
+    appimage-run ~/Applications/deskthing-linux-0.10.3-setup.AppImage
+    sleep 15 && hyprctl dispatch closewindow deskthing
   '';
 in
 {

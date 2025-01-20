@@ -10,7 +10,7 @@
 
        gammastop = "systemctl --user stop gammastep";
        gammastart = "systemctl --user start gammastep";
-       restartDeskThing = "system --user restart deskThingService";
+       restartDeskThing = "systemctl --user restart deskThingService";
       };
     };
   };
