@@ -29,6 +29,7 @@ in
     ../../config/hyprland/hypridle.nix
     ../../config/hyprland/hyprlock.nix
     ../../config/deskthing.nix
+
 ];
 
   # Place Files Inside Home Directory
@@ -57,10 +58,12 @@ in
     early_exit=true
     fill_shape=false
   '';
+
 #home.file.".local/share/flatpak/overrides/com.valvesoftware.Steam".text = ''
 #  [Context]
 #  filesystems=/mnt/game_disc
 #'';
+
   # Install & Configure Git
   programs.git = {
     enable = true;

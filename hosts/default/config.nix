@@ -340,6 +340,7 @@ environment.variables = {
         ];
     };
     gnome.gnome-keyring.enable = true;
+   # power-profiles-daemon.enable = true;
     avahi = {
       enable = true;
       nssmdns4 = true;
@@ -362,7 +363,7 @@ environment.variables = {
       pulse.enable = true;
       jack.enable = true;
 
-      wireplumber.extraConfig.bluetoothEnhancements = {
+      wireplumber.extraConfig = {
                                "monitor.bluez.properties" = {
                                    "bluez5.enable-sbc-xq" = true;
                                    "bluez5.enable-msbc" = true;

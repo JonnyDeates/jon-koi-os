@@ -15,20 +15,24 @@
   "usbhid"
   "usb_storage"
   "sd_mod"
+  "amdgpu"
   ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-amd" ];
-  boot.kernelParams = [ "resume=UUID=d83a21dc-bc0e-48cd-bdc8-24817ff46b29"];
+  boot.kernelParams = [
+ "mem_sleep_default=deep"     # Explicitly use deep sleep
+  "resume=UUID=a56d2645-af86-4b76-9a7e-1d6b45464c3e"  # The UUID of the filesystem containing the swapfile
+  "resume_offset=81305600"  # The offset from filefrag (first physical_offset)
+  ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
     { device = "/dev/disk/by-uuid/a56d2645-af86-4b76-9a7e-1d6b45464c3e";
       fsType = "ext4";
     };
-  fileSystems."/game_disc" =
+  fileSystems."/mnt/game_disc" =
     { device = "/dev/disk/by-uuid/cec6e902-c1ee-4f40-9398-51e259c6546e";
       fsType = "ext4";
-      mountPoint = "/mnt/game_disc";
       options = ["users" "exec" "nofail"];
     };
 #    fileSystems."/run/media/Locked Storage" = {
@@ -42,15 +46,22 @@
     };
 
   swapDevices = [{
-  device = "/swap/swapfile";
-  size = 96 * 1024;
+   device = "/swap/swapfile";
+   size = 96 * 1024;
   } ];
+
   # (the default) this is the recommended approach. When using systemd-networkd it's
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
   # networking.interfaces.eno1.useDHCP = lib.mkDefault true;
   # networking.interfaces.wlp13s0.useDHCP = lib.mkDefault true;
+  powerManagement = {
+    enable = true;
+    cpuFreqGovernor = "performance";
+    # Added: Power saving tweaks
+    powertop.enable = true;
+  };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

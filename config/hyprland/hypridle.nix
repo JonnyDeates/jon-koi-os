@@ -3,35 +3,21 @@
   ...
 }:
 {
-  services.hypridle = {
-      settings = {
-        general = {
-        enable = true;
-        before_sleep_cmd = "hyprctl dispatch dpms off";
-          after_sleep_cmd = "hyprctl dispatch dpms on && systemctl --user restart waybar";
-          ignore_dbus_inhibit = false;
-          lock_cmd = "hyprlock";
-          starship = {
-            enable = true;
-            package = pkgs.starship;
-          };
-        };
-        listener = [
-          {
-            timeout = 900;
-            on-timeout = "hyprlock";
-          }
-          {
-            timeout = 1200;
-            on-timeout = "hyprctl dispatch dpms off";
-            on-resume = "hyprctl dispatch dpms on && systemctl --user restart waybar";
-          }
-          {
-             timeout = 1800;  # 30 minutes
-             on-timeout = "systemctl suspend";  # Add explicit suspend command
-             on-resume = "hyprctl dispatch dpms on && systemctl --user restart waybar";  # Ensure display is on after resume
-          }
-        ];
-      };
-  };
+  home.file.".config/hypr/hypridle.conf".text = ''
+         general {
+             lock_cmd = "hyprlock"       # avoid starting multiple hyprlock instances.
+             before_sleep_cmd = loginctl lock-session    # lock before suspend.
+             after_sleep_cmd = hyprctl dispatch dpms on  # to avoid having to press a key twice to turn on the display.
+         }
+         listener {
+             timeout = 900
+             on-timeout = "hyprlock"
+         }
+
+         listener {
+             timeout = 1800
+             on-timeout = "hyprctl dispatch dpms off"
+             on-resume = "hyprctl dispatch dpms on && systemctl --user restart waybar"
+         }
+       '';
 }

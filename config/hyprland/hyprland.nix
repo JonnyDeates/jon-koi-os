@@ -63,10 +63,10 @@ with lib;
                 exec-once = killall -q swaync;sleep .5 && swaync
                 exec-once = nm-applet --indicator
                 exec-once = lxqt-policykit-agent
-                exec-once = hypridle
+                exec-once = sleep 2 && hypridle
                 exec-once = sleep 1.5 &&  swww img /home/${username}/Pictures/Wallpapers/jonkoios.png
-                exec-once = sleep 3 && hyprpapr
-                exec-once = adb kill-server
+                exec-once = sleep 3 && hyprpaper
+                exec-once = sleep 6 && adb kill-server
                 monitor=,preferred,auto,1
                 ${extraMonitorSettings}
                 
