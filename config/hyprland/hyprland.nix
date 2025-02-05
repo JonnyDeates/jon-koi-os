@@ -47,7 +47,7 @@ with lib;
                 env = QT_AUTO_SCREEN_SCALE_FACTOR, 1
                 env = SDL_VIDEODRIVER, x11
                 env = MOZ_ENABLE_WAYLAND, 1
-                env = LD_LIBRARY_PATH, /opt/rocm/hip/lib:$LD_LIBRARY_PATH
+                env = LD_LIBRARY_PATH, ~/.steam/bin32:/opt/rocm/hip/lib:$LD_LIBRARY_PATH
                 env = HIP_VISIBLE_DEICES, 1
                 env = HSA_OVERRIDE_GFX_VERSION, 11.0.0
                 env = HCC_AMDGPU_TARGET, gfx1100
@@ -64,9 +64,8 @@ with lib;
                 exec-once = nm-applet --indicator
                 exec-once = lxqt-policykit-agent
                 exec-once = sleep 2 && hypridle
-                exec-once = sleep 1.5 &&  swww img /home/${username}/Pictures/Wallpapers/jonkoios.png
                 exec-once = sleep 3 && hyprpaper
-                exec-once = sleep 6 && adb kill-server
+                exec-once = sleep 7 && adb kill-server
                 monitor=,preferred,auto,1
                 ${extraMonitorSettings}
                 

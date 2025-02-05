@@ -6,6 +6,7 @@
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     stylix.url = "github:danth/stylix";
+    affinity-nix.url = "github:mrshmllow/affinity-nix";
     #hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
     #hyprland-plugins = {
     #  url = "github:hyprwm/hyprland-plugins";
@@ -14,7 +15,7 @@
   };
 
   outputs =
-   { nixpkgs, home-manager, ... }@inputs:
+   { nixpkgs, home-manager, affinity-nix, ... }@inputs:
     let
       system = "x86_64-linux";
       host = "default";
@@ -34,6 +35,7 @@
             inherit system;
             inherit inputs;
             inherit username;
+            inherit affinity-nix;
             inherit host;
           };
           modules = [

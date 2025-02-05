@@ -6,6 +6,7 @@
   username,
   options,
   lib,
+
   ...
 }:
 
@@ -13,14 +14,36 @@
   imports = [
     ./hardware.nix
     ./users.nix
+    # Drivers
     ../../modules/drivers/amd-drivers.nix
     ../../modules/drivers/nvidia-drivers.nix
     ../../modules/drivers/nvidia-prime-drivers.nix
     ../../modules/drivers/intel-drivers.nix
-    ../../modules/vm-guest-services.nix
-    ../../modules/local-hardware-clock.nix
-    ../../modules/stylix.nix
-    ../../modules/fonts.nix
+
+    # Virtualization
+    ../../modules/virtualization/docker.nix
+    ../../modules/virtualization/vm-guest-services.nix
+
+    # Hardware
+    ../../modules/hardware/audio.nix
+    ../../modules/hardware/bluetooth.nix
+    ../../modules/hardware/disk.nix
+    ../../modules/hardware/local-hardware-clock.nix
+    ../../modules/hardware/networking.nix
+
+    # Gaming
+    ../../modules/gaming/flatpak.nix
+
+    # OS Styling
+    ../../modules/os-styling/fonts.nix
+    ../../modules/os-styling/login-screen.nix
+    ../../modules/os-styling/stylix.nix
+    ../../modules/os-styling/starship.nix
+
+    # General Apps
+    ../../modules/apps.nix
+
+    # System Commands
     ../../aliases/system-bash-aliases.nix
     ../../aliases/git-aliases.nix
     ../../aliases/quit-aliases.nix
@@ -57,14 +80,6 @@
     };
     plymouth.enable = true;
   };
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
-  networking.hostName = "${host}";
-  networking.timeServers = options.networking.timeServers.default ++ [ "pool.ntp.org" ];
 
   # Set your time zone.
   time.timeZone = "America/Chicago";
@@ -85,122 +100,38 @@
   };
 
   programs = {
-    firefox.enable = true;
     adb.enable = true;
-    starship = {
-          enable = true;
-          settings = {
-            add_newline = false;
-            buf = {
-              symbol = " ";
-            };
-            c = {
-              symbol = " ";
-            };
-            directory = {
-              read_only = " 󰌾";
-            };
-            docker_context = {
-              symbol = " ";
-            };
-            fossil_branch = {
-              symbol = " ";
-            };
-            git_branch = {
-              symbol = " ";
-            };
-            golang = {
-              symbol = " ";
-            };
-            hg_branch = {
-              symbol = " ";
-            };
-            hostname = {
-              ssh_symbol = " ";
-            };
-            lua = {
-              symbol = " ";
-            };
-            memory_usage = {
-              symbol = "󰍛 ";
-            };
-            meson = {
-              symbol = "󰔷 ";
-            };
-            nim = {
-              symbol = "󰆥 ";
-            };
-            nix_shell = {
-              symbol = " ";
-            };
-            nodejs = {
-              symbol = " ";
-            };
-            ocaml = {
-              symbol = " ";
-            };
-            package = {
-              symbol = "󰏗 ";
-            };
-            python = {
-              symbol = " ";
-            };
-            rust = {
-              symbol = " ";
-            };
-            swift = {
-              symbol = " ";
-            };
-            zig = {
-              symbol = " ";
-            };
-          };
-        };
-
     dconf.enable = true;
+    # Application for managing encryption keys and passwords
     seahorse.enable = true;
+
+    # Allows file systems in userspace
     fuse.userAllowOther = true;
-    mtr.enable = true;
+
+    # Modern release of the GNU Privacy Guard, a GPL OpenPGP implementation
     gnupg.agent = {
       enable = true;
       enableSSHSupport = true;
     };
-    virt-manager.enable = true;
-    gamemode = {
-      enable = true;
-      settings.general.inhibit_screensaver = 0;
-    };
-#     steam = {
-#      enable = true;
-#        gamescopeSession.enable = true;
-#       remotePlay.openFirewall = true;
-#      dedicatedServer.openFirewall = true;
-#    };
+
+    # File manager
     thunar = {
       enable = true;
       plugins = with pkgs.xfce; [ thunar-archive-plugin thunar-volman ];
     };
 
+    # Allows for app images to be installed
     appimage.binfmt = true;
   };
-
-  nixpkgs.config = {
-  allowUnfree = true;
-#  allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-#       "steam"
-#      "steam-original"
-#    "steam-run"
-#  ];
-};
 
   users = {
     mutableUsers = true;
   };
 
-environment.variables = {
-                HSA_OVERRIDE_GFX_VERSION = "11.0.0";
-                 AMD_VULKAN_ICD = "RADV";
-};
+  environment.variables = {
+       HSA_OVERRIDE_GFX_VERSION = "11.0.0";
+       AMD_VULKAN_ICD = "RADV";
+  };
 
   environment.systemPackages =
     with pkgs;
@@ -208,96 +139,70 @@ environment.variables = {
       vim
       wget
       killall
-      eza
+      eza # basically just ls
       git
-      cmatrix
       fastfetch
       htop
-      libvirt
-      lxqt.lxqt-policykit
-      mangohud
-      lm_sensors
-      unzip
-      unrar
-      libnotify
-      v4l-utils
-      ydotool
-      wl-clipboard
-      lm_sensors
-      pciutils
-      socat
-      ripgrep
-      lsd
-      lshw
-      pkg-config
-      meson
-      gnumake
-      ninja
-      brightnessctl
-      virt-viewer
-      swappy
-      appimage-run
-      networkmanagerapplet
-      yad
-      playerctl
-      nh
-      nixfmt-rfc-style
-      discord
-      hyprpaper
-      grim
-      slurp
-      keepassxc
-      pkgs.file-roller
-      swaynotificationcenter
-      imv
-      transmission_4-gtk
-      distrobox
-      mpv
-      obs-studio
-      rustup
-      audacity
-      pavucontrol
-      tree
-      protonup-qt
-      spotify
-      neovide
-      hyprpicker
-      swww
-      ffmpeg
-      greetd.tuigreet
-      r2modman
-      # mesa-demos
-      # libdrm
-#       steam-run
-      # vulkan-loader
-      #vulkan-validation-layers
-##      brave
-       vipsdisp
-      gperftools
-      vulkan-tools
-      keymapp
+      lxqt.lxqt-policykit # A PolicyKit authentication agent for the LXQt desktop environment. It handles authorization for various system-level tasks.
+      mangohud # An overlay for Vulkan and DirectX applications that shows real‑time performance metrics (e.g., FPS, CPU/GPU usage) while gaming.
+      lm_sensors # A utility to monitor hardware sensors
+      unzip # A tool for extracting files from ZIP archives.
+      unrar # A utility to extract files from RAR archives.
+      libnotify # A library that enables desktop applications to send user notifications.
+      v4l-utils # A collection of command‑line utilities for controlling and testing Video4Linux devices
+      # ydotool # A tool to simulate keyboard and mouse input on Wayland systems
+      wl-clipboard # A command‑line utility for accessing the Wayland clipboard (copying and pasting) in scripts or terminal sessions.
+      pciutils # A set of utilities (like lspci) that provide information about PCI buses and devices on your system.
+      # ripgrep
+      # lsd another ls replacement
+      lshw # A tool that displays detailed information about your hardware configuration.
+      pkg-config # A helper tool used when compiling applications; it retrieves metadata about installed libraries (such as compiler and linker flags).
+      # meson # A build system designed for speed and ease of use, commonly used in modern software development.
+      #gnumake # The GNU implementation of the make build automation tool, which reads makefiles to compile and build programs.
+      #libgccjit
+      # ninja # A small, fast build system that is designed to have its input files generated by higher‑level build systems (like Meson).
+      # brightnessctl # A command‑line utility for adjusting the screen brightness.
 
-      legendary-gl
+      # swappy # A tool for annotating screenshots, often used in Wayland environments to quickly mark up images.
+      appimage-run # A helper utility to run AppImage packages (self‑contained Linux applications) seamlessly.
+      yad # “Yet Another Dialog”—a tool that creates simple graphical dialog boxes from shell scripts.
+      nh # Nixos helper
+      nixfmt-rfc-style # A formatter for Nix expressions that reformats code according to RFC style guidelines.
+
+      grim # A screenshot utility for Wayland compositors—it captures the screen (or a region) and outputs an image.
+
+      slurp # A selection tool for Wayland that lets you interactively select a region of the screen (often used in tandem with grim).
+      swaynotificationcenter # A notification center tailored for the Sway window manager, helping to organize and view notifications.
+
+      file-roller # The default graphical archive manager for GNOME (often simply called “Archive Manager”), used to view and extract archive files.
+      imv # A simple image viewer that works well on both Wayland and X11.
+      transmission_4-gtk # The GTK‑based graphical interface for Transmission, a BitTorrent client.
+
+      mpv # A versatile media player capable of playing video and audio with high‑quality output and extensive format support.
+      # rustup # The official installer and version manager for the Rust programming language toolchain.
+
+     # tree # A command‑line program that displays directory structures in a tree‑like format.
+
+      neovide # A graphical (GUI) client for Neovim that offers additional interface enhancements compared to the terminal version.
+      hyprpicker
+      hyprpaper
+      hypridle
+      swww # A wallpaper setter for Wayland compositors (often used with Sway or Hyprland) that makes changing backgrounds easier.
+      ffmpeg # A comprehensive multimedia framework for recording, converting, and streaming audio and video.
+
+      gammastep
+
       nodejs_22
       nodePackages.pnpm
-      gammastep
-      libsForQt5.qt5.qtgraphicaleffects
-      ledger-live-desktop
-      gnome-disk-utility
-      jetbrains.idea-ultimate
-      remmina
-      bat
-      duf
-      inxi
-      starship
-      docker-compose
-    prusa-slicer
-    blender
-    usbutils
-    antimicrox
+      libsForQt5.qt5.qtgraphicaleffects # A Qt5 module that provides additional graphical effects (like animations and transitions) for Qt‑based applications.
 
-      pipewire
-      wireplumber
+
+      remmina # A remote desktop client that supports multiple protocols (such as RDP, VNC, and SSH) to access other computers.
+      # bat basically cat
+      inxi # A command‑line tool that displays detailed system information about your hardware and software configuration.
+      starship # A minimal, customizable, and fast shell prompt that works with many different shells.
+      usbutils # A set of utilities (like lsusb) for listing and interacting with USB devices connected to your computer.
+
     ];
 
   # Services to start
@@ -309,30 +214,10 @@ environment.variables = {
         variant = "";
       };
     };
-        greetd = {
-          enable = true;
-          vt = 3;
-          settings = {
-            default_session = {
-              # Wayland Desktop Manager is installed only for user ryan via home-manager!
-              user = username;
-              # .wayland-session is a script generated by home-manager, which links to the current wayland compositor(sway/hyprland or others).
-              # with such a vendor-no-locking script, we can switch to another wayland compositor without modifying greetd's config here.
-              # command = "$HOME/.wayland-session"; # start a wayland session directly without a login manager
-              command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd Hyprland"; # start Hyprland with a TUI login manager
-            };
-          };
-        };
-
-    smartd = {
-      enable = false;
-      autodetect = true;
-    };
     libinput.enable = true;
-    fstrim.enable = false;
     gvfs.enable = true;
     openssh.enable = true;
-    flatpak.enable = true;
+
     printing = {
         enable = true;
         drivers = [
@@ -341,47 +226,11 @@ environment.variables = {
     };
     gnome.gnome-keyring.enable = true;
    # power-profiles-daemon.enable = true;
-    avahi = {
-      enable = true;
-      nssmdns4 = true;
-      openFirewall = true;
-    };
+
    tumbler.enable = true;
-   udisks2.enable = true;
    ipp-usb.enable = true;
-    syncthing = {
-      enable = false;
-      user = "${username}";
-      dataDir = "/home/${username}";
-      configDir = "/home/${username}/.config/syncthing";
-    };
-    pulseaudio.enable = false;
-    pipewire = {
-      enable = true;
-      alsa.enable = true;
-      alsa.support32Bit = true;
-      pulse.enable = true;
-      jack.enable = true;
-
-      wireplumber.extraConfig = {
-                               "monitor.bluez.properties" = {
-                                   "bluez5.enable-sbc-xq" = true;
-                                   "bluez5.enable-msbc" = true;
-                                   "bluez5.enable-hw-volume" = true;
-                                   "bluez5.roles" = [ "hsp_hs" "hsp_ag" "hfp_hf" "hfp_ag" ];
-                               };
-};
-
-    };
     rpcbind.enable = false;
     nfs.server.enable = false;
-    blueman.enable = true;
-  };
-  systemd.services.flatpak-repo = {
-    path = [ pkgs.flatpak ];
-    script = ''
-      flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    '';
   };
 
   xdg.portal = {
@@ -399,20 +248,7 @@ environment.variables = {
   };
 
   
-  hardware.bluetooth = {
-    enable = true;
-    powerOnBoot = true;
-    settings = {
-      General = {
-        ControllerMode = "dual";
-        FastConnectable = "true";
-        Experimental = "true";
-      };
-           Policy = {
-              AutoEnable = "true";
-            };
-    };
-  };
+
   hardware.sane = {
     enable = true;
     extraBackends = [ pkgs.sane-airscan ];
@@ -421,7 +257,6 @@ environment.variables = {
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
 hardware.xpadneo.enable = true;
-  # Enable sound with pipewire.
 
 
   hardware.ledger.enable = true;
@@ -471,17 +306,6 @@ hardware.xpadneo.enable = true;
     };
   };
 
-  # Virtualization / Containers
-  virtualisation.docker.enable = true;
-  virtualisation.libvirtd.enable = true;
-  virtualisation.podman = {
-    enable = true;
-#    dockerCompat = true;
-    defaultNetwork.settings.dns_enabled = true;
-  };
-
-  # OpenGL
-
   # Extra Module Options
   drivers.amdgpu.enable = true;
   drivers.nvidia.enable = false;
@@ -493,20 +317,12 @@ hardware.xpadneo.enable = true;
   drivers.intel.enable = false;
   vm.guest-services.enable = false;
   local.hardware-clock.enable = false;
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
 
-  # Or disable the firewall altogether.
-  networking.firewall = {
-  enable = true;
-  interfaces."enp15s0u2".allowedTCPPortRanges = [ {from = 0; to = 65534;} ];
-  };
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = "24.11"; # Did you read the comment?
 }

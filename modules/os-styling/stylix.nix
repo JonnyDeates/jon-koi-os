@@ -7,7 +7,7 @@
 {
 # Styling Options
   stylix = {
-    image = ../config/wallpapers/jonkoios.png;
+    image = ../../config/wallpapers/jonkoios.png;
     # base16Scheme = {
     #   base00 = "232136";
     #   base01 = "2a273f";
