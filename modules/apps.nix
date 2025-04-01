@@ -8,13 +8,14 @@ nixpkgs.config = {
   };
   environment.systemPackages =
     with pkgs; [
+          brave
           discord
           keepassxc
           obs-studio
           audacity
           r2modman
           keymapp
-          legendary-gl
+          trilium-next-server
           ledger-live-desktop
           jetbrains.idea-ultimate
           prusa-slicer
@@ -22,10 +23,12 @@ nixpkgs.config = {
           antimicrox
           spotify
           affinity-nix.packages.x86_64-linux.photo
+          libreoffice-qt
+          hunspell # Spell check for libreoffice
     ];
 
     programs = {
-        firefox.enable = true;
+        firefox.enable = false;
         java.enable = true;
     };
 }

@@ -59,19 +59,19 @@ with lib;
                 exec-once = dbus-update-activation-environment --systemd --all
                 exec-once = systemctl --user import-environment QT_QPA_PLATFORMTHEME WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
                 exec-once = killall -q swww;sleep .5 && swww init
-                exec-once = killall -q waybar;sleep .5 && waybar
                 exec-once = killall -q swaync;sleep .5 && swaync
                 exec-once = nm-applet --indicator
                 exec-once = lxqt-policykit-agent
                 exec-once = sleep 2 && hypridle
-                exec-once = sleep 3 && hyprpaper
-                exec-once = sleep 7 && adb kill-server
+                exec-once = sleep 1.5 && swww img /home/${username}/Pictures/Wallpapers/jonkoios.png
+                exec-once = sleep 2 && wallsetter
+                exec-once = sleep 6 && adb kill-server
                 monitor=,preferred,auto,1
                 ${extraMonitorSettings}
                 
                 general {
-                           gaps_in = 6
-                           gaps_out = 8
+                           gaps_in = 3
+                           gaps_out = 6
                            border_size = 2
                            layout = dwindle
                            resize_on_border = true
@@ -100,7 +100,6 @@ with lib;
                          windowrule = float, zoom
                          windowrulev2 = stayfocused, title:^()$,class:^(steam)$
                          windowrulev2 = minsize 1 1, title:^()$,class:^(steam)$
-                         windowrulev2 = opacity 0.9 0.7, class:^(Firefox)$
                          windowrulev2 = opacity 0.9 0.7, class:^(thunar)$
 
                          gestures {

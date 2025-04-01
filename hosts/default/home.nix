@@ -100,16 +100,10 @@ in
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
-    gtk3.extraConfig = {
-      gtk-application-prefer-dark-theme = 1;
-    };
-    gtk4.extraConfig = {
-      gtk-application-prefer-dark-theme = 1;
-    };
   };
   qt = {
     enable = true;
-    style.name = "adwaita-dark";
+    style.name = "adwaita";
     platformTheme.name = "gtk3";
   };
 
@@ -129,7 +123,7 @@ in
       inherit pkgs;
       inherit host;
     })
-
+    (import ../../scripts/ai-renamer.nix {inherit pkgs; })
   ];
 
   xresources.properties = {
@@ -187,16 +181,7 @@ in
           source $HOME/.bashrc-personal
         fi
       '';
-      shellAliases = {
-        sv = "sudo nvim";
-        gcCleanup = "nix-collect-garbage --delete-old && sudo nix-collect-garbage -d && sudo /run/current-system/bin/switch-to-configuration boot";
-        v = "nvim";
-        cat = "bat";
-        ls = "eza --icons";
-        ll = "eza -lh --icons --grid --group-directories-first";
-        la = "eza -lah --icons --grid --group-directories-first";
-        ".." = "cd ..";
-      };
+
     };
     home-manager.enable = true;
   };

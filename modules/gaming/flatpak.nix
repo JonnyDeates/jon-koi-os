@@ -12,6 +12,8 @@ let
   desiredFlatpaks = [
     "com.valvesoftware.Steam"
     "com.github.tchx84.Flatseal"
+    "io.gitlab.adhami3310.Impression"
+    "com.heroicgameslauncher.hgl"
   ];
 in {
   services = {
