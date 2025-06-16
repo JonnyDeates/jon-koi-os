@@ -31,6 +31,7 @@
     ../../modules/hardware/disk.nix
     ../../modules/hardware/local-hardware-clock.nix
     ../../modules/hardware/networking.nix
+    ../../modules/hardware/printing.nix
 
     # Gaming
     ../../modules/gaming/flatpak.nix
@@ -52,10 +53,10 @@
     ../../aliases/virtualization.nix
 ];
 
-
+hardware.enableAllFirmware = true;
  boot = {
     # Kernel
-    kernelPackages = pkgs.linuxPackages_zen;
+    kernelPackages = pkgs.linuxPackages_latest;
     # This is for OBS Virtual Cam Support
     kernelModules = [ "v4l2loopback" ];
     extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
@@ -204,7 +205,6 @@
       inxi # A command‑line tool that displays detailed system information about your hardware and software configuration.
       starship # A minimal, customizable, and fast shell prompt that works with many different shells.
       usbutils # A set of utilities (like lsusb) for listing and interacting with USB devices connected to your computer.
-
     ];
 
   # Services to start
@@ -219,13 +219,6 @@
     libinput.enable = true;
     gvfs.enable = true;
     openssh.enable = true;
-
-    printing = {
-        enable = true;
-        drivers = [
-          # pkgs.hplipWithPlugin
-        ];
-    };
     gnome.gnome-keyring.enable = true;
    # power-profiles-daemon.enable = true;
 

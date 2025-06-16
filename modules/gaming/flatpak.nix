@@ -12,13 +12,16 @@ let
   desiredFlatpaks = [
     "com.valvesoftware.Steam"
     "com.github.tchx84.Flatseal"
-    "io.gitlab.adhami3310.Impression"
+    "org.kde.isoimagewriter"
     "com.heroicgameslauncher.hgl"
+    "io.github.limo_app.limo"
+    "org.kde.kdenlive"
   ];
 in {
   services = {
       flatpak.enable = true;
   };
+  environment.systemPackages = [ pkgs.flatpak-builder ];
   systemd.services.flatpak-repo = {
     path = [ pkgs.flatpak ];
     script = ''

@@ -16,6 +16,7 @@
   "usb_storage"
   "sd_mod"
   "amdgpu"
+  "btusb"
   ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-amd" ];
@@ -24,7 +25,7 @@
   "resume=UUID=a56d2645-af86-4b76-9a7e-1d6b45464c3e"  # The UUID of the filesystem containing the swapfile
   "resume_offset=81305600"  # The offset from filefrag (first physical_offset)
   ];
-  boot.extraModulePackages = [ ];
+  boot.extraModulePackages = [];
 
   fileSystems."/" =
     { device = "/dev/disk/by-uuid/a56d2645-af86-4b76-9a7e-1d6b45464c3e";
@@ -33,7 +34,7 @@
   fileSystems."/mnt/game_disc" =
     { device = "/dev/disk/by-uuid/cec6e902-c1ee-4f40-9398-51e259c6546e";
       fsType = "ext4";
-      options = ["users" "exec" "nofail"];
+      options = ["nofail" "x-systemd.automount" "x-systemd.after=local-fs.target" "x-systemd.device-timeout=10"];
     };
 #    fileSystems."/run/media/Locked Storage" = {
 #      device= "/dev/disk/by-uuid/26ECC06DECC03937";

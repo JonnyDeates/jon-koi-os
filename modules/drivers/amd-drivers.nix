@@ -22,7 +22,15 @@ in
       graphics = {
         enable = true;
       ## amdvlk: an open-source Vulkan driver from AMD
-      extraPackages = [ pkgs.amdvlk ];
+      extraPackages = with pkgs; [
+           mesa
+           libva
+           libvdpau-va-gl
+           vulkan-loader
+           vulkan-validation-layers
+           amdvlk
+           mesa.opencl
+       ];
       extraPackages32 = [ pkgs.driversi686Linux.amdvlk ];
     };
   };

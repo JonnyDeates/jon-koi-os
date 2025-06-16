@@ -26,14 +26,6 @@ host,
         # Network diagnostics tool
         mtr.enable = true;
     };
-  services = {
-    # Facilitates zero-configuration networking (service discovery using mDNS/DNS‑SD).
-    avahi = {
-      enable = true;
-      nssmdns4 = true;
-      openFirewall = true;
-    };
-  };
     # Open ports in the firewall.
     # networking.firewall.allowedTCPPorts = [ ... ];
     # networking.firewall.allowedUDPPorts = [ ... ];
