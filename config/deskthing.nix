@@ -6,7 +6,7 @@ let
     sleep 0.1
     sudo adb reboot
     sleep 0.1
-    appimage-run ~/Applications/deskthing-linux-0.11.7.AppImage
+    appimage-run ~/Applications/deskthing-linux-0.11.10.AppImage
     sleep 15 && hyprctl dispatch closewindow deskthing
   '';
 in

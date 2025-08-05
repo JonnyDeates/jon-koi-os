@@ -36,6 +36,11 @@
       fsType = "ext4";
       options = ["nofail" "x-systemd.automount" "x-systemd.after=local-fs.target" "x-systemd.device-timeout=10"];
     };
+    fileSystems."/mnt/large_disc" =
+    { device = "dev/disk/by-uuid/4cd79705-9f21-4ada-a3a9-811e65e9e311";
+      fsType = "ext4";
+      options = ["nofail" "x-systemd.automount" "x-systemd.after=local-fs.target" "x-systemd.device-timeout=10"];
+    };
 #    fileSystems."/run/media/Locked Storage" = {
 #      device= "/dev/disk/by-uuid/26ECC06DECC03937";
 #      fsType = "ext4";

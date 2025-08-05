@@ -86,16 +86,13 @@ in
     };
   };
 
- # home.sessionVariables = {
- #   LIBGL_DRIVERS_PATH = "${pkgs.libglvnd}/lib/libGL.so";
- # };
-
   # Styling Options
   stylix.targets.waybar.enable = false;
   stylix.targets.rofi.enable = false;
   stylix.targets.hyprland.enable = false;
 
   gtk = {
+  enable = true;
     iconTheme = {
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
@@ -124,6 +121,7 @@ in
       inherit host;
     })
     (import ../../scripts/ai-renamer.nix {inherit pkgs; })
+    pkgs.papirus-icon-theme
   ];
 
   xresources.properties = {
@@ -172,7 +170,7 @@ in
       enableCompletion = true;
       profileExtra = ''
         #if [ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ]; then
-        #  exec Hyprland
+        #  exec Hyprlandx
         #fi
       '';
       initExtra = ''

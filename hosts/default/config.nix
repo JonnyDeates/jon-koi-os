@@ -104,6 +104,7 @@ hardware.enableAllFirmware = true;
 
   programs = {
     adb.enable = true;
+    xfconf.enable = true;
     dconf.enable = true;
     # Application for managing encryption keys and passwords
     seahorse.enable = true;
@@ -125,6 +126,10 @@ hardware.enableAllFirmware = true;
 
     # Allows for app images to be installed
     appimage.binfmt = true;
+
+    # Hyprland
+    hyprland.enable = true;
+
   };
 
   users = {

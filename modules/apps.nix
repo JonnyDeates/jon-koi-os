@@ -4,7 +4,6 @@ affinity-nix,
 ...
 }: {
 
-#nixpkgs.overlays = [(import ./overlays/wrapped-resolve.nix)];
 nixpkgs.config = {
   allowUnfree = true;
   };

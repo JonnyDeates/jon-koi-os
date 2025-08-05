@@ -16,6 +16,8 @@
        idlestop = "systemctl --user disable --now hypridle.service";
        #sv = "sudo nvim";
        gcCleanup = "nix-collect-garbage --delete-old && sudo nix-collect-garbage -d && sudo /run/current-system/bin/switch-to-configuration boot";
+       pythonShell = "nix-shell ~/jon-koi-os/shells/python/python3.nix";
+       pythonAIShell = "nix-shell ~/jon-koi-os/shells/python/pythonAI.nix";
        #v = "nvim";
        #cat = "bat";
        ls = "eza --icons";

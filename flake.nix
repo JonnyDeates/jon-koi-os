@@ -12,10 +12,14 @@
     #  url = "github:hyprwm/hyprland-plugins";
     #  inputs.hyprland.follows = "hyprland";
     #};
+    sddm-sugar-candy-nix = {
+        url = "gitlab:Zhaith-Izaliel/sddm-sugar-candy-nix";
+        inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-   { nixpkgs, home-manager, affinity-nix, ... }@inputs:
+   { nixpkgs, home-manager, affinity-nix, sddm-sugar-candy-nix, ... }@inputs:
     let
       system = "x86_64-linux";
       host = "default";
@@ -26,6 +30,9 @@
         config = {
           allowUnfree = true;
         };
+          overlays = [
+            sddm-sugar-candy-nix.overlays.default
+          ];
       };
     in
     {
@@ -40,6 +47,7 @@
           };
           modules = [
             ./hosts/${host}/config.nix
+            sddm-sugar-candy-nix.nixosModules.default
             inputs.stylix.nixosModules.stylix
             home-manager.nixosModules.home-manager
             {

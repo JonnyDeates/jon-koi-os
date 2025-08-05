@@ -41,6 +41,7 @@ with lib;
                 env = XDG_SESSION_DESKTOP, Hyprland
                 env = GDK_BACKEND, wayland, x11
                 env = GTK_IM_MODULE=wayland
+                env = GTK_ICON_THEME=Papirus-Dark
                 env = CLUTTER_BACKEND, wayland
                 env = QT_QPA_PLATFORM=wayland;xcb
                 env = QT_WAYLAND_DISABLE_WINDOWDECORATION, 1
