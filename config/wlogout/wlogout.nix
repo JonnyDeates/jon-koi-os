@@ -51,22 +51,22 @@
       	background-color: rgba(12, 12, 12, 0.1);
       }
       button {
-      	color: #${config.stylix.base16Scheme.base05};
+      	color: #e0def4;
         font-size:20px;
         background-repeat: no-repeat;
       	background-position: center;
       	background-size: 25%;
       	border-style: solid;
       	background-color: rgba(12, 12, 12, 0.3);
-      	border: 3px solid #${config.stylix.base16Scheme.base05};
+      	border: 3px solid #e0def4;
         box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
       }
       button:focus,
       button:active,
       button:hover {
-        color: #${config.stylix.base16Scheme.base0B};
+        color: #3e8fb0;
         background-color: rgba(12, 12, 12, 0.5);
-        border: 3px solid #${config.stylix.base16Scheme.base0B};
+        border: 3px solid #3e8fb0;
       }
       #logout {
       	margin: 10px;

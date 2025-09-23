@@ -39,7 +39,6 @@
     # OS Styling
     ../../modules/os-styling/fonts.nix
     ../../modules/os-styling/login-screen.nix
-    ../../modules/os-styling/stylix.nix
     ../../modules/os-styling/starship.nix
 
     # General Apps
@@ -256,7 +255,6 @@ hardware.enableAllFirmware = true;
   };
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
-hardware.xpadneo.enable = true;
 
 
   hardware.ledger.enable = true;

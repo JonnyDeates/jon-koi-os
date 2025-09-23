@@ -76,8 +76,8 @@ with lib;
                            border_size = 2
                            layout = dwindle
                            resize_on_border = true
-                           col.active_border = rgb(${config.stylix.base16Scheme.base08}) rgb(${config.stylix.base16Scheme.base0C}) 45deg
-                           col.inactive_border = rgb(${config.stylix.base16Scheme.base01})
+                           col.active_border = rgb(eb6f92) rgb(9ccfd8) 45deg
+                           col.inactive_border = rgb(2a273f)
                          }
                          input {
                            kb_layout = us
@@ -117,6 +117,7 @@ with lib;
                             initial_workspace_tracking = 0
                             mouse_move_enables_dpms = true
                             key_press_enables_dpms = false
+                            disable_hyprland_logo = true
                          }
                          animations {
                             enabled = yes

@@ -43,7 +43,9 @@ with lib;
                   text = "$USER";
                   font_size = "48";
                   color = "rgb(202, 211, 245)";
-
+                     valign = "center";
+                     halign = "center";
+                     position = "0, 0";
                   }
                    {
                      monitor = "DP-1";
@@ -52,7 +54,7 @@ with lib;
                      color = "rgb(202, 211, 245)";
                      valign = "center";
                      halign = "center";
-                     position = "0, 0";
+                     position = "0, 144";
                      }
                      {
                         monitor = "DP-1";

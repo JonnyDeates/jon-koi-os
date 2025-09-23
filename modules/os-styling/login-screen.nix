@@ -4,8 +4,8 @@ lib,
 ...
 }: {
   environment.systemPackages = with pkgs; [
-     sddm
-     sddm-kcm
+     kdePackages.sddm
+     kdePackages.sddm-kcm
     ];
     services = {
         xserver.displayManager.setupCommands =  ''

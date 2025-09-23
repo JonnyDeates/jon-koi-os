@@ -3,6 +3,11 @@ pkgs,
 ...
 }:
 {
+environment.systemPackages = with pkgs; [
+blueman
+linuxKernel.packages.linux_zen.xpadneo
+];
+boot.blacklistedKernelModules = [ "xpad" ];
   services = {
     blueman.enable = true;
   };
@@ -11,14 +16,15 @@ pkgs,
     powerOnBoot = true;
     settings = {
       General = {
-        Enable = "Source,Sink,Media,Socket";
-        ControllerMode = "dual";
+        Privacy = "device";
+        JustWorksRepairing = "always";
+        Class = "0x000100";
         FastConnectable = "true";
-        Experimental = "true";
       };
-      Policy = {
-        AutoEnable = "true";
-      };
+#      Policy = {
+#        AutoEnable = true;
+#      };
     };
   };
+  hardware.xpadneo.enable = true;
 }

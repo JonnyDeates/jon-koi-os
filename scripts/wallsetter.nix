@@ -5,45 +5,37 @@ pkgs.writeShellScriptBin "wallsetter" ''
   DIRECTORY="/home/${username}/Pictures/Wallpapers"
 
   if [ -d "$DIRECTORY" ]; then
+        readarray -t hlist < <(find "$DIRECTORY/Horizontal" -maxdepth 1 -type f \
+            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' \))
 
-    num_files_horizontal=$(ls -1 "$DIRECTORY/Horizontal" | wc -l)
+        readarray -t plist < <(find "$DIRECTORY/Portrait" -maxdepth 1 -type f \
+            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' \))
 
-    if [ $num_files_horizontal -lt 1 ]; then
-      notify-send -t 9000 "The wallpaper folder is expected to have more than 1 image. Exiting Wallsetter."
-      exit
-    fi
-    num_files_portait=$(ls -1 "$DIRECTORY/Portrait" | wc -l)
+        if [ "''${#hlist[@]}" -lt 2 ]; then
+            notify-send -t 9000 "Need at least 2 horizontal images. Exiting Wallsetter."
+            exit 1
+        fi
+        if [ "''${#plist[@]}" -lt 1 ]; then
+          notify-send -t 9000 "Need at least 1 portrait image. Exiting Wallsetter."
+          exit 1
+        fi
 
-    if [ $num_files_portait -lt 1 ]; then
-      notify-send -t 9000 "The wallpaper folder is expected to have more than 1 image. Exiting Wallsetter."
-      exit
-    fi
+        mapfile -t IMAGES < <(printf '%s\n' "''${hlist[@]}" | shuf | head -n 2)
+        mapfile -t IMAGES_PORTRAIT < <(printf '%s\n' "''${plist[@]}" | shuf | head -n 1)
 
-    mapfile -t IMAGES < <(shuf -e "$DIRECTORY"/Horizontal/*.{jpg,jpeg,png,gif} | head -n 2)
-    mapfile -t IMAGES_PORTAIT < <(shuf -e "$DIRECTORY"/Portrait/*.{jpg,jpeg,png,gif} | head -n 1)
-
-    # Check if we got at least three images
-    if [ "''${#IMAGES[@]}" -lt 2 ]; then
-      notify-send -t 9000 "Not enough images found after shuffling. Exiting Wallsetter."
-      exit 1
-    fi
-    if [ "''${#IMAGES_PORTAIT[@]}" -lt 1 ]; then
-      notify-send -t 9000 "Not enough images found after shuffling. Exiting Wallsetter."
-      exit 1
-    fi
-    IMG1="''${IMAGES[0]}"
-    IMG2="''${IMAGES[1]}"
-    IMG3="''${IMAGES_PORTAIT[0]}"
+        IMG1="''${IMAGES[0]}"
+        IMG2="''${IMAGES[1]}"
+        IMG3="''${IMAGES_PORTRAIT[0]}"
 
     echo "Image 1: $IMG1"
     echo "Image 2: $IMG2"
     echo "Image 3: $IMG3"
 
-    sleep 2
+    sleep 1
 
     hyprctl hyprpaper preload "$IMG1"
 
-    sleep 0.5
+    sleep 1
 
     hyprctl hyprpaper wallpaper DP-1, "$IMG1"
 
@@ -51,7 +43,7 @@ pkgs.writeShellScriptBin "wallsetter" ''
 
     hyprctl hyprpaper preload "$IMG2"
     
-    sleep 0.5
+    sleep 1
 
     hyprctl hyprpaper wallpaper DP-2, "$IMG2"
 
@@ -59,7 +51,7 @@ pkgs.writeShellScriptBin "wallsetter" ''
 
     hyprctl hyprpaper preload "$IMG3"
     
-    sleep 0.5
+    sleep 1
     
     hyprctl hyprpaper wallpaper DP-3, "$IMG3"
 

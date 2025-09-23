@@ -5,7 +5,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable-small";
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    stylix.url = "github:danth/stylix";
     affinity-nix.url = "github:mrshmllow/affinity-nix";
     #hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
     #hyprland-plugins = {
@@ -48,7 +47,6 @@
           modules = [
             ./hosts/${host}/config.nix
             sddm-sugar-candy-nix.nixosModules.default
-            inputs.stylix.nixosModules.stylix
             home-manager.nixosModules.home-manager
             {
               home-manager.extraSpecialArgs = {
