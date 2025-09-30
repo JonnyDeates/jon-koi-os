@@ -8,6 +8,9 @@
 
 let
   betterTransition = "all 0.3s cubic-bezier(.55,-0.68,.48,1.682)";
+  koiColor = "#7bc9ff";
+  textColor = "black";
+
   inherit (import ../hosts/${host}/variables.nix) clock24h;
 in
 with lib;
@@ -119,7 +122,7 @@ with lib;
         };
         "custom/startmenu" = {
           tooltip = false;
-          format = "👾";
+          format = "🍀";
           # exec = "rofi -show drun";
           on-click = "sleep 0.1 && rofi-launcher";
         };
@@ -193,8 +196,8 @@ with lib;
           background: rgba(0,0,0,0);
         }
         #workspaces {
-          color: #232136;
-          background: #2a273f;
+          color: ${textColor};
+          background: ${koiColor};
           margin: 4px 4px;
           padding: 5px 5px;
           border-radius: 16px;
@@ -204,8 +207,8 @@ with lib;
           padding: 0px 5px;
           margin: 0px 3px;
           border-radius: 16px;
-          color: #232136;
-          background: linear-gradient(45deg, #eb6f92, #c4a7e7);
+          color: ${textColor};
+          background: white;
           opacity: 0.5;
           transition: ${betterTransition};
         }
@@ -214,8 +217,8 @@ with lib;
           padding: 0px 5px;
           margin: 0px 3px;
           border-radius: 16px;
-          color: #232136;
-          background: linear-gradient(45deg, #eb6f92, #c4a7e7);
+          color: ${textColor};
+          background: linear-gradient(45deg, white, ${koiColor});
           transition: ${betterTransition};
           opacity: 1.0;
           min-width: 40px;
@@ -223,53 +226,54 @@ with lib;
         #workspaces button:hover {
           font-weight: bold;
           border-radius: 16px;
-          color: #232136;
-          background: linear-gradient(45deg, #eb6f92, #c4a7e7);
+          color: white;
+          background: black;
           opacity: 0.8;
           transition: ${betterTransition};
         }
         tooltip {
-          background: #232136;
-          border: 1px solid #eb6f92;
+          background: black;
+          border: 1px solid ${koiColor};
           border-radius: 12px;
         }
         tooltip label {
-          color: #eb6f92;
+          color: ${koiColor};
         }
         #window, #pulseaudio, #cpu, #memory, #idle_inhibitor {
           font-weight: bold;
           margin: 4px 0px;
           margin-left: 7px;
           padding: 0px 18px;
-          background: #908caa;
-          color: #232136;
-          border-radius: 24px 10px 24px 10px;
+          color: ${textColor};
+          background: ${koiColor};
+          border-radius: 8px;
+          box-shadow: 1px 1px 1px rgba(0,0,0,0.25);
         }
         #custom-startmenu {
-          color: #3e8fb0;
-          background: #393552;
-          font-size: 28px;
+          color: ${textColor};
+          background: ${koiColor};
+          font-size: 32px;
           margin: 0px;
-          padding: 0px 30px 0px 15px;
-          border-radius: 0px 0px 40px 0px;
+          padding: 0px 12px;
+          border-radius: 0px 0px 16px 0px;
         }
         #custom-hyprbindings, #network, #battery,
         #custom-notification, #tray, #custom-exit {
           font-weight: bold;
-          background: #56526e;
-          color: #232136;
+          color: ${textColor};
+          background: ${koiColor};
           margin: 4px 0px;
           margin-right: 7px;
-          border-radius: 10px 24px 10px 24px;
+          border-radius: 8px;
           padding: 0px 18px;
         }
         #clock {
           font-weight: bold;
-          color: #0D0E15;
-          background: linear-gradient(90deg, #f6c177, #9ccfd8);
+          color: ${textColor};
+          background: ${koiColor};
           margin: 0px;
-          padding: 0px 15px 0px 30px;
-          border-radius: 0px 0px 0px 40px;
+          padding: 0px 12px;
+          border-radius: 0px 0px 0px 16px;
         }
       ''
     ];

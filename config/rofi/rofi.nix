@@ -22,13 +22,13 @@
         in
         {
           "*" = {
-            bg = mkLiteral "#232136";
+            bg = mkLiteral "#000000";
             bg-alt = mkLiteral "#f6c177";
             foreground = mkLiteral "#2a273f";
-            selected = mkLiteral "#eb6f92";
+            selected = mkLiteral "#7bc9ff";
             active = mkLiteral "#3e8fb0";
-            text-selected = mkLiteral "#232136";
-            text-color = mkLiteral "#e0def4";
+            text-selected = mkLiteral "#000000";
+            text-color = mkLiteral "#ffffff";
             border-color = mkLiteral "#56526e";
             urgent = mkLiteral "#f6c177";
           };
