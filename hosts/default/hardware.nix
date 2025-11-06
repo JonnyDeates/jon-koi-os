@@ -18,7 +18,7 @@
   "amdgpu"
   "btusb"
   ];
-  boot.initrd.kernelModules = [ ];
+  boot.initrd.kernelModules = [ "amdgpu" ];
   boot.kernelModules = [ "kvm-amd" ];
   boot.kernelParams = [
  "mem_sleep_default=deep"     # Explicitly use deep sleep
