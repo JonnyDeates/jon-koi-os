@@ -110,8 +110,7 @@ with lib;
                          windowrule = opacity 0.9 0.7, class:^(thunar)$
 
                          gestures {
-                           workspace_swipe = true
-                           workspace_swipe_fingers = 3
+                           workspace = 3, horizontal, workspace
                          }
                          misc {
                             initial_workspace_tracking = 0

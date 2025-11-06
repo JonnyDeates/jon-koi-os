@@ -290,6 +290,7 @@ hardware.enableAllFirmware = true;
   nix = {
     settings = {
       auto-optimise-store = true;
+      download-buffer-size = 52428800;
       experimental-features = [
         "nix-command"
         "flakes"

@@ -30,10 +30,8 @@ in
            libvdpau-va-gl
            vulkan-loader
            vulkan-validation-layers
-           amdvlk
            mesa.opencl
        ];
-      extraPackages32 = [ pkgs.driversi686Linux.amdvlk ];
     };
   };
 };
