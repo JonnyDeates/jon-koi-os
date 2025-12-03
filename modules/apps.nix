@@ -23,9 +23,11 @@ nixpkgs.config = {
           blender
           antimicrox
           spotify
-          affinity-nix.packages.x86_64-linux.photo
+          affinity-nix.packages.x86_64-linux.v3
           libreoffice-qt
           hunspell # Spell check for libreoffice
+          nexusmods-app
+          prismlauncher
     ];
 
     programs = {

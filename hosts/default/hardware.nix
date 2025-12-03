@@ -24,6 +24,7 @@
  "mem_sleep_default=deep"     # Explicitly use deep sleep
   "resume=UUID=a56d2645-af86-4b76-9a7e-1d6b45464c3e"  # The UUID of the filesystem containing the swapfile
   "resume_offset=81305600"  # The offset from filefrag (first physical_offset)
+  "usbcore.autosuspend=-1"
   ];
   boot.extraModulePackages = [];
 

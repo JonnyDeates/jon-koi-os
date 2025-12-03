@@ -10,7 +10,34 @@ let
   betterTransition = "all 0.3s cubic-bezier(.55,-0.68,.48,1.682)";
   koiColor = "#7bc9ff";
   textColor = "black";
+  gammaScript = pkgs.writeShellScriptBin "gamma-toggle" ''
+    LOCK_FILE="/tmp/waybar-gamma.lock"
+    START_CMD="systemctl --user start gammastep"
+    STOP_CMD="systemctl --user stop gammastep"
 
+    toggle() {
+      if [ -f "$LOCK_FILE" ]; then
+        # Run stop command, silence errors
+        $STOP_CMD >/dev/null 2>&1
+        rm -f "$LOCK_FILE"
+      else
+        # Run start command in background, silence errors
+        $START_CMD >/dev/null 2>&1 &
+        touch "$LOCK_FILE"
+      fi
+    }
+
+    if [ "$1" == "toggle" ]; then
+      toggle
+    fi
+
+    # --- STEP 2: GUARANTEED JSON OUTPUT ---
+    if [ -f "$LOCK_FILE" ]; then
+      echo '{"text": "⛅", "tooltip": "Gamma is ON"}'
+    else
+      echo '{"text": "🌞", "tooltip": "Gamma is OFF"}'
+    fi
+  '';
   inherit (import ../hosts/${host}/variables.nix) clock24h;
 in
 with lib;
@@ -30,6 +57,7 @@ with lib;
           "pulseaudio"
           "cpu"
           "memory"
+          "custom/gamma_toggle"
           "idle_inhibitor"
         ];
         modules-right = [
@@ -139,6 +167,14 @@ with lib;
           };
           tooltip = "true";
         };
+        "custom/gamma_toggle" = {
+        return-type = "json";
+        exec = "${gammaScript}/bin/gamma-toggle";
+        interval = 1;
+        on-click = "${gammaScript}/bin/gamma-toggle toggle";
+        format = "{}";
+        tooltip = true;
+        };
         "custom/notification" = {
           tooltip = false;
           format = "{icon} {}";
@@ -239,7 +275,7 @@ with lib;
         tooltip label {
           color: ${koiColor};
         }
-        #window, #pulseaudio, #cpu, #memory, #idle_inhibitor {
+        #window, #pulseaudio, #cpu, #memory, #idle_inhibitor, #custom-gamma_toggle {
           font-weight: bold;
           margin: 4px 0px;
           margin-left: 7px;

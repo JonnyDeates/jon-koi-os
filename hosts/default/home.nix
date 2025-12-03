@@ -17,7 +17,7 @@ in
   imports = [
     ../../config/hyprland/hyprland.nix
     ../../config/emoji.nix
-    ../../config/nvim/neovim.nix
+#    ../../config/nvim/neovim.nix
     ../../config/rofi/rofi.nix
     ../../config/rofi/config-emoji.nix
     ../../config/rofi/config-long.nix

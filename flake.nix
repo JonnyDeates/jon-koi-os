@@ -2,7 +2,7 @@
   description = "JonKoiOS";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable-small";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     affinity-nix.url = "github:mrshmllow/affinity-nix";
@@ -11,14 +11,10 @@
     #  url = "github:hyprwm/hyprland-plugins";
     #  inputs.hyprland.follows = "hyprland";
     #};
-    sddm-sugar-candy-nix = {
-        url = "gitlab:Zhaith-Izaliel/sddm-sugar-candy-nix";
-        inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
-   { nixpkgs, home-manager, affinity-nix, sddm-sugar-candy-nix, ... }@inputs:
+   { nixpkgs, home-manager, affinity-nix, ... }@inputs:
     let
       system = "x86_64-linux";
       host = "default";
@@ -29,9 +25,6 @@
         config = {
           allowUnfree = true;
         };
-          overlays = [
-            sddm-sugar-candy-nix.overlays.default
-          ];
       };
     in
     {
@@ -46,7 +39,6 @@
           };
           modules = [
             ./hosts/${host}/config.nix
-            sddm-sugar-candy-nix.nixosModules.default
             home-manager.nixosModules.home-manager
             {
               home-manager.extraSpecialArgs = {

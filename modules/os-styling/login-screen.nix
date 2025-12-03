@@ -4,32 +4,50 @@ lib,
 ...
 }: {
   environment.systemPackages = with pkgs; [
-     kdePackages.sddm
-     kdePackages.sddm-kcm
+    sddm-astronaut
+    kdePackages.qtmultimedia
+    kdePackages.qtsvg
+    kdePackages.qtvirtualkeyboard
+    kdePackages.qtbase
     ];
     services = {
-        xserver.displayManager.setupCommands =  ''
-                                                  xrandr --output DP-1 --primary \n
-                                                  xrandr --output DP-2 --noprimary \n
-                                                  xrandr --output DP-3 --noprimary
-                                                '';
+        xserver = {
+        enable = true;
+        displayManager.setupCommands = ''
+            ${pkgs.xorg.xrandr}/bin/xrandr --output DP-1 --primary --auto
+            ${pkgs.xorg.xrandr}/bin/xrandr --output DP-2 --off
+            ${pkgs.xorg.xrandr}/bin/xrandr --output DP-3 --off
+        '';
+          };
+
         displayManager = {
             sddm = {
                 enable = true; # Enable SDDM.
-                sugarCandyNix = {
-                    enable = true; # This set SDDM's theme to "sddm-sugar-candy-nix".
-                    settings = {
-                        # Set your configuration options here.
-                        # Here is a simple example:
-                        Background = lib.cleanSource ../../config/wallpapers/jonkoios.png;
-                        ScreenWidth = 2560;
-                        ScreenHeight = 1440;
-                        FormPosition = "center";
-                        HaveFormBackground = true;
-                        PartialBlur = true;
-                        RoundCorners = 16;
-                    };
-                  };
+                wayland.enable = true;
+                theme = "sddm-astronaut-theme";
+
+                extraPackages = with pkgs; [
+                    sddm-astronaut
+                    # The core Qt6 libraries needed for this theme
+                    kdePackages.qt6ct
+                    kdePackages.qtmultimedia
+                    kdePackages.qtsvg
+                      kdePackages.qtvirtualkeyboard
+
+                    # IMPORTANT: Many "Qt6" themes still use old QML effects
+                    # This package provides the "Qt5Compat" module often missing
+                    kdePackages.qt5compat
+                    kdePackages.qtdeclarative
+                    # --- NEW ADDITIONS BASED ON THE SCRIPT ---
+                                  # Video backends are required for the video background to play!
+                                  kdePackages.qtmultimedia.out # Sometimes the lib is split
+                                  ffmpeg
+                                  gst_all_1.gstreamer
+                                  gst_all_1.gst-plugins-base
+                                  gst_all_1.gst-plugins-good
+                                  gst_all_1.gst-plugins-bad
+                                  gst_all_1.gst-libav
+                ];
                 };
             };
         };

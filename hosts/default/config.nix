@@ -138,6 +138,7 @@ hardware.enableAllFirmware = true;
   environment.variables = {
        HSA_OVERRIDE_GFX_VERSION = "11.0.0";
        AMD_VULKAN_ICD = "RADV";
+       VK_ICD_FILENAMES="/run/host/usr/share/vulkan/icd.d/radeon_icd.x86_64.json";
   };
 
   environment.systemPackages =
@@ -160,6 +161,7 @@ hardware.enableAllFirmware = true;
       # ydotool # A tool to simulate keyboard and mouse input on Wayland systems
       wl-clipboard # A command‑line utility for accessing the Wayland clipboard (copying and pasting) in scripts or terminal sessions.
       pciutils # A set of utilities (like lspci) that provide information about PCI buses and devices on your system.
+      espeak-ng
       # ripgrep
       # lsd another ls replacement
       lshw # A tool that displays detailed information about your hardware configuration.
@@ -201,8 +203,6 @@ hardware.enableAllFirmware = true;
 
       nodejs_22
       nodePackages.pnpm
-      libsForQt5.qt5.qtgraphicaleffects # A Qt5 module that provides additional graphical effects (like animations and transitions) for Qt‑based applications.
-
 
       remmina # A remote desktop client that supports multiple protocols (such as RDP, VNC, and SSH) to access other computers.
       # bat basically cat
@@ -213,6 +213,7 @@ hardware.enableAllFirmware = true;
 
   # Services to start
   services = {
+    speechd.enable = true;
     xserver = {
       enable = true;
       xkb = {

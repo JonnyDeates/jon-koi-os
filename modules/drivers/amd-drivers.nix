@@ -25,12 +25,7 @@ in
         enable32Bit = true;
       ## amdvlk: an open-source Vulkan driver from AMD
       extraPackages = with pkgs; [
-           mesa
-           libva
-           libvdpau-va-gl
-           vulkan-loader
-           vulkan-validation-layers
-           mesa.opencl
+        rocmPackages.clr.icd
        ];
     };
   };
