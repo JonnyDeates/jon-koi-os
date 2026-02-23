@@ -7,7 +7,7 @@
       shellAliases = {
        build-os = "sudo nixos-rebuild switch --flake /home/jonkoi/jon-koi-os#default";
        upgrade-os = "nix flake update --flake ~/jon-koi-os/flake.nix";
-
+       zed="VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json zeditor";
        gammastop = "systemctl --user stop gammastep";
        gammastart = "systemctl --user start gammastep";
        restartDeskThing = "systemctl --user restart deskThingService";

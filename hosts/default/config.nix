@@ -199,8 +199,6 @@ hardware.enableAllFirmware = true;
       swww # A wallpaper setter for Wayland compositors (often used with Sway or Hyprland) that makes changing backgrounds easier.
       ffmpeg # A comprehensive multimedia framework for recording, converting, and streaming audio and video.
 
-      gammastep
-
       nodejs_22
       nodePackages.pnpm
 

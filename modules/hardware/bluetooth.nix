@@ -7,7 +7,7 @@ environment.systemPackages = with pkgs; [
 blueman
 linuxKernel.packages.linux_zen.xpadneo
 ];
-boot.extraModprobConfig = ''
+boot.extraModprobeConfig = ''
     options bluetooth disable_ertm=1
 '';
 

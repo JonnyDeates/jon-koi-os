@@ -18,6 +18,7 @@ let
 in
 with lib;
 {
+
   wayland.windowManager.hyprland = {
     enable = true;
     xwayland.enable = true;
@@ -28,6 +29,7 @@ with lib;
     #plugins = [
       # hyprplugins.hyprtrails
     #];
+
     extraConfig =
       let
         modifier = "SUPER";
@@ -69,7 +71,7 @@ with lib;
                 exec-once = sleep 6 && adb kill-server
                 monitor=,preferred,auto,1
                 ${extraMonitorSettings}
-                
+
                 general {
                            gaps_in = 3
                            gaps_out = 6
@@ -229,4 +231,3 @@ with lib;
                      ];
                  };
                }
-

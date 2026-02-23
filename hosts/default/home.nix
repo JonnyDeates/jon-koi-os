@@ -12,6 +12,7 @@ in
   home.username = "${username}";
   home.homeDirectory = "/home/${username}";
   home.stateVersion = "23.11";
+    # This is likely what is triggering the error:
 
   # Import Program Configurations
   imports = [
@@ -72,6 +73,9 @@ in
             name = "${gitUsername}";
             email = "${gitEmail}";
         };
+        core = {
+            editor = "vim";
+        };
     };
  };
 
@@ -123,14 +127,10 @@ in
     pkgs.papirus-icon-theme
   ];
 
-  xresources.properties = {
-    "Xcursor.size" = 64;
-  };
-
  # Configure Cursor Theme
   home.pointerCursor = {
     gtk.enable = false;
-    x11.enable = true;
+    x11.enable = false;
     package = pkgs.bibata-cursors;
     name = "Bibata-Modern-Ice";
     size = 64;

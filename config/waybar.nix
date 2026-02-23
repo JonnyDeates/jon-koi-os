@@ -10,34 +10,17 @@ let
   betterTransition = "all 0.3s cubic-bezier(.55,-0.68,.48,1.682)";
   koiColor = "#7bc9ff";
   textColor = "black";
-  gammaScript = pkgs.writeShellScriptBin "gamma-toggle" ''
-    LOCK_FILE="/tmp/waybar-gamma.lock"
-    START_CMD="systemctl --user start gammastep"
-    STOP_CMD="systemctl --user stop gammastep"
 
-    toggle() {
-      if [ -f "$LOCK_FILE" ]; then
-        # Run stop command, silence errors
-        $STOP_CMD >/dev/null 2>&1
-        rm -f "$LOCK_FILE"
-      else
-        # Run start command in background, silence errors
-        $START_CMD >/dev/null 2>&1 &
-        touch "$LOCK_FILE"
-      fi
-    }
-
-    if [ "$1" == "toggle" ]; then
-      toggle
-    fi
-
-    # --- STEP 2: GUARANTEED JSON OUTPUT ---
-    if [ -f "$LOCK_FILE" ]; then
-      echo '{"text": "⛅", "tooltip": "Gamma is ON"}'
+  # A lightweight script just for the icon/tooltip in Waybar
+  # logic is now handled by the main gamma-gui script
+  gammaWaybarModule = pkgs.writeShellScriptBin "gamma-waybar" ''
+    if systemctl --user is-active gammastep >/dev/null; then
+        echo '{"text": "⛅", "tooltip": "Gamma is ON", "class": "active"}'
     else
-      echo '{"text": "🌞", "tooltip": "Gamma is OFF"}'
+        echo '{"text": "🌞", "tooltip": "Gamma is OFF", "class": "inactive"}'
     fi
   '';
+
   inherit (import ../hosts/${host}/variables.nix) clock24h;
 in
 with lib;
@@ -48,6 +31,7 @@ with lib;
     package = pkgs.waybar;
     settings = [
       {
+        # ... (Your existing config kept same until modules-left) ...
         layer = "top";
         position = "top";
         modules-center = [ "hyprland/workspaces" ];
@@ -168,12 +152,16 @@ with lib;
           tooltip = "true";
         };
         "custom/gamma_toggle" = {
-        return-type = "json";
-        exec = "${gammaScript}/bin/gamma-toggle";
-        interval = 1;
-        on-click = "${gammaScript}/bin/gamma-toggle toggle";
-        format = "{}";
-        tooltip = true;
+            return-type = "json";
+            exec = "${gammaWaybarModule}/bin/gamma-waybar";
+            # Check status every 2 seconds
+            interval = 2;
+            # Left click opens the GUI we created in gammastep.nix
+            on-click = "gamma-gui";
+            # Right click can be a quick toggle if you want (optional)
+            on-click-right = "gamma-gui";
+            format = "{}";
+            tooltip = true;
         };
         "custom/notification" = {
           tooltip = false;
@@ -267,6 +255,16 @@ with lib;
           opacity: 0.8;
           transition: ${betterTransition};
         }
+                        #custom-gamma_toggle.active {
+                            color: ${textColor};
+                        }
+                        #custom-gamma_toggle.inactive {
+                            color: #555555;
+                        }
+
+                #custom-gamma_toggle.inactive {
+                    color: #555555;
+                }
         tooltip {
           background: black;
           border: 1px solid ${koiColor};
