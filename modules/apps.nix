@@ -18,7 +18,7 @@ nixpkgs.config = {
           keymapp
           trilium-next-server
           ledger-live-desktop
-          jetbrains.idea-ultimate
+          jetbrains.idea
           prusa-slicer
           blender
           antimicrox

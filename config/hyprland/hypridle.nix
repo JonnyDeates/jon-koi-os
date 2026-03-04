@@ -19,5 +19,10 @@
              on-timeout = "hyprctl dispatch dpms off"
              on-resume = "hyprctl dispatch dpms on && systemctl --user restart waybar"
          }
+
+         listener {
+             timeout = 2700
+             on-timeout = "systemctl suspend"
+         }
        '';
 }

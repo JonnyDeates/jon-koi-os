@@ -55,7 +55,7 @@
 hardware.enableAllFirmware = true;
  boot = {
     # Kernel
-    kernelPackages = pkgs.linuxPackages_latest;
+    kernelPackages = pkgs.linuxPackages_6_12; # LTS - more stable for RDNA3
     # This is for OBS Virtual Cam Support
     kernelModules = [ "v4l2loopback" ];
     extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];

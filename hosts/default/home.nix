@@ -12,6 +12,7 @@ in
   home.username = "${username}";
   home.homeDirectory = "/home/${username}";
   home.stateVersion = "23.11";
+  home.sessionPath = [ "$HOME/.local/bin" ];
     # This is likely what is triggering the error:
 
   # Import Program Configurations
@@ -85,6 +86,28 @@ in
       enable = true;
       createDirectories = true;
     };
+    mimeApps = {
+      enable = true;
+      defaultApplications = {
+        "x-scheme-handler/terminal" = "kitty.desktop";
+        "inode/directory" = "thunar.desktop";
+        "x-scheme-handler/file" = "thunar.desktop";
+      };
+    };
+  };
+
+  # Thunar terminal helper (XFCE uses its own helper system)
+  home.file.".config/xfce4/helpers.rc".text = ''
+    TerminalEmulator=kitty
+  '';
+
+  # Steam wrapper for Flatpak (game shortcuts call "steam steam://...")
+  home.file.".local/bin/steam" = {
+    executable = true;
+    text = ''
+      #!/bin/sh
+      exec flatpak run com.valvesoftware.Steam "$@"
+    '';
   };
 
   dconf.settings = {
@@ -168,6 +191,7 @@ in
       enable = true;
       enableCompletion = true;
       profileExtra = ''
+        export PATH="$HOME/.local/bin:$PATH"
         #if [ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ]; then
         #  exec Hyprlandx
         #fi
