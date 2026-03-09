@@ -207,6 +207,8 @@ hardware.enableAllFirmware = true;
       inxi # A command‑line tool that displays detailed system information about your hardware and software configuration.
       starship # A minimal, customizable, and fast shell prompt that works with many different shells.
       usbutils # A set of utilities (like lsusb) for listing and interacting with USB devices connected to your computer.
+      bitwarden-cli # CLI for Bitwarden/Vaultwarden password manager
+      jq # Command-line JSON processor
     ];
 
   # Services to start
@@ -232,17 +234,21 @@ hardware.enableAllFirmware = true;
   };
 
   xdg.portal = {
-   enable = true;
-    wlr.enable = true;
+    enable = true;
+    xdgOpenUsePortal = true;
     extraPortals = [
       pkgs.xdg-desktop-portal-gtk
-      pkgs.xdg-desktop-portal
-    ];
-   configPackages = [
-      pkgs.xdg-desktop-portal-gtk
       pkgs.xdg-desktop-portal-hyprland
-      pkgs.xdg-desktop-portal
     ];
+    config = {
+      common = {
+        default = [ "gtk" ];
+      };
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+      };
+    };
   };
 
   

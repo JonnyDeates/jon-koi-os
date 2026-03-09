@@ -165,6 +165,7 @@ with lib;
                           bind = ${modifier},C,exec,hyprpicker -a
                           bind = ${modifier},G,exec,gimp
                           bind = ${modifier}SHIFT,G,exec,godot4
+                          bind = ${modifier}SHIFT,V,exec,vaultwarden-backup
                           bind = ${modifier},T,exec,thunar
                           bind = ${modifier},M,exec,spotify
                           bind = ${modifier},Q,killactive,

@@ -147,7 +147,12 @@ in
       inherit host;
     })
     (import ../../scripts/ai-renamer.nix {inherit pkgs; })
+    (import ../../scripts/vaultwarden-backup.nix {
+      inherit pkgs;
+      inherit username;
+    })
     pkgs.papirus-icon-theme
+    pkgs.xdg-desktop-portal-gtk
   ];
 
  # Configure Cursor Theme
