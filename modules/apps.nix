@@ -30,6 +30,7 @@ nixpkgs.config = {
           prismlauncher
           claude-code
           zed-editor-fhs
+          mission-center
     ];
 
     programs = {

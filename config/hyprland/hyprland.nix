@@ -154,6 +154,7 @@ with lib;
                          }
                           bind = ${modifier},Return,exec,${terminal}
                           bind = ${modifier}SHIFT,Return,exec,rofi-launcher
+                          bind = ${modifier},TAB,exec,rofi -show window
                           bind = ${modifier}SHIFT,W,exec,web-search
                           bind = ${modifier}ALT,W,exec,wallsetter
                           bind = ${modifier}SHIFT,N,exec,swaync-client -rs

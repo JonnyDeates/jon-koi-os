@@ -188,8 +188,10 @@ hardware.enableAllFirmware = true;
       transmission_4-gtk # The GTK‑based graphical interface for Transmission, a BitTorrent client.
 
       mpv # A versatile media player capable of playing video and audio with high‑quality output and extensive format support.
-      # rustup # The official installer and version manager for the Rust programming language toolchain.
-
+      rustup # The official installer and version manager for the Rust programming language toolchain.
+      cargo
+      rustc
+      gcc
      # tree # A command‑line program that displays directory structures in a tree‑like format.
 
       neovide # A graphical (GUI) client for Neovim that offers additional interface enhancements compared to the terminal version.
