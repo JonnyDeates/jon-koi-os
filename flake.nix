@@ -6,12 +6,16 @@
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     affinity-nix.url = "github:mrshmllow/affinity-nix";
+    openclaude-flake.url = "github:JonnyDeates/openclaude-flake";
     #hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
     #hyprland-plugins = {
     #  url = "github:hyprwm/hyprland-plugins";
     #  inputs.hyprland.follows = "hyprland";
     #};
   };
+  
+
+  
 
   outputs =
    { nixpkgs, home-manager, affinity-nix, ... }@inputs:

@@ -211,6 +211,7 @@ hardware.enableAllFirmware = true;
       usbutils # A set of utilities (like lsusb) for listing and interacting with USB devices connected to your computer.
       bitwarden-cli # CLI for Bitwarden/Vaultwarden password manager
       jq # Command-line JSON processor
+      inputs.openclaude-flake.packages.${pkgs.system}.default
     ];
 
   # Services to start
@@ -253,7 +254,7 @@ hardware.enableAllFirmware = true;
     };
   };
 
-  
+
 
   hardware.sane = {
     enable = true;
