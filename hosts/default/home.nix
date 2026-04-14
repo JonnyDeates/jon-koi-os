@@ -13,6 +13,14 @@ in
   home.homeDirectory = "/home/${username}";
   home.stateVersion = "23.11";
   home.sessionPath = [ "$HOME/.local/bin" ];
+
+  # Prisma engines — NixOS can't use Prisma's downloaded binaries
+  home.sessionVariables = {
+    PRISMA_QUERY_ENGINE_LIBRARY = "${pkgs.prisma-engines}/lib/libquery_engine.node";
+    PRISMA_QUERY_ENGINE_BINARY = "${pkgs.prisma-engines}/bin/query-engine";
+    PRISMA_SCHEMA_ENGINE_BINARY = "${pkgs.prisma-engines}/bin/schema-engine";
+    PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING = "1";
+  };
     # This is likely what is triggering the error:
 
   # Import Program Configurations
@@ -147,6 +155,7 @@ in
       inherit host;
     })
     (import ../../scripts/ai-renamer.nix {inherit pkgs; })
+    (import ../../scripts/ai-usage.nix { inherit pkgs; })
     (import ../../scripts/vaultwarden-backup.nix {
       inherit pkgs;
       inherit username;

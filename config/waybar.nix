@@ -45,6 +45,7 @@ with lib;
           "idle_inhibitor"
         ];
         modules-right = [
+          "custom/ai_usage"
           "custom/hyprbindings"
           "custom/notification"
           "custom/exit"
@@ -137,6 +138,11 @@ with lib;
           format = "🍀";
           # exec = "rofi -show drun";
           on-click = "sleep 0.1 && rofi-launcher";
+        };
+        "custom/ai_usage" = {
+          tooltip = false;
+          format = "🤖";
+          on-click = "sleep 0.1 && ai-usage";
         };
         "custom/hyprbindings" = {
           tooltip = false;
@@ -291,7 +297,7 @@ with lib;
           padding: 0px 12px;
           border-radius: 0px 0px 16px 0px;
         }
-        #custom-hyprbindings, #network, #battery,
+        #custom-ai_usage, #custom-hyprbindings, #network, #battery,
         #custom-notification, #tray, #custom-exit {
           font-weight: bold;
           color: ${textColor};

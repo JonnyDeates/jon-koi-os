@@ -50,6 +50,9 @@
     ../../aliases/quit-aliases.nix
     ../../aliases/gaming-aliases.nix
     ../../aliases/virtualization.nix
+
+    # Shutdown Timer
+    ../../modules/shutdown-timer.nix
 ];
 
 hardware.enableAllFirmware = true;
@@ -139,6 +142,11 @@ hardware.enableAllFirmware = true;
        HSA_OVERRIDE_GFX_VERSION = "11.0.0";
        AMD_VULKAN_ICD = "RADV";
        VK_ICD_FILENAMES="/run/host/usr/share/vulkan/icd.d/radeon_icd.x86_64.json";
+       # Prisma engine paths for NixOS (avoids libssl detection failure)
+       PRISMA_QUERY_ENGINE_LIBRARY = "${pkgs.prisma-engines}/lib/libquery_engine.node";
+       PRISMA_QUERY_ENGINE_BINARY = "${pkgs.prisma-engines}/bin/query-engine";
+       PRISMA_SCHEMA_ENGINE_BINARY = "${pkgs.prisma-engines}/bin/schema-engine";
+       PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING = "1";
   };
 
   environment.systemPackages =
@@ -203,6 +211,8 @@ hardware.enableAllFirmware = true;
 
       nodejs_22
       nodePackages.pnpm
+      prisma-engines
+      openssl
 
       remmina # A remote desktop client that supports multiple protocols (such as RDP, VNC, and SSH) to access other computers.
       # bat basically cat
@@ -211,7 +221,7 @@ hardware.enableAllFirmware = true;
       usbutils # A set of utilities (like lsusb) for listing and interacting with USB devices connected to your computer.
       bitwarden-cli # CLI for Bitwarden/Vaultwarden password manager
       jq # Command-line JSON processor
-      inputs.openclaude-flake.packages.${pkgs.system}.default
+      inputs.openclaude-flake.packages.${pkgs.stdenv.hostPlatform.system}.default
     ];
 
   # Services to start

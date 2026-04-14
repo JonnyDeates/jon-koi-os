@@ -9,7 +9,7 @@
 }:
 
 let
-  hyprplugins = inputs.hyprland-plugins.packages.${pkgs.system};
+  hyprplugins = inputs.hyprland-plugins.packages.${pkgs.stdenv.hostPlatform.system};
   inherit (import ../../hosts/${host}/variables.nix)
     browser
     terminal
