@@ -13,6 +13,12 @@ pkgs,
     pipewire
     # A session and policy manager for PipeWire that handles the configuration and routing of multimedia streams.
     wireplumber
+    # Text‑to‑speech synthesizer with multi‑language support.
+    espeak-ng
+    # A voice synthesis system that provides higher‑quality voices.
+    mbrola
+    # Multi‑language voice files for mbrola.
+    mbrola-voices
   ];
     services = {
       pulseaudio.enable = false;
