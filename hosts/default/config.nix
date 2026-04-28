@@ -53,6 +53,9 @@
 
     # Shutdown Timer
     ../../modules/shutdown-timer.nix
+
+    # Steam Blocker (weekday work hours)
+    ../../modules/steam-blocker.nix
 ];
 
 hardware.enableAllFirmware = true;

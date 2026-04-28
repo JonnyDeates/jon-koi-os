@@ -110,13 +110,40 @@ in
   '';
 
   # Steam wrapper for Flatpak (game shortcuts call "steam steam://...")
+  # Blocked on weekdays 6 AM - 6 PM CT
   home.file.".local/bin/steam" = {
     executable = true;
     text = ''
       #!/bin/sh
+      DAY=$(date +%u)   # 1=Mon..5=Fri, 6=Sat, 7=Sun
+      HOUR=$(date +%-H)
+
+      if [ "$DAY" -le 5 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 18 ]; then
+        notify-send -u normal -a "Steam Block" \
+          "Steam is blocked on weekdays from 6 AM to 6 PM."
+        exit 1
+      fi
+
+      flatpak override --user \
+        --filesystem='/mnt/game_disc' \
+        --filesystem='/home/jonkoi/Documents/r2modman' \
+        com.valvesoftware.Steam
       exec flatpak run com.valvesoftware.Steam "$@"
     '';
   };
+
+  # Override Zed desktop entry to use zed-open (bypasses bwrap sandbox GPU issues)
+  home.file.".local/share/applications/dev.zed.Zed.desktop".text = ''
+    [Desktop Entry]
+    Name=Zed
+    Comment=High-performance, GPU-accelerated code editor
+    Exec=zed-open %U
+    Icon=dev.zed.Zed
+    Terminal=false
+    Type=Application
+    Categories=Development;Editor;TextEditor;
+    MimeType=text/plain;text/x-chdr;text/x-csrc;text/x-c++src;text/x-java;text/x-js;text/x-objcsrc;text/x-php;text/x-python;text/x-ruby;text/x-sh;application/x-php;application/xhtml+xml;application/xml;
+  '';
 
   dconf.settings = {
     "org/virt-manager/virt-manager/connections" = {
@@ -160,6 +187,7 @@ in
       inherit pkgs;
       inherit username;
     })
+    (import ../../scripts/zed-open.nix { inherit pkgs; })
     pkgs.papirus-icon-theme
     pkgs.xdg-desktop-portal-gtk
   ];
