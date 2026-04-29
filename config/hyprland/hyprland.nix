@@ -68,7 +68,6 @@ with lib;
                 exec-once = sleep 2 && hypridle
                 exec-once = sleep 1.5 && swww img /home/${username}/Pictures/Wallpapers/jonkoios.png
                 exec-once = sleep 2 && wallsetter
-                exec-once = sleep 6 && adb kill-server
                 monitor=,preferred,auto,1
                 ${extraMonitorSettings}
 

@@ -56,6 +56,9 @@
 
     # Steam Blocker (weekday work hours)
     ../../modules/steam-blocker.nix
+
+    # DeskThing USB auto-detection
+    ../../modules/deskthing-udev.nix
 ];
 
 hardware.enableAllFirmware = true;
