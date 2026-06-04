@@ -208,7 +208,6 @@ hardware.enableAllFirmware = true;
       gcc
      # tree # A command‑line program that displays directory structures in a tree‑like format.
 
-      neovide # A graphical (GUI) client for Neovim that offers additional interface enhancements compared to the terminal version.
       hyprpicker
       hyprpaper
       hypridle

@@ -14,7 +14,12 @@ let
     ${pkgs.android-tools}/bin/adb kill-server 2>/dev/null || true
     sleep 2
     ${pkgs.android-tools}/bin/adb start-server
-    sleep 3
+
+    # Wait for the Car Thing to actually be detected (up to 30s)
+    echo "deskthing: waiting for device..."
+    ${pkgs.android-tools}/bin/adb wait-for-device
+    sleep 2
+    echo "deskthing: device found"
   '';
 in
 {

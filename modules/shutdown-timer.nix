@@ -31,11 +31,11 @@ in
     };
 
     systemd.timers.shutdown-timer = {
-      description = "Daily shutdown at 10:30 PM CT";
+      description = "Daily shutdown warning sequence (shutdown at 10:30 PM CT)";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = "22:30:00";
-        Persistent = true;
+        OnCalendar = "21:30:00";
+        Persistent = false;
         Unit = "shutdown-warning.service";
       };
     };

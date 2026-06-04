@@ -38,10 +38,10 @@
             inherit system;
             inherit inputs;
             inherit username;
-            inherit affinity-nix;
             inherit host;
           };
           modules = [
+            { nixpkgs.overlays = [ affinity-nix.overlays.default ]; }
             ./hosts/${host}/config.nix
             home-manager.nixosModules.home-manager
             {

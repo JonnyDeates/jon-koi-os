@@ -61,13 +61,14 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
+  networking.firewall.allowedUDPPorts = [ 10578 ];
   # networking.interfaces.eno1.useDHCP = lib.mkDefault true;
   # networking.interfaces.wlp13s0.useDHCP = lib.mkDefault true;
   powerManagement = {
     enable = true;
     cpuFreqGovernor = "performance";
     # Added: Power saving tweaks
-    powertop.enable = true;
+    powertop.enable = false;
   };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";

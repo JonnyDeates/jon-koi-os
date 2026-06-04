@@ -1,6 +1,5 @@
 {
 pkgs,
-affinity-nix,
 ...
 }: {
 
@@ -23,16 +22,22 @@ nixpkgs.config = {
           blender
           antimicrox
           spotify
-          affinity-nix.packages.x86_64-linux.v3
+          (pkgs.symlinkJoin {
+            name = "affinity-v3-wrapped";
+            paths = [ affinity-v3 ];
+            buildInputs = [ pkgs.makeWrapper ];
+            postBuild = ''
+              wrapProgram $out/bin/affinity-v3 \
+                --set WINEDLLOVERRIDES "opencl=d"
+            '';
+          })
           libreoffice-qt
           hunspell # Spell check for libreoffice
-         # nexusmods-app
           prismlauncher
           claude-code
           zed-editor-fhs
           mission-center
     ];
-
     programs = {
         firefox.enable = false;
         java.enable = true;

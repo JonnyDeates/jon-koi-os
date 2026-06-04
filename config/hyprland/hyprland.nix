@@ -106,9 +106,17 @@ with lib;
                          windowrule = float, title:qt5ct
                          windowrule = float, title:mpv
                          windowrule = float, title:zoom
-                         windowrule = stayfocused, title:^()$,class:^(steam)$
                          windowrule = minsize 1 1, title:^()$,class:^(steam)$
-                         windowrule = opacity 0.9 0.7, class:^(thunar)$
+                         windowrule = float, class:^(thunar)$
+                        windowrule = size 50% 40%, class:^(thunar)$
+                        windowrule = center, class:^(thunar)$
+
+                        # Affinity (Wine) window rules
+                        windowrule = noborder, class:^(affinity.*|wine.*)$
+                        windowrule = noanim, class:^(affinity.*|wine.*)$
+                        windowrule = forcergbx, class:^(affinity.*|wine.*)$
+                        windowrule = float, class:^(affinity.*|wine.*)$,title:^(?!.*Photo.*)
+                        windowrule = minsize 1 1, class:^(affinity.*|wine.*)$
 
                          gestures {
                            workspace = 3, horizontal, workspace

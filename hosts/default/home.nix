@@ -127,6 +127,7 @@ in
       flatpak override --user \
         --filesystem='/mnt/game_disc' \
         --filesystem='/home/jonkoi/Documents/r2modman' \
+        --share=network \
         com.valvesoftware.Steam
       exec flatpak run com.valvesoftware.Steam "$@"
     '';
