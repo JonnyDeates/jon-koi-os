@@ -57,6 +57,9 @@
     # Steam Blocker (weekday work hours)
     ../../modules/steam-blocker.nix
 
+    # Stand Enforcer (random standing breaks)
+    ../../modules/stand-enforcer.nix
+
     # DeskThing USB auto-detection
     ../../modules/deskthing-udev.nix
 ];

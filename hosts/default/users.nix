@@ -27,6 +27,7 @@ users.groups.adbusers = {};
         "adbusers"
         "video"
         "plugdev"
+        "dialout"
       ];
       shell = pkgs.bash;
       ignoreShellProgramCheck = true;
