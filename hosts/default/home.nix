@@ -110,20 +110,11 @@ in
   '';
 
   # Steam wrapper for Flatpak (game shortcuts call "steam steam://...")
-  # Blocked on weekdays 6 AM - 6 PM CT
+  # Time block DISABLED — kept for easy re-enable
   home.file.".local/bin/steam" = {
     executable = true;
     text = ''
       #!/bin/sh
-      DAY=$(date +%u)   # 1=Mon..5=Fri, 6=Sat, 7=Sun
-      HOUR=$(date +%-H)
-
-      if [ "$DAY" -le 5 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 18 ]; then
-        notify-send -u normal -a "Steam Block" \
-          "Steam is blocked on weekdays from 6 AM to 6 PM."
-        exit 1
-      fi
-
       flatpak override --user \
         --filesystem='/mnt/game_disc' \
         --filesystem='/home/jonkoi/Documents/r2modman' \
@@ -189,6 +180,7 @@ in
       inherit username;
     })
     (import ../../scripts/zed-open.nix { inherit pkgs; })
+    (import ../../scripts/shutdown-snooze.nix { inherit pkgs; })
     pkgs.papirus-icon-theme
     pkgs.xdg-desktop-portal-gtk
   ];

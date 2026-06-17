@@ -54,14 +54,17 @@
     # Shutdown Timer
     ../../modules/shutdown-timer.nix
 
-    # Steam Blocker (weekday work hours)
-    ../../modules/steam-blocker.nix
+    # Steam Blocker (weekday work hours) - DISABLED
+    # ../../modules/steam-blocker.nix
 
     # Stand Enforcer (random standing breaks)
     ../../modules/stand-enforcer.nix
 
     # DeskThing USB auto-detection
     ../../modules/deskthing-udev.nix
+
+    # Bi-weekly printer test (prevent Epson head clogs)
+    ../../modules/printer-test.nix
 ];
 
 hardware.enableAllFirmware = true;

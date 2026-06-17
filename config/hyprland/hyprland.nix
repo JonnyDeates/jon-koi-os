@@ -68,6 +68,7 @@ with lib;
                 exec-once = sleep 2 && hypridle
                 exec-once = sleep 1.5 && swww img /home/${username}/Pictures/Wallpapers/jonkoios.png
                 exec-once = sleep 2 && wallsetter
+                exec-once = sleep 3 && wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0
                 monitor=,preferred,auto,1
                 ${extraMonitorSettings}
 

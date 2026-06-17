@@ -61,6 +61,16 @@ let
       log "Roll was $ROLL (not 0). Skipping stand enforcement."
       exit 0
     fi
+
+    # Once-per-hour guard: skip if already ran this hour
+    HOUR_STAMP=$(date +%Y-%m-%d-%H)
+    STATE_FILE="/tmp/stand-enforcer-''${HOUR_STAMP}"
+    if [ -f "$STATE_FILE" ]; then
+      log "Already ran this hour ($HOUR_STAMP). Skipping."
+      exit 0
+    fi
+    touch "$STATE_FILE"
+
     log "Roll was 0. STAND TIME!"
 
     # Notification
@@ -87,7 +97,7 @@ in
 {
   config = {
     systemd.services.stand-enforcer = {
-      description = "Random standing desk enforcement (50% chance per hour)";
+      description = "Random standing desk enforcement (50% chance, max once per hour, 9AM-5PM)";
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = false;
@@ -103,10 +113,10 @@ in
     };
 
     systemd.timers.stand-enforcer = {
-      description = "Hourly trigger for standing desk enforcement";
+      description = "Quarter-hourly trigger for standing desk enforcement (9AM-5PM)";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = "*-*-* *:00:00";
+        OnCalendar = "*-*-* 09..17:00,15,30,45:00";
         RandomizedDelaySec = "300";
         Persistent = false;
         Unit = "stand-enforcer.service";
