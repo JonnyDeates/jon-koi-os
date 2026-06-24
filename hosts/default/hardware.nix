@@ -25,6 +25,9 @@
   "resume=UUID=a56d2645-af86-4b76-9a7e-1d6b45464c3e"  # The UUID of the filesystem containing the swapfile
   "resume_offset=81305600"  # The offset from filefrag (first physical_offset)
   "usbcore.autosuspend=-1"
+  "amdgpu.gpu_recovery=1"       # Enable GPU recovery on reset instead of full crash
+  "amdgpu.reset_method=4"       # Force mode1 reset - more reliable for RDNA3, better chance of preserving compositor
+  "amdgpu.runpm=0"              # Disable GPU runtime power management (prevents RDNA3 power state reset crashes)
   ];
   boot.extraModulePackages = [];
 
