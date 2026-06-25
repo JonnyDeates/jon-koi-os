@@ -21,6 +21,7 @@ programs={
 
       # Virtualization / Containers
       virtualisation.docker.enable = true;
+      virtualisation.docker.package = pkgs.docker_29;
       virtualisation.libvirtd.enable = true;
       virtualisation.podman = {
         enable = true;
