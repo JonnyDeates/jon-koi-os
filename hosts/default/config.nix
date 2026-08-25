@@ -65,6 +65,12 @@
 
     # Bi-weekly printer test (prevent Epson head clogs)
     ../../modules/printer-test.nix
+
+    # nix-ld: run unpatched dynamically-linked Linux binaries
+    ../../modules/nix-ld.nix
+
+    # Vaultwarden (self-hosted Bitwarden-compatible server)
+    ../../modules/vaultwarden.nix
 ];
 
 hardware.enableAllFirmware = true;

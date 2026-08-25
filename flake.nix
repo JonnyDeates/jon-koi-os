@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     affinity-nix.url = "github:mrshmllow/affinity-nix";
@@ -18,7 +19,7 @@
   
 
   outputs =
-   { nixpkgs, home-manager, affinity-nix, ... }@inputs:
+   { nixpkgs, nixpkgs-unstable, home-manager, affinity-nix, ... }@inputs:
     let
       system = "x86_64-linux";
       host = "default";
@@ -29,6 +30,13 @@
         config = {
           allowUnfree = true;
         };
+      };
+
+      unstable-overlay = final: prev: {
+        bambu-studio = (import nixpkgs-unstable {
+          inherit system;
+          config.allowUnfree = true;
+        }).bambu-studio;
       };
     in
     {
@@ -41,7 +49,12 @@
             inherit host;
           };
           modules = [
-            { nixpkgs.overlays = [ affinity-nix.overlays.default ]; }
+            { nixpkgs.overlays = [
+                affinity-nix.overlays.default
+                (import ./modules/overlays/r2modman.nix)
+                (import ./modules/overlays/bettercrewlink.nix)
+                unstable-overlay
+              ]; }
             ./hosts/${host}/config.nix
             home-manager.nixosModules.home-manager
             {
