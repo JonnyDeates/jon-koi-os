@@ -177,6 +177,7 @@ with lib;
                           bind = ${modifier}SHIFT,V,exec,vaultwarden-backup
                           bind = ${modifier},T,exec,thunar
                           bind = ${modifier},M,exec,spotify
+                          bind = CTRLALT,Delete,exec,missioncenter
                           bind = ${modifier},Q,killactive,
                           bind = ${modifier},P,pseudo,
                           bind = ${modifier}SHIFT,I,togglesplit,

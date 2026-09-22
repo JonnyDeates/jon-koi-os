@@ -15,10 +15,10 @@ pkgs.writeShellScriptBin "list-hypr-bindings" ''
   --column=Command: \
   --timeout=90 \
   --timeout-indicator=right \
-  " = Windows/Super/CAPS LOCK" "Modifier Key, used for keybindings" "Doesn't really execute anything by itself." \
+  " = Windows/Super/CAPS LOCK" "Modifier Key, used for keybindings" "Doesn't really execute anything by itself." \
   " + ENTER" "Terminal" "${terminal}" \
   " + SHIFT + ENTER" "App Launcher" "rofi" \
-  " + TAB" "Window Switcher" "rofi -show window" \
+  " + TAB" "Window Switcher" "rofi -show window" \
   " + ALT + W" "Change Wallpaper" "wallsetter" \
   " + Q" "Kill Focused Window" "killactive" \
   " + SHIFT + W" "Search Websites Like Nix Packages" "web-search" \
@@ -28,14 +28,17 @@ pkgs.writeShellScriptBin "list-hypr-bindings" ''
   " + S" "Take Screenshot" "screenshootin" \
   " + D" "Launch Discord" "discord" \
   " + O" "Launch OBS" "obs" \
+  " + C" "Color Picker" "hyprpicker -a" \
   " + G" "Launch GIMP" "gimp" \
-  " + N" "Launch New File Browser Window" "thunar" \
+  " + SHIFT + G" "Launch Godot" "godot4" \
+  " + SHIFT + V" "Vaultwarden Backup" "vaultwarden-backup" \
+  " + T" "Launch New File Browser Window" "thunar" \
   " + M" "Launch Spotify" "spotify" \
+  "CTRL + ALT + DELETE" "Launch Mission Center" "missioncenter" \
   " + P" "Pseudo Tiling" "pseudo" \
   " + SHIFT + I" "Toggle Split Direction" "togglesplit" \
   " + F" "Toggle Focused Fullscreen" "fullscreen" \
-  " + SHIFT + F" "Toggle Focused Floating" "fullscreen" \
-  " + SHIFT + C" "Quit / Exit Hyprland" "exit" \
+  " + SHIFT + F" "Toggle Focused Floating" "togglefloating" \
   " + Left" "Move Focus To Window On The Left" "movefocus,l" \
   " + Right" "Move Focus To Window On The Right" "movefocus,r" \
   " + Up" "Move Focus To Window On The Up" "movefocus,u" \
@@ -56,8 +59,15 @@ pkgs.writeShellScriptBin "list-hypr-bindings" ''
   " + SHIFT + SPACE" "Send Focused Window To Special Workspace" "movetoworkspace,special" \
   " + 1-0" "Move To Workspace 1 - 10" "workspace,X" \
   " + SHIFT + 1-0" "Move Focused Window To Workspace 1 - 10" "movetoworkspace,X" \
+  " + CTRL + Right" "Next Workspace" "workspace,e+1" \
+  " + CTRL + Left" "Previous Workspace" "workspace,e-1" \
+  " + Scroll" "Cycle Workspaces" "workspace,e+/-1" \
   " + MOUSE_LEFT" "Move/Drag Window" "movewindow" \
   " + MOUSE_RIGHT" "Resize Window" "resizewindow" \
   "ALT + TAB" "Cycle Window Focus + Bring To Front" "cyclenext & bringactivetotop" \
+  "Volume Up/Down" "Change Volume" "wpctl set-volume 5%+/-" \
+  "Volume Mute" "Toggle Mute" "wpctl set-mute toggle" \
+  "Media Play/Pause/Next/Prev" "Media Control" "playerctl" \
+  "Brightness Up/Down" "Adjust Brightness" "brightnessctl set +/-5%" \
   ""
 ''
