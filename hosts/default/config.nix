@@ -54,8 +54,8 @@
     # Shutdown Timer
     ../../modules/shutdown-timer.nix
 
-    # Steam Blocker (weekday work hours) - DISABLED
-    # ../../modules/steam-blocker.nix
+    # Steam Blocker (weekday work hours)
+    ../../modules/steam-blocker.nix
 
     # Stand Enforcer (random standing breaks)
     ../../modules/stand-enforcer.nix
@@ -314,6 +314,24 @@ hardware.enableAllFirmware = true;
         return polkit.Result.YES;
       }
     })
+
+    polkit.addRule(function(action, subject) {
+      if (subject.user != "jonkoi") return null;
+      if (action.id != "org.freedesktop.systemd1.manage-units" &&
+          action.id != "org.freedesktop.systemd1.manage-unit-files") return null;
+      var unit = action.lookup("unit");
+      var verb = action.lookup("verb");
+      var blockedUnits = {
+        "shutdown-timer.timer": true,
+        "shutdown-check.service": true,
+        "steam-blocker.timer": true,
+        "steam-blocker.service": true
+      };
+      var blockedVerbs = { "stop": true, "disable": true };
+      if (blockedUnits[unit] && blockedVerbs[verb]) {
+        return polkit.Result.NO;
+      }
+    })
   '';
   security.sudo.extraRules = [
   {
@@ -321,6 +339,24 @@ hardware.enableAllFirmware = true;
     commands = [ {command = "/run/current-system/sw/bin/adb"; options = ["SETENV" "NOPASSWD"]; }];
   }
   ];
+  security.sudo.extraConfig = ''
+    Cmnd_Alias BLOCKED_UNITS = \
+      /run/current-system/sw/bin/systemctl stop shutdown-timer, \
+      /run/current-system/sw/bin/systemctl stop shutdown-timer.timer, \
+      /run/current-system/sw/bin/systemctl stop shutdown-check, \
+      /run/current-system/sw/bin/systemctl stop shutdown-check.service, \
+      /run/current-system/sw/bin/systemctl stop steam-blocker, \
+      /run/current-system/sw/bin/systemctl stop steam-blocker.timer, \
+      /run/current-system/sw/bin/systemctl stop steam-blocker.service, \
+      /run/current-system/sw/bin/systemctl disable shutdown-timer, \
+      /run/current-system/sw/bin/systemctl disable shutdown-timer.timer, \
+      /run/current-system/sw/bin/systemctl disable shutdown-check, \
+      /run/current-system/sw/bin/systemctl disable shutdown-check.service, \
+      /run/current-system/sw/bin/systemctl disable steam-blocker, \
+      /run/current-system/sw/bin/systemctl disable steam-blocker.timer, \
+      /run/current-system/sw/bin/systemctl disable steam-blocker.service
+    jonkoi ALL=(ALL) !BLOCKED_UNITS
+  '';
   # Optimization settings and garbage collection automation
   nix = {
     settings = {

@@ -10,14 +10,28 @@ let
   '';
 
   prepareAdb = pkgs.writeShellScript "deskthing-prepare-adb" ''
-    # Kill any stale ADB server, then start a fresh one
+    # Poll for up to 30s — Superbird can be slow to enumerate on cold boot.
+    for i in $(seq 1 15); do
+      if ${pkgs.usbutils}/bin/lsusb -d 1d6b:1014 > /dev/null 2>&1; then
+        break
+      fi
+      sleep 2
+    done
+
+    if ! ${pkgs.usbutils}/bin/lsusb -d 1d6b:1014 > /dev/null 2>&1; then
+      echo "deskthing: Superbird not on USB after 30s, exiting (udev will retrigger on hotplug)"
+      exit 1
+    fi
+
     ${pkgs.android-tools}/bin/adb kill-server 2>/dev/null || true
     sleep 2
     ${pkgs.android-tools}/bin/adb start-server
 
-    # Wait for the Car Thing to actually be detected (up to 30s)
     echo "deskthing: waiting for device..."
-    ${pkgs.android-tools}/bin/adb wait-for-device
+    if ! timeout 15 ${pkgs.android-tools}/bin/adb wait-for-device; then
+      echo "deskthing: device did not appear within 15s, exiting"
+      exit 1
+    fi
     sleep 2
     echo "deskthing: device found"
   '';
@@ -47,4 +61,18 @@ in
       IOSchedulingClass = "idle";
       };
     };
+
+    # Launcher tile — clears any prior failed/rate-limit state then starts the service.
+    # Icon expects /home/<user>/.local/share/icons/hicolor/512x512/apps/deskthing.png
+    home.file.".local/share/applications/deskthing.desktop".text = ''
+      [Desktop Entry]
+      Name=DeskThing
+      Comment=Spotify Car Thing companion
+      Exec=sh -c 'systemctl --user reset-failed deskThingService 2>/dev/null; systemctl --user start deskThingService'
+      Icon=deskthing
+      Terminal=false
+      Type=Application
+      Categories=Utility;
+      StartupWMClass=DeskThing
+    '';
 }

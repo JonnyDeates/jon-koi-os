@@ -4,9 +4,10 @@
 # The sandbox's VK_ICD_FILENAMES points to /run/host/ which doesn't exist outside of container contexts.
 # This wrapper calls the real Zed ELF directly, bypassing the bubblewrap sandbox.
 pkgs.writeShellScriptBin "zed-open" ''
-  # Real Zed ELF binary (bypassing bwrap sandbox at /run/current-system/sw/bin/zeditor)
-  # The zeditor binary is a bwrap wrapper; the real ELF is here:
-  ZED_REAL="/nix/store/00w021rqzkdyf47ir0dibk2d9h3ky68y-zed-editor-0.218.6/bin/zeditor"
+  # Real Zed ELF binary (bypassing bwrap sandbox at /run/current-system/sw/bin/zeditor).
+  # System install is zed-editor-fhs (bwrap-wrapped); pkgs.zed-editor is the raw ELF.
+  # Reference via nix interpolation so this stays in sync with the package.
+  ZED_REAL="${pkgs.zed-editor}/bin/zeditor"
 
   # Wayland environment
   export WAYLAND_DISPLAY="''${WAYLAND_DISPLAY:-wayland-1}"

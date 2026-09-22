@@ -11,9 +11,18 @@ let
       exit 0
     fi
 
-    # Restart the user-level DeskThing service
-    ${pkgs.util-linux}/bin/runuser -l ${username} -- \
-      env DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
+    # Clear any prior rate-limit / failed state, then restart.
+    # `runuser -u` (not `-l`) avoids the login-shell that treats `env` as a script path.
+    ${pkgs.util-linux}/bin/runuser -u ${username} -- \
+      ${pkgs.coreutils}/bin/env \
+        XDG_RUNTIME_DIR=/run/user/1000 \
+        DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
+      ${pkgs.systemd}/bin/systemctl --user reset-failed deskThingService || true
+
+    ${pkgs.util-linux}/bin/runuser -u ${username} -- \
+      ${pkgs.coreutils}/bin/env \
+        XDG_RUNTIME_DIR=/run/user/1000 \
+        DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
       ${pkgs.systemd}/bin/systemctl --user restart deskThingService
 
     echo "deskthing-udev-trigger: deskThingService restart requested"

@@ -5,8 +5,8 @@ let
     DAY=$(date +%u)   # 1=Mon..5=Fri, 6=Sat, 7=Sun
     HOUR=$(date +%-H)
 
-    # Only enforce on weekdays (Mon-Fri), 6 AM to 6 PM
-    if [ "$DAY" -le 5 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 18 ]; then
+    # Only enforce on weekdays (Mon-Fri), 6 AM to 5 PM
+    if [ "$DAY" -le 5 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 17 ]; then
       # Kill flatpak steam
       ${pkgs.flatpak}/bin/flatpak kill com.valvesoftware.Steam 2>/dev/null || true
 
@@ -28,10 +28,10 @@ in
     };
 
     systemd.timers.steam-blocker = {
-      description = "Enforce Steam block on weekdays 6AM-6PM";
+      description = "Enforce Steam block on weekdays 6AM-5PM";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = "*-*-* 06..17:00/5:00";
+        OnCalendar = "*-*-* 06..16:00/5:00";
         Persistent = false;
         Unit = "steam-blocker.service";
       };
