@@ -43,6 +43,7 @@ nixpkgs.config = {
           zed-editor-fhs
           mission-center
           godot
+          popsicle
     ];
     programs = {
         firefox.enable = false;
