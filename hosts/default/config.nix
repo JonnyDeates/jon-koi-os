@@ -55,7 +55,7 @@
     ../../modules/shutdown-timer.nix
 
     # Steam Blocker (weekday work hours)
-    ../../modules/steam-blocker.nix
+    # ../../modules/steam-blocker.nix
 
     # Stand Enforcer (random standing breaks)
     ../../modules/stand-enforcer.nix
@@ -91,6 +91,7 @@ hardware.enableAllFirmware = true;
     tmp = {
       useTmpfs = false;
       tmpfsSize = "30%";
+      cleanOnBoot = true;
     };
     # Appimage Support
     binfmt.registrations.appimage = {
@@ -103,6 +104,12 @@ hardware.enableAllFirmware = true;
     };
     plymouth.enable = true;
   };
+
+  # Weekly /tmp cleanup — systemd-tmpfiles-clean.timer runs daily and removes
+  # files older than 7d (safer than a hard wipe; leaves active sockets/locks alone).
+  systemd.tmpfiles.rules = [
+    "d /tmp 1777 root root 7d"
+  ];
 
   # Set your time zone.
   time.timeZone = "America/Chicago";
@@ -203,6 +210,7 @@ hardware.enableAllFirmware = true;
       yad # “Yet Another Dialog”—a tool that creates simple graphical dialog boxes from shell scripts.
       nh # Nixos helper
       nixfmt-rfc-style # A formatter for Nix expressions that reformats code according to RFC style guidelines.
+      nixd # Nix language server (used by Zed/VSCode Nix extensions for completion, diagnostics, go-to-def).
 
       grim # A screenshot utility for Wayland compositors—it captures the screen (or a region) and outputs an image.
 
@@ -238,7 +246,24 @@ hardware.enableAllFirmware = true;
       usbutils # A set of utilities (like lsusb) for listing and interacting with USB devices connected to your computer.
       bitwarden-cli # CLI for Bitwarden/Vaultwarden password manager
       jq # Command-line JSON processor
+      libsecret
+      steamcmd # CLI for downloading Steam content (dedicated servers, workshop mods)
       inputs.openclaude-flake.packages.${pkgs.stdenv.hostPlatform.system}.default
+      # Root-run privileged helper for shutdown-postpone. Must live in
+      # /run/current-system/sw/bin so sudo's secure_path can find it.
+      (import ../../scripts/shutdown-postpone-helper.nix { inherit pkgs; })
+      # Discipline-window rebuild guard + supporting check. In systemPackages
+      # (not home.packages) so sudo's secure_path finds them when the shim
+      # below reroutes `sudo nixos-rebuild` through the guard.
+      (import ../../scripts/nixos-rebuild-guard.nix { inherit pkgs; })
+      (import ../../scripts/discipline-window-check.nix { inherit pkgs; })
+      # Shadow /run/current-system/sw/bin/nixos-rebuild with a shim that
+      # exec's the guard. hiPrio wins the buildEnv collision against the
+      # real pkgs.nixos-rebuild. Closes the `sudo nixos-rebuild` bypass;
+      # raw store-path calls still work by design.
+      (lib.hiPrio (pkgs.writeShellScriptBin "nixos-rebuild" ''
+        exec /run/current-system/sw/bin/nixos-rebuild-guard "$@"
+      ''))
     ];
 
   # Services to start
@@ -356,6 +381,7 @@ hardware.enableAllFirmware = true;
       /run/current-system/sw/bin/systemctl disable steam-blocker.timer, \
       /run/current-system/sw/bin/systemctl disable steam-blocker.service
     jonkoi ALL=(ALL) !BLOCKED_UNITS
+    jonkoi ALL=(root) NOPASSWD: /run/current-system/sw/bin/shutdown-postpone-helper
   '';
   # Optimization settings and garbage collection automation
   nix = {

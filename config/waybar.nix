@@ -15,9 +15,9 @@ let
   # logic is now handled by the main gamma-gui script
   gammaWaybarModule = pkgs.writeShellScriptBin "gamma-waybar" ''
     if systemctl --user is-active gammastep >/dev/null; then
-        echo '{"text": "⛅", "tooltip": "Gamma is ON", "class": "active"}'
+        echo '{"text": "", "tooltip": "Gamma is ON", "class": "active"}'
     else
-        echo '{"text": "🌞", "tooltip": "Gamma is OFF", "class": "inactive"}'
+        echo '{"text": "", "tooltip": "Gamma is OFF", "class": "inactive"}'
     fi
   '';
 
@@ -42,12 +42,10 @@ with lib;
           "cpu"
           "memory"
           "custom/gamma_toggle"
-          "idle_inhibitor"
         ];
         modules-right = [
-          "custom/ai_usage"
+          "custom/system_settings"
           "custom/hyprbindings"
-          "custom/notification"
           "custom/exit"
           "battery"
           "tray"
@@ -135,27 +133,19 @@ with lib;
         };
         "custom/startmenu" = {
           tooltip = false;
-          format = "🍀";
+          format = "";
           # exec = "rofi -show drun";
           on-click = "sleep 0.1 && rofi-launcher";
         };
-        "custom/ai_usage" = {
+        "custom/system_settings" = {
           tooltip = false;
-          format = "🤖";
-          on-click = "sleep 0.1 && ai-usage";
+          format = "";
+          on-click = "sleep 0.1 && system-settings";
         };
         "custom/hyprbindings" = {
           tooltip = false;
-          format = "❓";
+          format = "";
           on-click = "sleep 0.1 && list-hypr-bindings";
-        };
-        "idle_inhibitor" = {
-          format = "{icon}";
-          format-icons = {
-            activated = "👍";
-            deactivated = "👎";
-          };
-          tooltip = "true";
         };
         "custom/gamma_toggle" = {
             return-type = "json";
@@ -168,25 +158,6 @@ with lib;
             on-click-right = "gamma-gui";
             format = "{}";
             tooltip = true;
-        };
-        "custom/notification" = {
-          tooltip = false;
-          format = "{icon} {}";
-          format-icons = {
-            notification = "<span foreground='red'><sup>+</sup></span>";
-            none = "";
-            dnd-notification = "<span foreground='red'><sup>+</sup></span>";
-            dnd-none = "";
-            inhibited-notification = "<span foreground='red'><sup>+</sup></span>";
-            inhibited-none = "";
-            dnd-inhibited-notification = "<span foreground='red'><sup>+</sup></span>";
-            dnd-inhibited-none = "";
-          };
-          return-type = "json";
-          exec-if = "which swaync-client";
-          exec = "swaync-client -swb";
-          on-click = "sleep 0.1 && task-waybar";
-          escape = true;
         };
         "battery" = {
           states = {
@@ -279,7 +250,7 @@ with lib;
         tooltip label {
           color: ${koiColor};
         }
-        #window, #pulseaudio, #cpu, #memory, #idle_inhibitor, #custom-gamma_toggle {
+        #window, #pulseaudio, #cpu, #memory, #custom-gamma_toggle {
           font-weight: bold;
           margin: 4px 0px;
           margin-left: 7px;
@@ -297,8 +268,8 @@ with lib;
           padding: 0px 12px;
           border-radius: 0px 0px 16px 0px;
         }
-        #custom-ai_usage, #custom-hyprbindings, #network, #battery,
-        #custom-notification, #tray, #custom-exit {
+        #custom-system_settings, #custom-hyprbindings, #network, #battery,
+        #tray, #custom-exit {
           font-weight: bold;
           color: ${textColor};
           background: ${koiColor};

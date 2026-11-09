@@ -1,49 +1,46 @@
 { pkgs }:
 
-pkgs.writeShellScriptBin "shutdown-postpone" ''
-  KEY_FILE="/var/lib/shutdown-timer/hmac.key"
-  STATE_DIR="$HOME/.local/state"
-  LAST_FILE="$STATE_DIR/shutdown-postpone-last"
-  mkdir -p "$STATE_DIR"
+# User-facing postpone wrapper. Checks cooldown for a nice UX, then delegates
+# all privileged work to shutdown-postpone-helper via sudo NOPASSWD.
+# The helper re-enforces the cooldown as defense in depth.
 
-  if [ ! -r "$KEY_FILE" ]; then
-    echo "Cannot read HMAC key at $KEY_FILE. Postpone disabled."
-    ${pkgs.libnotify}/bin/notify-send -u critical -a "Shutdown Postpone" \
-      "HMAC key unreadable. Postpone disabled."
+pkgs.writeShellScriptBin "shutdown-postpone" ''
+  LAST_FILE="/var/lib/shutdown-timer/postpone-last"
+  COOLDOWN_SECONDS=$((5 * 24 * 60 * 60))
+
+  NOW=$(date +%s)
+  LAST=0
+  if [ -s "$LAST_FILE" ]; then
+    LAST_RAW=$(cat "$LAST_FILE" 2>/dev/null || echo 0)
+    case "$LAST_RAW" in
+      '''|*[!0-9]*) LAST=0 ;;
+      *) LAST=$LAST_RAW ;;
+    esac
+  fi
+
+  ELAPSED=$((NOW - LAST))
+  if [ "$ELAPSED" -lt "$COOLDOWN_SECONDS" ]; then
+    REMAINING=$((COOLDOWN_SECONDS - ELAPSED))
+    NEXT_TIME=$(date -d "@$((NOW + REMAINING))" '+%a %H:%M')
+    echo "Postpone already used recently. Next available: $NEXT_TIME."
+    ${pkgs.libnotify}/bin/notify-send -u normal -a "Shutdown Postpone" \
+      "Already used recently. Next available $NEXT_TIME."
     exit 1
   fi
 
-  NOW=$(date +%s)
-  WEEK_SECONDS=$((7 * 24 * 60 * 60))
-
-  if [ -f "$LAST_FILE" ]; then
-    LAST=$(cat "$LAST_FILE")
-    ELAPSED=$((NOW - LAST))
-    if [ "$ELAPSED" -lt "$WEEK_SECONDS" ]; then
-      REMAINING=$((WEEK_SECONDS - ELAPSED))
-      NEXT_TIME=$(date -d "@$((NOW + REMAINING))" '+%a %H:%M')
-      echo "Postpone already used this week. Next available: $NEXT_TIME."
-      ${pkgs.libnotify}/bin/notify-send -u normal -a "Shutdown Postpone" \
-        "Already used this week. Next available $NEXT_TIME."
-      exit 1
-    fi
+  OUT=$(sudo /run/current-system/sw/bin/shutdown-postpone-helper 2>&1)
+  RC=$?
+  if [ "$RC" -ne 0 ]; then
+    echo "Postpone failed (helper exited $RC):"
+    echo "$OUT"
+    ${pkgs.libnotify}/bin/notify-send -u critical -a "Shutdown Postpone" \
+      "Postpone failed (code $RC). See terminal / journal."
+    exit 1
   fi
 
-  HOUR=$(date +%-H)
-  if [ "$HOUR" -lt 2 ]; then
-    NIGHT_DATE=$(date -d "yesterday" +%Y-%m-%d)
-  else
-    NIGHT_DATE=$(date +%Y-%m-%d)
-  fi
-
-  SNOOZE_FILE="/tmp/shutdown-snooze-''${NIGHT_DATE}"
-  SNOOZE_UNTIL=$(date -d "+2 hours" +%s)
-  HMAC=$(printf '%s' "$SNOOZE_UNTIL" | ${pkgs.openssl}/bin/openssl dgst -sha256 -hmac "$(cat "$KEY_FILE")" | awk '{print $NF}')
-  echo "''${SNOOZE_UNTIL}|''${HMAC}" > "$SNOOZE_FILE"
-  echo "$NOW" > "$LAST_FILE"
-
-  SNOOZE_TIME=$(date -d "+2 hours" '+%H:%M')
-  echo "Shutdown postponed by 2 hours (until $SNOOZE_TIME). Weekly postpone used."
+  SNOOZE_UNTIL=$(echo "$OUT" | tail -n1)
+  SNOOZE_TIME=$(date -d "@$SNOOZE_UNTIL" '+%H:%M')
+  echo "Shutdown postponed by 1 hour (until $SNOOZE_TIME). 5-day postpone used."
   ${pkgs.libnotify}/bin/notify-send -u normal -a "Shutdown Postpone" \
-    "Shutdown pushed back 2 hours (until $SNOOZE_TIME). Weekly postpone used."
+    "Shutdown pushed back 1 hour (until $SNOOZE_TIME). 5-day postpone used."
 ''

@@ -32,12 +32,16 @@
         };
       };
 
-      unstable-overlay = final: prev: {
-        bambu-studio = (import nixpkgs-unstable {
-          inherit system;
-          config.allowUnfree = true;
-        }).bambu-studio;
-      };
+      unstable-overlay = final: prev:
+        let
+          unstable = import nixpkgs-unstable {
+            inherit system;
+            config.allowUnfree = true;
+          };
+        in {
+          bambu-studio = unstable.bambu-studio;
+          r2modman = unstable.r2modman;
+        };
     in
     {
       nixosConfigurations = {
@@ -51,7 +55,6 @@
           modules = [
             { nixpkgs.overlays = [
                 affinity-nix.overlays.default
-                (import ./modules/overlays/r2modman.nix)
                 (import ./modules/overlays/bettercrewlink.nix)
                 unstable-overlay
               ]; }

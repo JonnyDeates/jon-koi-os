@@ -42,7 +42,11 @@ nixpkgs.config = {
           claude-code
           zed-editor-fhs
           mission-center
-          godot
+          godot_4-mono
+          dotnet-sdk_8
+          material-maker
+          inkscape
+          upscayl
           popsicle
     ];
     programs = {

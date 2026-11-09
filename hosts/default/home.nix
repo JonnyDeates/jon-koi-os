@@ -97,9 +97,18 @@ in
     mimeApps = {
       enable = true;
       defaultApplications = {
+        "x-scheme-handler/deskthing" = "deskthing.desktop";
         "x-scheme-handler/terminal" = "kitty.desktop";
         "inode/directory" = "thunar.desktop";
         "x-scheme-handler/file" = "thunar.desktop";
+        "image/png" = "imv-dir.desktop";
+        "image/jpeg" = "imv-dir.desktop";
+        "image/gif" = "imv-dir.desktop";
+        "image/webp" = "imv-dir.desktop";
+        "image/bmp" = "imv-dir.desktop";
+        "image/tiff" = "imv-dir.desktop";
+        "image/svg+xml" = "imv-dir.desktop";
+        "image/avif" = "imv-dir.desktop";
       };
     };
   };
@@ -174,16 +183,16 @@ in
       inherit host;
     })
     (import ../../scripts/ai-renamer.nix {inherit pkgs; })
-    (import ../../scripts/ai-usage.nix { inherit pkgs; })
+    (import ../../scripts/system-settings.nix { inherit pkgs; })
     (import ../../scripts/vaultwarden-backup.nix {
       inherit pkgs;
       inherit username;
     })
     (import ../../scripts/zed-open.nix { inherit pkgs; })
-    (import ../../scripts/shutdown-snooze.nix { inherit pkgs; })
     (import ../../scripts/shutdown-postpone.nix { inherit pkgs; })
     pkgs.papirus-icon-theme
     pkgs.xdg-desktop-portal-gtk
+    pkgs.python3
   ];
 
  # Configure Cursor Theme

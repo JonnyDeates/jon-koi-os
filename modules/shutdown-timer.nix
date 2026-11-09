@@ -67,7 +67,10 @@ let
       elif [ ! -r "$KEY_FILE" ]; then
         log "HMAC key unreadable at $KEY_FILE. Ignoring snooze."
       else
-        EXPECTED_HMAC=$(printf '%s' "$SNOOZE_UNTIL" | ${pkgs.openssl}/bin/openssl dgst -sha256 -hmac "$(cat "$KEY_FILE")" | awk '{print $NF}')
+        # Parameter-expand the last whitespace-separated field — avoids depending
+        # on `awk` being in the service PATH (systemd units only have coreutils).
+        EXPECTED_RAW=$(printf '%s' "$SNOOZE_UNTIL" | ${pkgs.openssl}/bin/openssl dgst -sha256 -hmac "$(cat "$KEY_FILE")")
+        EXPECTED_HMAC="''${EXPECTED_RAW##* }"
         if [ "$SNOOZE_HMAC" != "$EXPECTED_HMAC" ]; then
           log "Snooze file HMAC mismatch. Ignoring."
         elif [ "$NOW" -lt "$SNOOZE_UNTIL" ]; then
@@ -118,6 +121,13 @@ in
         fi
         chown ${username} ${keyFile}
         chmod 0400 ${keyFile}
+        # Root-owned cooldown state for shutdown-postpone. Keeping it in
+        # /var/lib means `rm` as the user cannot reset the 5-day counter.
+        if [ ! -f /var/lib/shutdown-timer/postpone-last ]; then
+          : > /var/lib/shutdown-timer/postpone-last
+        fi
+        chown root:root /var/lib/shutdown-timer/postpone-last
+        chmod 0644 /var/lib/shutdown-timer/postpone-last
       '';
     };
 

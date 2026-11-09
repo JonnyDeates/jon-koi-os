@@ -5,8 +5,19 @@ let
   deskThingApp = "/home/${username}/Applications/deskthing-linux-0.11.17.AppImage";
 
   closeWindow = pkgs.writeShellScript "deskthing-close-window" ''
-    sleep 15
-    ${pkgs.hyprland}/bin/hyprctl dispatch closewindow deskthing
+    # Wait up to 60s for DeskThing's window to show up — on cold boot the
+    # Electron app can take a while to render.
+    for i in $(seq 1 30); do
+      if ${pkgs.hyprland}/bin/hyprctl clients | ${pkgs.gnugrep}/bin/grep -q "class: deskthing"; then
+        break
+      fi
+      sleep 2
+    done
+    # Let it finish connecting before we tuck it away.
+    sleep 5
+    # closewindow sends a close signal (not SIGKILL), so DeskThing's own
+    # minimise-to-tray handler runs instead of the process dying.
+    ${pkgs.hyprland}/bin/hyprctl dispatch closewindow "class:^(deskthing)$"
   '';
 
   prepareAdb = pkgs.writeShellScript "deskthing-prepare-adb" ''
@@ -35,6 +46,20 @@ let
     sleep 2
     echo "deskthing: device found"
   '';
+
+  # Handles deskthing:// URIs from the browser after OAuth.
+  # With no argument: starts the service (app launcher behaviour).
+  # With a deskthing:// URI: launches a second AppImage instance with the URI — Electron's
+  # single-instance lock forwards it to the already-running process via IPC.
+  uriHandler = pkgs.writeShellScript "deskthing-uri-handler" ''
+    URI=''${1:-}
+    if [ -z "$URI" ]; then
+      systemctl --user reset-failed deskThingService 2>/dev/null || true
+      systemctl --user start deskThingService
+      exit 0
+    fi
+    ${pkgs.appimage-run}/bin/appimage-run ${deskThingApp} "$URI" &
+  '';
 in
 {
     systemd.user.services.deskThingService = {
@@ -45,8 +70,8 @@ in
       After = [ "graphical-session.target" ];
       PartOf = [ "graphical-session.target" ];
       Wants = [ "graphical-session.target" ];
-      StartLimitIntervalSec = 120;
-      StartLimitBurst = 3;
+      StartLimitIntervalSec = 600;
+      StartLimitBurst = 10;
     };
 
      Service = {
@@ -63,16 +88,18 @@ in
     };
 
     # Launcher tile — clears any prior failed/rate-limit state then starts the service.
+    # Also handles deskthing:// OAuth callbacks via uriHandler above.
     # Icon expects /home/<user>/.local/share/icons/hicolor/512x512/apps/deskthing.png
     home.file.".local/share/applications/deskthing.desktop".text = ''
       [Desktop Entry]
       Name=DeskThing
       Comment=Spotify Car Thing companion
-      Exec=sh -c 'systemctl --user reset-failed deskThingService 2>/dev/null; systemctl --user start deskThingService'
+      Exec=${uriHandler} %u
       Icon=deskthing
       Terminal=false
       Type=Application
       Categories=Utility;
       StartupWMClass=DeskThing
+      MimeType=x-scheme-handler/deskthing;
     '';
 }

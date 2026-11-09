@@ -5,8 +5,9 @@ let
     DAY=$(date +%u)   # 1=Mon..5=Fri, 6=Sat, 7=Sun
     HOUR=$(date +%-H)
 
-    # Only enforce on weekdays (Mon-Fri), 6 AM to 5 PM
-    if [ "$DAY" -le 5 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 17 ]; then
+    # Mon-Thu: 06:00-16:59. Fri: 06:00-12:59.
+    if { [ "$DAY" -le 4 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 17 ]; } || \
+       { [ "$DAY" -eq 5 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 13 ]; }; then
       # Steam (flatpak + native)
       ${pkgs.flatpak}/bin/flatpak kill com.valvesoftware.Steam 2>/dev/null || true
       ${pkgs.procps}/bin/pkill -f "steamwebhelper" 2>/dev/null || true
@@ -39,7 +40,7 @@ in
     };
 
     systemd.timers.steam-blocker = {
-      description = "Enforce game blocker on weekdays 6AM-5PM (every 5 min)";
+      description = "Enforce game blocker Mon-Thu 6AM-5PM, Fri 6AM-1PM (every 5 min)";
       wantedBy = [ "timers.target" ];
       # Layer 1: refuse `systemctl stop steam-blocker.timer`.
       unitConfig.RefuseManualStop = true;
@@ -66,7 +67,7 @@ in
     };
 
     systemd.timers.steam-guard = {
-      description = "Watchdog: run game blocker every minute during work hours";
+      description = "Watchdog: run game blocker every minute during work hours (Mon-Thu 6AM-5PM, Fri 6AM-1PM)";
       wantedBy = [ "timers.target" ];
       unitConfig.RefuseManualStop = true;
       timerConfig = {
