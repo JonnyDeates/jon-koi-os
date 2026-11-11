@@ -37,6 +37,7 @@ let
     ./shaders/events/pulsar.glsl
     ./shaders/events/supernova.glsl
     ./shaders/events/star-surface.glsl
+    ./shaders/meteors.glsl
     ./shaders/main.glsl
   ];
 
@@ -73,16 +74,23 @@ let
     events="hole star system comet field planet spiral pillars crab ring bipolar elliptical bigcomet binary eaten pulsar pulsarclose supernova surface"
     if [ $# -lt 1 ]; then
       echo "usage: space-wallpaper-preview <event> [output] [seconds] [seed]"
-      echo "events: $events"
+      echo "events: $events meteors"
       exit 1
     fi
     id=0
-    for name in $events; do
-      id=$((id + 1))
-      [ "$name" = "$1" ] && break
-    done
+    extra=""
+    if [ "$1" = meteors ]; then
+      # Not a rolled event: plain sky with a meteor shower forced on from the start.
+      name=meteors
+      extra='s/const float SHOWER_CHANCE = 0.35;/const float SHOWER_CHANCE = 1.0;/; s/float showerStart = hash12(vec2(window, seed + 403.0)) \* (SHOWER_PERIOD - SHOWER_LENGTH);/float showerStart = 0.0;/'
+    else
+      for name in $events; do
+        id=$((id + 1))
+        [ "$name" = "$1" ] && break
+      done
+    fi
     if [ "$name" != "$1" ]; then
-      echo "unknown event '$1'; events: $events"
+      echo "unknown event '$1'; events: $events meteors"
       exit 1
     fi
     output=''${2:-DP-2}
@@ -93,7 +101,7 @@ let
     trap 'rm -f "$frag"' EXIT
     ${pkgs.gnused}/bin/sed -e "s/const int FORCE_EVENT = -1;/const int FORCE_EVENT = $id;/" \
       -e 's/const float EVENT_FADE = 20.0;/const float EVENT_FADE = 0.001;/' \
-      -e "${seedSed}" ${spaceShader} > "$frag"
+      -e "${seedSed}" -e "$extra" ${spaceShader} > "$frag"
     ${pkgs.coreutils}/bin/timeout "$seconds" ${shaderbg}/bin/shaderbg --fps 30 --layer overlay "$output" "$frag"
     true
   '';

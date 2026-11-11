@@ -139,6 +139,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     col = col * shadow;
     col = col * (1.0 - holeOverlay.a) + holeOverlay.rgb;
 
+    // Shooting stars over everything.
+    col += meteors(uv, eventSeed, t);
+
     vec2 c = screen - 0.5;
     col *= 1.0 - 0.35 * dot(c, c);
 
