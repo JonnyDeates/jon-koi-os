@@ -98,7 +98,8 @@ let
     true
   '';
 
-  # Freeze a monitor's shader while its active workspace has a fullscreen window (e.g. a game).
+  # Freeze a monitor's shader (0 fps) while anything is open on it: a window on its active workspace,
+  # or a special (scratchpad) workspace shown over it. It only animates on an empty desktop.
   pauser = pkgs.writeShellScript "space-wallpaper-pauser" ''
     export PATH=${
       lib.makeBinPath [
@@ -111,8 +112,10 @@ let
 
     update() {
       workspaces=$(hyprctl -j workspaces)
-      hyprctl -j monitors | jq -r '.[] | "\(.name) \(.activeWorkspace.id)"' | while read -r mon ws; do
-        if [ "$(jq --argjson id "$ws" 'any(.[]; .id == $id and .hasfullscreen)' <<<"$workspaces")" = true ]; then
+      hyprctl -j monitors | jq -r '.[] | "\(.name) \(.activeWorkspace.id) \(.specialWorkspace.id // 0)"' | while read -r mon ws special; do
+        busy=$(jq --argjson id "$ws" --argjson sp "$special" \
+          'any(.[]; (.id == $id or ($sp != 0 and .id == $sp)) and .windows > 0)' <<<"$workspaces")
+        if [ "$busy" = true ]; then
           sig=STOP
         else
           sig=CONT
@@ -122,12 +125,12 @@ let
     }
 
     update
-    # Also recheck periodically: a wallpaper instance that restarts behind a fullscreen window
+    # Also recheck periodically: a wallpaper instance that restarts behind a window
     # starts unpaused, and no Hyprland event fires for that.
     (while sleep 5; do update; done) &
     socat -U - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" | while read -r event; do
       case "$event" in
-        fullscreen\>\>* | workspace\>\>* | focusedmon\>\>* | openwindow\>\>* | closewindow\>\>* | movewindow\>\>* | moveworkspace\>\>*)
+        fullscreen\>\>* | workspace\>\>* | focusedmon\>\>* | openwindow\>\>* | closewindow\>\>* | movewindow\>\>* | moveworkspace\>\>* | activespecial\>\>*)
           update
           ;;
       esac
