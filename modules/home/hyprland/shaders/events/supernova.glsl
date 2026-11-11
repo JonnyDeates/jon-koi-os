@@ -41,11 +41,13 @@ vec4 supernova(vec2 uv, float seed, float slot, float lt, float t, float fade, o
     float age = smoothstep(0.0, 90.0, since);
     // Turbulent, finger-like edge (Rayleigh-Taylor plumes) and a lumpy outline.
     float lump = (fbm(dir * 2.5 + seed) - 0.5) * 0.15;
-    float fingers = (fbm(vec2(atan(dir.y, dir.x) * 5.0, seed * 3.0)) - 0.5) * 0.25 * age;
+    // Built from the direction vector, not the angle, so there's no seam where the angle wraps.
+    float fingers = (fbm(dir * 5.0 + seed * 3.0) - 0.5) * 0.25 * age;
     float s = r / R - lump - fingers;
     // A hollow shell: brightest at the rim, as with real supernova remnants.
     float shell = sqrt(max(1.0 - s * s, 0.0)) - sqrt(max(0.9 * 0.9 - s * s, 0.0));
-    shell += exp(-max(s - 1.0, 0.0) * 20.0) * step(1.0, s) * 0.3;
+    // Glow across the outer edge, continuous on both sides (a one-sided glow left a dark line at s = 1).
+    shell += exp(-abs(s - 1.0) * 20.0) * 0.3;
     float fil = fbm(d / R * 3.0 + seed) * 0.6 + pow(1.0 - abs(2.0 * fbm(d / R * 5.0 - seed) - 1.0), 6.0) * 0.8;
     // Colour cools with age: blue-white, teal, then gold and red at the rim.
     vec3 hot = vec3(0.75, 0.88, 1.0);

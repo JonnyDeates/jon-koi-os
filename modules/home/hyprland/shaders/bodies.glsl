@@ -33,18 +33,30 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
     vec4 body = vec4(0.0);
     if (r < edge + px) {
         float z = sqrt(max(1.0 - r * r, 0.0));
-        float rot = t * 0.01;
+        // Surface motion is in units of the star's radius, so on small stars it would crawl at a pixel
+        // a second. Speed it up for smaller stars so it churns at a similar on-screen pace.
+        float ts = t * clamp(0.22 / radius, 1.0, 5.0);
+        float rot = ts * 0.01;
         vec3 sp = vec3(d.x * cos(rot) + z * sin(rot), d.y, -d.x * sin(rot) + z * cos(rot));
 
         // Boiling plasma: slowly churning domain-warped noise dominates the look...
         vec2 ps = sp.xy * plasmaScale + sp.z * 1.7;
-        vec2 q = vec2(fbm(ps + vec2(0.0, t * 0.02)), fbm(ps + vec2(5.2, 1.3) - t * 0.02));
-        float plasma = fbm(ps * 1.4 + q * 2.5 + vec2(sp.z * 2.0, t * 0.03));
+        vec2 q = vec2(fbm(ps + vec2(0.0, ts * 0.06)), fbm(ps + vec2(5.2, 1.3) - ts * 0.06));
+        float plasma = fbm(ps * 1.4 + q * 2.5 + vec2(sp.z * 2.0, ts * 0.09));
         // ...with faint granulation (convection cells and darker lanes) on top.
-        vec2 v = voronoi3(sp * cellScale, t);
-        float gran = smoothstep(0.0, 0.3, v.y - v.x);
+        // The grain boils: two cell patterns cross-fade, each re-seeded while it's invisible, so cells
+        // keep fading out and new ones forming, while drifting slowly across the surface.
+        vec3 gp = sp * cellScale + vec3(ts * 0.12, ts * 0.05, -ts * 0.08);
+        float phase = ts / 6.0;
+        float wA = 0.5 + 0.5 * cos(phase * 3.14159);
+        float wB = 1.0 - wA;
+        float seedA = floor(phase * 0.5 + 0.5) * 17.0;
+        float seedB = floor(phase * 0.5) * 17.0 + 9.0;
+        vec2 vA = voronoi3(gp + seedA, ts * 2.5);
+        vec2 vB = voronoi3(gp + seedB, ts * 2.5);
+        float gran = smoothstep(0.0, 0.3, vA.y - vA.x) * wA + smoothstep(0.0, 0.3, vB.y - vB.x) * wB;
         // Bright, thin plasma filaments threading through the surface.
-        float fil = 1.0 - abs(2.0 * fbm(ps * 2.2 + q * 3.0 - vec2(t * 0.04, 0.0)) - 1.0);
+        float fil = 1.0 - abs(2.0 * fbm(ps * 2.2 + q * 3.0 - vec2(ts * 0.12, 0.0)) - 1.0);
         float b = 0.5 + 0.8 * plasma * plasma + 0.35 * pow(fil, 4.0) + (giant ? 0.08 : 0.15) * (gran - 0.5);
         if (!blue) {
             // Sunspots: a few small dark umbras with lighter penumbras.
