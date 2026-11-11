@@ -21,7 +21,7 @@ let
 
   # Flatpak distributed as a GitHub release bundle, not on Flathub
   amethystId = "io.github.Amethyst.ModManager";
-  amethystVersion = "2.6.0";
+  amethystVersion = "2.6.3";
   amethystUrl = "https://github.com/ChrisDKN/Amethyst-Mod-Manager/releases/download/v${amethystVersion}/AmethystModManager.flatpak";
 
   # Apps the cleanup sweep must NOT remove (Flathub apps + the bundle app)
@@ -59,18 +59,12 @@ in
         ${pkgs.flatpak}/bin/flatpak install -y flathub $app
       done
 
-      # Install or upgrade Amethyst from its GitHub release bundle when the
-      # pinned version differs from what's installed. `flatpak update` can't
-      # reach it because it was side-loaded, not sourced from a remote.
-      installedAmethystVersion=$(${pkgs.flatpak}/bin/flatpak list --app --columns=application,version 2>/dev/null \
-        | ${grep}/bin/grep "^${amethystId}"$'\t' \
-        | ${pkgs.coreutils}/bin/cut -f2)
-      if [ "$installedAmethystVersion" != "${amethystVersion}" ]; then
-        echo "Installing Amethyst Mod Manager ${amethystVersion} (currently: ''${installedAmethystVersion:-none})."
+      # Bootstrap Amethyst from its GitHub release bundle only if it's missing.
+      # The bundle registers the modmanager-origin remote, so later upgrades
+      # come from the `flatpak update -y` below.
+      if ! ${pkgs.flatpak}/bin/flatpak info ${amethystId} >/dev/null 2>&1; then
+        echo "Installing Amethyst Mod Manager ${amethystVersion}."
         ${pkgs.curl}/bin/curl -L -o /tmp/amethyst.flatpak "${amethystUrl}"
-        if [ -n "$installedAmethystVersion" ]; then
-          ${pkgs.flatpak}/bin/flatpak uninstall -y --noninteractive ${amethystId} || true
-        fi
         ${pkgs.flatpak}/bin/flatpak install -y --bundle /tmp/amethyst.flatpak
         rm -f /tmp/amethyst.flatpak
       fi

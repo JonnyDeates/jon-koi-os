@@ -12,6 +12,6 @@
     ./waybar.nix
     ./gammastep.nix
     ./deskthing.nix
-    ./comfyui.nix
+    ./docker-apps.nix
   ];
 }

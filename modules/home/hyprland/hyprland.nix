@@ -18,6 +18,10 @@ in
 with lib;
 {
 
+  # HM's Hyprland module points NIX_XDG_DESKTOP_PORTAL_DIR at the user profile, hiding the
+  # system portals; without gtk here, OpenURI (xdg-open) and FileChooser are missing.
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
   wayland.windowManager.hyprland = {
     enable = true;
     xwayland.enable = true;
@@ -46,7 +50,7 @@ with lib;
           env = QT_AUTO_SCREEN_SCALE_FACTOR, 1
           env = SDL_VIDEODRIVER, x11
           env = MOZ_ENABLE_WAYLAND, 1
-          env = LD_LIBRARY_PATH, ~/.steam/bin32:/opt/rocm/hip/lib:$LD_LIBRARY_PATH
+          env = LD_LIBRARY_PATH, /opt/rocm/hip/lib:$LD_LIBRARY_PATH
           env = HIP_VISIBLE_DEICES, 1
           env = HSA_OVERRIDE_GFX_VERSION, 11.0.0
           env = HCC_AMDGPU_TARGET, gfx1100
