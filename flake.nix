@@ -8,37 +8,30 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     affinity-nix.url = "github:mrshmllow/affinity-nix";
     openclaude-flake.url = "github:JonnyDeates/openclaude-flake";
-    #hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
-    #hyprland-plugins = {
-    #  url = "github:hyprwm/hyprland-plugins";
-    #  inputs.hyprland.follows = "hyprland";
-    #};
   };
-  
-
-  
 
   outputs =
-   { nixpkgs, nixpkgs-unstable, home-manager, affinity-nix, ... }@inputs:
+    {
+      nixpkgs,
+      nixpkgs-unstable,
+      home-manager,
+      affinity-nix,
+      ...
+    }@inputs:
     let
       system = "x86_64-linux";
       host = "default";
       username = "jonkoi";
 
-      pkgs = import nixpkgs {
-        inherit system;
-        config = {
-          allowUnfree = true;
-        };
-      };
-
-      unstable-overlay = final: prev:
+      unstable-overlay =
+        final: prev:
         let
           unstable = import nixpkgs-unstable {
             inherit system;
             config.allowUnfree = true;
           };
-        in {
+        in
+        {
           bambu-studio = unstable.bambu-studio;
           r2modman = unstable.r2modman;
           claude-code = unstable.claude-code;
@@ -54,11 +47,13 @@
             inherit host;
           };
           modules = [
-            { nixpkgs.overlays = [
+            {
+              nixpkgs.overlays = [
                 affinity-nix.overlays.default
-                (import ./modules/overlays/bettercrewlink.nix)
+                (import ./overlays/bettercrewlink.nix)
                 unstable-overlay
-              ]; }
+              ];
+            }
             ./hosts/${host}/config.nix
             home-manager.nixosModules.home-manager
             {
