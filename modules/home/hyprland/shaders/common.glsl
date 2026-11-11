@@ -27,6 +27,8 @@ const int EV_ELLIPTICAL = 12;
 const int EV_COMETCLOSE = 13;
 const int EV_BINARY = 14;
 const int EV_EATEN = 15;
+const int EV_PULSAR = 16;
+const int EV_PULSARCLOSE = 17;
 
 // Set to an EV_* id to always show that event (space-wallpaper-preview does this).
 const int FORCE_EVENT = -1;
@@ -41,22 +43,24 @@ const float SKY_FADE = 60.0;
 // Chances per roll. The more GPU an event costs, the rarer it is (extra cost over plain sky at
 // 4K in comments, measured from /proc/<pid>/fdinfo).
 // Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
-const float FIELD_CHANCE = 0.11;      // -3.3%
-const float COMETCLOSE_CHANCE = 0.11; // -2.9%
-const float CRAB_CHANCE = 0.10;       // -1.1%
-const float RING_CHANCE = 0.09;       //  0.0%
+const float FIELD_CHANCE = 0.10;      // -3.3%
+const float COMETCLOSE_CHANCE = 0.10; // -2.9%
+const float CRAB_CHANCE = 0.09;       // -1.1%
+const float RING_CHANCE = 0.08;       //  0.0%
 const float PLANET_CHANCE = 0.08;     // +0.2%
 const float COMET_CHANCE = 0.07;      // +0.7%
 const float ELLIPTICAL_CHANCE = 0.06; // +2.0%
 const float BIPOLAR_CHANCE = 0.06;    // +2.2%
+const float PULSAR_CHANCE = 0.06;     // +2.2%
 const float SPIRAL_CHANCE = 0.05;     // +3.0%
 const float SYSTEM_CHANCE = 0.05;     // +3.1%
-const float STAR_CHANCE = 0.05;       // +3.0%
+const float STAR_CHANCE = 0.04;       // +3.0%
 const float PILLARS_CHANCE = 0.04;    // +3.9%
 const float BLACKHOLE_CHANCE = 0.04;  // +4.1%
 const float BINARY_CHANCE = 0.03;     // +4.0%
 const float EATEN_CHANCE = 0.02;      // +5.4%
-// The rest (~4%) is plain sky.
+const float PULSARCLOSE_CHANCE = 0.02; // +7.3%
+// The rest (~1%) is plain sky.
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -84,6 +88,10 @@ int pickEvent(float roll) {
     if (roll < c) return EV_BINARY;
     c += EATEN_CHANCE;
     if (roll < c) return EV_EATEN;
+    c += PULSAR_CHANCE;
+    if (roll < c) return EV_PULSAR;
+    c += PULSARCLOSE_CHANCE;
+    if (roll < c) return EV_PULSARCLOSE;
     c += RING_CHANCE;
     if (roll < c) return EV_RING;
     c += PILLARS_CHANCE;

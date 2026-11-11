@@ -16,6 +16,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasSystem = ev == EV_SYSTEM;
     bool hasBinary = ev == EV_BINARY;
     bool hasEaten = ev == EV_EATEN;
+    bool hasPulsar = ev == EV_PULSAR;
+    bool hasPulsarClose = ev == EV_PULSARCLOSE;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -108,6 +110,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if (hasField) {
         vec4 field = asteroidField(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - field.a) + field.rgb;
+    }
+    if (hasPulsarClose) {
+        col += pulsarCloseUp(uv, eventSeed, slot, t, fade).rgb;
+    }
+    if (hasPulsar) {
+        col += pulsar(uv, eventSeed, slot, t, fade).rgb;
     }
     if (hasCometClose) {
         vec4 cc = cometCloseUp(uv, eventSeed, slot, t, fade);
