@@ -25,6 +25,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasRogue = ev == EV_ROGUE;
     bool hasHorizon = ev == EV_HORIZON;
     bool hasCluster = ev == EV_CLUSTER;
+    bool hasGiant = ev == EV_GIANT;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -116,6 +117,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         col = col * (1.0 - hz.a) + hz.rgb;
         // From orbit, meteors burn up far below us, so none streak across this sky.
         solid = fade;
+    }
+    if (hasGiant) {
+        vec4 gp = giantPlanet(uv, eventSeed, slot, t, fade);
+        col = col * (1.0 - gp.a) + gp.rgb;
+        solid = max(solid, gp.a);
     }
     if (hasCluster) {
         vec4 sc = starCluster(uv, eventSeed, slot, t, fade);
