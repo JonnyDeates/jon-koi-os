@@ -41,9 +41,7 @@
     transmission_4-gtk # The GTK‑based graphical interface for Transmission, a BitTorrent client.
     mpv # A versatile media player capable of playing video and audio with high‑quality output and extensive format support.
     hyprpicker
-    hyprpaper
     hypridle
-    swww # A wallpaper setter for Wayland compositors (often used with Sway or Hyprland) that makes changing backgrounds easier.
     remmina # A remote desktop client that supports multiple protocols (such as RDP, VNC, and SSH) to access other computers.
   ];
 

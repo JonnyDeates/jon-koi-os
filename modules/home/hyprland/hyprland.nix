@@ -61,13 +61,10 @@ with lib;
           env = XCURSOR_SIZE,64
           exec-once = dbus-update-activation-environment --systemd --all
           exec-once = systemctl --user import-environment QT_QPA_PLATFORMTHEME WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
-          exec-once = killall -q swww;sleep .5 && swww init
           exec-once = killall -q swaync;sleep .5 && swaync
           exec-once = nm-applet --indicator
           exec-once = lxqt-policykit-agent
           exec-once = sleep 2 && hypridle
-          exec-once = sleep 1.5 && swww img /home/${username}/Pictures/Wallpapers/jonkoios.png
-          exec-once = sleep 2 && wallsetter
           exec-once = sleep 3 && wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0
           monitor=,preferred,auto,1
           ${extraMonitorSettings}
@@ -130,6 +127,8 @@ with lib;
                       mouse_move_enables_dpms = true
                       key_press_enables_dpms = false
                       disable_hyprland_logo = true
+                      force_default_wallpaper = 0
+                      background_color = 0x05060f
                    }
                    animations {
                       enabled = yes
@@ -167,7 +166,7 @@ with lib;
                     bind = ${modifier}SHIFT,Return,exec,rofi-launcher
                     bind = ${modifier},TAB,exec,rofi -show window
                     bind = ${modifier}SHIFT,W,exec,web-search
-                    bind = ${modifier}ALT,W,exec,wallsetter
+                    bind = ${modifier}ALT,W,exec,space-wallpaper-toggle
                     bind = ${modifier}SHIFT,N,exec,swaync-client -rs
                     bind = ${modifier},W,exec,${browser}
                     bind = ${modifier},E,exec,emopicker9000

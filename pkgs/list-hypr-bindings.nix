@@ -19,7 +19,7 @@ pkgs.writeShellScriptBin "list-hypr-bindings" ''
   " + ENTER" "Terminal" "${terminal}" \
   " + SHIFT + ENTER" "App Launcher" "rofi" \
   " + TAB" "Window Switcher" "rofi -show window" \
-  " + ALT + W" "Change Wallpaper" "wallsetter" \
+  " + ALT + W" "Toggle Animated Wallpaper" "space-wallpaper-toggle" \
   " + Q" "Kill Focused Window" "killactive" \
   " + SHIFT + W" "Search Websites Like Nix Packages" "web-search" \
   " + SHIFT + N" "Reload SwayNC Styling" "swaync-client -rs" \

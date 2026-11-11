@@ -1,7 +1,7 @@
 {
   imports = [
     ./hyprland.nix
-    ./hyprpaper.nix
+    ./space-wallpaper.nix
     ./hypridle.nix
     ./hyprlock.nix
   ];

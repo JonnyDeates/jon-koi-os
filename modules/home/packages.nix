@@ -11,10 +11,6 @@
     (import ../../pkgs/emoji-picker.nix { inherit pkgs; })
     (import ../../pkgs/task-waybar.nix { inherit pkgs; })
     (import ../../pkgs/nvidia-offload.nix { inherit pkgs; })
-    (import ../../pkgs/wallsetter.nix {
-      inherit pkgs;
-      inherit username;
-    })
     (import ../../pkgs/web-search.nix { inherit pkgs; })
     (import ../../pkgs/rofi-launcher.nix { inherit pkgs; })
     (import ../../pkgs/screenshootin.nix { inherit pkgs; })
