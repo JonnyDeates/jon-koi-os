@@ -18,6 +18,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasEaten = ev == EV_EATEN;
     bool hasPulsar = ev == EV_PULSAR;
     bool hasPulsarClose = ev == EV_PULSARCLOSE;
+    bool hasSupernova = ev == EV_SUPERNOVA;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -49,6 +50,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         vec2 center = (hash22(vec2(slot * 3.1, eventSeed + 75.0)) - 0.5) * 2.0 * halfExtent() * 0.8;
         center += (hash22(vec2(slot, eventSeed + 77.0)) - 0.5) * 0.0004 * lt;
         sun = star(uv, center, radius, kind, eventSeed, slot, t, fade, sunGlow, shimmer);
+    }
+    vec3 nova = vec3(0.0);
+    if (hasSupernova) {
+        nova = supernova(uv, eventSeed, slot, lt, t, fade, shimmer).rgb;
     }
     vec4 system = vec4(0.0);
     if (hasBinary) {
@@ -111,6 +116,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         vec4 field = asteroidField(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - field.a) + field.rgb;
     }
+    col += nova;
     if (hasPulsarClose) {
         col += pulsarCloseUp(uv, eventSeed, slot, t, fade).rgb;
     }
