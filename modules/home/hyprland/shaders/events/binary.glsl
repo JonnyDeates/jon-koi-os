@@ -101,7 +101,7 @@ vec4 binaryStars(vec2 uv, float seed, float slot, float t, float fade, out float
 // still; the motion is in the gas. Premultiplied colour/coverage; shimmer is the heat ripple.
 vec4 starEaten(vec2 uv, float seed, float slot, float t, float fade, out float shimmer) {
     vec2 c = (hash22(vec2(slot * 6.7, seed + 251.0)) - 0.5) * 2.0 * halfExtent() * vec2(0.2, 0.15);
-    c += (hash22(vec2(slot, seed + 273.0)) - 0.5) * 0.0003 * t; // a very slow drift
+    c += (hash22(vec2(slot, seed + 273.0)) - 0.5) * 0.0003 * eventTime(t); // a very slow drift
     float ang = hash12(vec2(slot, seed + 253.0)) * 6.2831;
     vec2 axis = vec2(cos(ang), sin(ang));                       // giant -> dwarf
     float side = hash12(vec2(slot, seed + 257.0)) < 0.5 ? -1.0 : 1.0;
