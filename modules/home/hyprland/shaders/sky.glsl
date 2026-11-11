@@ -108,9 +108,11 @@ vec3 heatStars(vec2 uv, float seed, float t, float lens) {
 vec3 sky(vec2 screen, vec2 bgUv, vec2 skySeed, float t, float lens, float nebulaAmount) {
     vec3 col = mix(vec3(0.035, 0.015, 0.060), vec3(0.008, 0.010, 0.030), screen.y);
 
-    float dens;
-    col += nebula(bgUv, skySeed, hash12(skySeed + 5.0), t, dens) * nebulaAmount;
-    dens *= nebulaAmount;
+    float dens = 0.0;
+    if (nebulaAmount > 0.0) { // skipped entirely while an event replaces the nebula
+        col += nebula(bgUv, skySeed, hash12(skySeed + 5.0), t, dens) * nebulaAmount;
+        dens *= nebulaAmount;
+    }
 
     vec3 stars = vec3(0.0);
     stars += starLayer(bgUv + vec2(t * 0.0030, t * 0.0010), 60.0, 0.14, 1.00, skySeed.x, t, lens);

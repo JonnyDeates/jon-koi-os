@@ -18,6 +18,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
     bool hasGalaxy = ev == EV_GALAXY;
+    bool hasPillars = ev == EV_PILLARS;
+    bool hasRing = ev == EV_RING;
+    bool hasBipolar = ev == EV_BIPOLAR;
+    bool hasCrab = ev == EV_CRAB;
 
     vec2 bgUv = uv;
     float shadow = 1.0;
@@ -49,7 +53,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bgUv += wob * shimmer * 0.004;
 
     // Asteroid fields get plain dark space behind them: the nebula fades out as the field fades in.
-    float nebulaAmount = hasField ? 1.0 - fade : 1.0;
+    // A nebula close-up replaces the background nebula the same way.
+    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar ? 1.0 - fade : 1.0;
 
     // A new random sky every SKY_PERIOD, cross-fading into the next one over the last SKY_FADE.
     float hour = floor(t / SKY_PERIOD);
@@ -61,6 +66,20 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         col = mix(col, sky(screen, bgUv, skySeedB, t, lens, nebulaAmount), skyBlend);
     }
 
+    if (hasPillars) {
+        vec4 n = pillarNebula(uv, eventSeed, slot, t) * fade;
+        col = col * (1.0 - n.a) + n.rgb;
+    }
+    if (hasBipolar) {
+        vec4 n = bipolarNebula(uv, eventSeed, slot, t, fade);
+        col = col * (1.0 - n.a) + n.rgb;
+    }
+    if (hasRing) {
+        col += ringNebula(uv, eventSeed, slot, t).rgb * fade;
+    }
+    if (hasCrab) {
+        col += crabNebula(uv, eventSeed, slot, t, fade).rgb;
+    }
     if (hasGalaxy) {
         vec4 g = galaxy(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - g.a) + g.rgb;

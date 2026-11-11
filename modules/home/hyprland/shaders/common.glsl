@@ -19,6 +19,10 @@ const int EV_COMET = 4;
 const int EV_FIELD = 5;
 const int EV_PLANET = 6;
 const int EV_GALAXY = 7;
+const int EV_PILLARS = 8;
+const int EV_CRAB = 9;
+const int EV_RING = 10;
+const int EV_BIPOLAR = 11;
 
 // Set to an EV_* id to always show that event (space-wallpaper-preview does this).
 const int FORCE_EVENT = -1;
@@ -32,14 +36,19 @@ const float SKY_FADE = 60.0;
 
 // Chances per roll. The more GPU an event costs, the rarer it is (extra cost over plain sky at
 // 4K in comments, measured from /proc/<pid>/fdinfo).
-const float PLANET_CHANCE = 0.20;    // +0.2%
-const float COMET_CHANCE = 0.16;     // +0.7%
-const float FIELD_CHANCE = 0.12;     // +1.6%
-const float GALAXY_CHANCE = 0.10;    // +2.4%
-const float SYSTEM_CHANCE = 0.10;    // +2.5%
-const float STAR_CHANCE = 0.08;      // +3.0%
-const float BLACKHOLE_CHANCE = 0.06; // +4.1%
-// The rest (~18%) is plain sky.
+// Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
+const float FIELD_CHANCE = 0.13;     // -3.3%
+const float CRAB_CHANCE = 0.11;      // -1.1%
+const float RING_CHANCE = 0.10;      //  0.0%
+const float PLANET_CHANCE = 0.10;    // +0.2%
+const float COMET_CHANCE = 0.09;     // +0.7%
+const float BIPOLAR_CHANCE = 0.08;   // +2.2%
+const float GALAXY_CHANCE = 0.07;    // +2.4%
+const float SYSTEM_CHANCE = 0.07;    // +2.5%
+const float STAR_CHANCE = 0.05;      // +3.0%
+const float PILLARS_CHANCE = 0.04;   // +3.9%
+const float BLACKHOLE_CHANCE = 0.04; // +4.1%
+// The rest (~12%) is plain sky.
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -59,6 +68,14 @@ int pickEvent(float roll) {
     if (roll < c) return EV_PLANET;
     c += GALAXY_CHANCE;
     if (roll < c) return EV_GALAXY;
+    c += RING_CHANCE;
+    if (roll < c) return EV_RING;
+    c += PILLARS_CHANCE;
+    if (roll < c) return EV_PILLARS;
+    c += CRAB_CHANCE;
+    if (roll < c) return EV_CRAB;
+    c += BIPOLAR_CHANCE;
+    if (roll < c) return EV_BIPOLAR;
     return EV_NONE;
 }
 
