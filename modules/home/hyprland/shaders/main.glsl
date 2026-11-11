@@ -19,6 +19,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasPulsar = ev == EV_PULSAR;
     bool hasPulsarClose = ev == EV_PULSARCLOSE;
     bool hasSupernova = ev == EV_SUPERNOVA;
+    bool hasSurface = ev == EV_SURFACE;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -71,7 +72,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // Asteroid fields get plain dark space behind them: the nebula fades out as the field fades in.
     // A nebula close-up replaces the background nebula the same way.
-    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose ? 1.0 - fade : 1.0;
+    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface ? 1.0 - fade : 1.0;
 
     // A new random sky every SKY_PERIOD, cross-fading into the next one over the last SKY_FADE.
     float hour = floor(t / SKY_PERIOD);
@@ -117,6 +118,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         col = col * (1.0 - field.a) + field.rgb;
     }
     col += nova;
+    if (hasSurface) {
+        vec4 ss = starSurface(uv, eventSeed, slot, t, fade);
+        col = col * (1.0 - ss.a) + ss.rgb;
+    }
     if (hasPulsarClose) {
         col += pulsarCloseUp(uv, eventSeed, slot, t, fade).rgb;
     }

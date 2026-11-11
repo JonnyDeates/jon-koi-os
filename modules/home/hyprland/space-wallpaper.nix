@@ -36,6 +36,7 @@ let
     ./shaders/events/binary.glsl
     ./shaders/events/pulsar.glsl
     ./shaders/events/supernova.glsl
+    ./shaders/events/star-surface.glsl
     ./shaders/main.glsl
   ];
 
@@ -69,7 +70,7 @@ let
 
   # Show one event on demand instead of waiting for the random roll.
   preview = pkgs.writeShellScriptBin "space-wallpaper-preview" ''
-    events="hole star system comet field planet spiral pillars crab ring bipolar elliptical bigcomet binary eaten pulsar pulsarclose supernova"
+    events="hole star system comet field planet spiral pillars crab ring bipolar elliptical bigcomet binary eaten pulsar pulsarclose supernova surface"
     if [ $# -lt 1 ]; then
       echo "usage: space-wallpaper-preview <event> [output] [seconds] [seed]"
       echo "events: $events"

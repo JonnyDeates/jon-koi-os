@@ -30,6 +30,7 @@ const int EV_EATEN = 15;
 const int EV_PULSAR = 16;
 const int EV_PULSARCLOSE = 17;
 const int EV_SUPERNOVA = 18;
+const int EV_SURFACE = 19;
 
 // Set to an EV_* id to always show that event (space-wallpaper-preview does this).
 const int FORCE_EVENT = -1;
@@ -44,11 +45,11 @@ const float SKY_FADE = 60.0;
 // Chances per roll. The more GPU an event costs, the rarer it is (extra cost over plain sky at
 // 4K in comments, measured from /proc/<pid>/fdinfo).
 // Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
-const float FIELD_CHANCE = 0.09;      // -3.3%
-const float COMETCLOSE_CHANCE = 0.09; // -2.9%
-const float CRAB_CHANCE = 0.09;       // -1.1%
-const float RING_CHANCE = 0.08;       //  0.0%
-const float PLANET_CHANCE = 0.08;     // +0.2%
+const float FIELD_CHANCE = 0.08;      // -3.3%
+const float COMETCLOSE_CHANCE = 0.08; // -2.9%
+const float CRAB_CHANCE = 0.08;       // -1.1%
+const float RING_CHANCE = 0.07;       //  0.0%
+const float PLANET_CHANCE = 0.07;     // +0.2%
 const float COMET_CHANCE = 0.07;      // +0.7%
 const float ELLIPTICAL_CHANCE = 0.06; // +2.0%
 const float BIPOLAR_CHANCE = 0.06;    // +2.2%
@@ -62,6 +63,7 @@ const float BINARY_CHANCE = 0.03;     // +4.0%
 const float EATEN_CHANCE = 0.02;      // +5.4%
 const float PULSARCLOSE_CHANCE = 0.02; // +7.3%
 const float SUPERNOVA_CHANCE = 0.02;   // +5.0% (peak, during the shell)
+const float SURFACE_CHANCE = 0.05;     // +2.1%
 // The rest (~1%) is plain sky.
 
 int pickEvent(float roll) {
@@ -96,6 +98,8 @@ int pickEvent(float roll) {
     if (roll < c) return EV_PULSARCLOSE;
     c += SUPERNOVA_CHANCE;
     if (roll < c) return EV_SUPERNOVA;
+    c += SURFACE_CHANCE;
+    if (roll < c) return EV_SURFACE;
     c += RING_CHANCE;
     if (roll < c) return EV_RING;
     c += PILLARS_CHANCE;
