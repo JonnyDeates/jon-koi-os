@@ -18,6 +18,78 @@ let
     patches = (old.patches or [ ]) ++ [ ./shaderbg-hidpi.patch ];
   });
 
+  # GLSL needs definitions before use, so the parts are joined in dependency order.
+  spaceShader = pkgs.concatText "space.frag" [
+    ./shaders/common.glsl
+    ./shaders/sky.glsl
+    ./shaders/bodies.glsl
+    ./shaders/events/planet.glsl
+    ./shaders/events/solar-system.glsl
+    ./shaders/events/comet.glsl
+    ./shaders/events/asteroid-field.glsl
+    ./shaders/events/black-hole.glsl
+    ./shaders/events/galaxy.glsl
+    ./shaders/main.glsl
+  ];
+
+  # Seeds are whole numbers 0-99999 (the shader gets seed / 100). Uses $seed if set, otherwise a
+  # random one, and prints it so a scene you like can be brought back.
+  pickSeed = ''
+    if [ -n "$seed" ]; then
+      case "$seed" in
+        *[!0-9]*)
+          echo "seed must be a whole number" >&2
+          exit 1
+          ;;
+      esac
+      seed=$((10#$seed % 100000))
+    else
+      seed=$(( $(${pkgs.coreutils}/bin/od -An -N4 -tu4 /dev/urandom) % 100000 ))
+    fi
+    echo "seed: $seed"
+  '';
+  seedSed = "s|const float RANDOM_SEED = 0.0;|const float RANDOM_SEED = $seed.0 / 100.0;|";
+
+  # Starts the wallpaper on one output with this launch's seed ($SPACE_WALLPAPER_SEED, or random).
+  launch = pkgs.writeShellScript "space-wallpaper-launch" ''
+    output=$1
+    seed=''${SPACE_WALLPAPER_SEED:-}
+    ${pickSeed}
+    frag="$XDG_RUNTIME_DIR/space-wallpaper-$output.frag"
+    ${pkgs.gnused}/bin/sed -e "${seedSed}" ${spaceShader} > "$frag"
+    exec ${shaderbg}/bin/shaderbg --fps 30 --layer background "$output" "$frag"
+  '';
+
+  # Show one event on demand instead of waiting for the random roll.
+  preview = pkgs.writeShellScriptBin "space-wallpaper-preview" ''
+    events="hole star system comet field planet galaxy"
+    if [ $# -lt 1 ]; then
+      echo "usage: space-wallpaper-preview <event> [output] [seconds] [seed]"
+      echo "events: $events"
+      exit 1
+    fi
+    id=0
+    for name in $events; do
+      id=$((id + 1))
+      [ "$name" = "$1" ] && break
+    done
+    if [ "$name" != "$1" ]; then
+      echo "unknown event '$1'; events: $events"
+      exit 1
+    fi
+    output=''${2:-DP-2}
+    seconds=''${3:-20}
+    seed=''${4:-}
+    ${pickSeed}
+    frag=$(mktemp --suffix=.frag)
+    trap 'rm -f "$frag"' EXIT
+    ${pkgs.gnused}/bin/sed -e "s/const int FORCE_EVENT = -1;/const int FORCE_EVENT = $id;/" \
+      -e 's/const float EVENT_FADE = 20.0;/const float EVENT_FADE = 0.001;/' \
+      -e "${seedSed}" ${spaceShader} > "$frag"
+    ${pkgs.coreutils}/bin/timeout "$seconds" ${shaderbg}/bin/shaderbg --fps 30 --layer overlay "$output" "$frag"
+    true
+  '';
+
   # Freeze a monitor's shader while its active workspace has a fullscreen window (e.g. a game).
   pauser = pkgs.writeShellScript "space-wallpaper-pauser" ''
     export PATH=${
@@ -45,7 +117,7 @@ let
     # Also recheck periodically: a wallpaper instance that restarts behind a fullscreen window
     # starts unpaused, and no Hyprland event fires for that.
     (while sleep 5; do update; done) &
-    socat -U -"UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" | while read -r event; do
+    socat -U - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" | while read -r event; do
       case "$event" in
         fullscreen\>\>* | workspace\>\>* | focusedmon\>\>* | openwindow\>\>* | closewindow\>\>* | movewindow\>\>* | moveworkspace\>\>*)
           update
@@ -69,7 +141,10 @@ let
   };
 in
 {
-  home.packages = [ toggle ];
+  home.packages = [
+    toggle
+    preview
+  ];
 
   systemd.user.targets.space-wallpaper = {
     Unit = {
@@ -89,7 +164,7 @@ in
       StartLimitIntervalSec = 0;
     };
     Service = resilient // {
-      ExecStart = "${shaderbg}/bin/shaderbg --fps 30 --layer background %i ${./shaders/space.frag}";
+      ExecStart = "${launch} %i";
     };
   };
 
