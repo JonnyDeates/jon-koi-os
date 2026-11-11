@@ -9,12 +9,12 @@ vec4 solarSystem(vec2 uv, float seed, float slot, float t, float fade, out float
     float depthK = sqrt(1.0 - k * k);
     float kind = hash12(vec2(slot, seed + 97.0)) * 0.85;     // mostly suns, sometimes giants or blue
     bool giant = kind >= STAR_GIANT && kind < STAR_BLUE;
-    float starR = giant ? 0.07 : kind >= STAR_BLUE ? 0.03 : 0.045;
+    float starR = giant ? 0.09 : kind >= STAR_BLUE ? 0.045 : 0.06;
     int count = 3 + int(hash12(vec2(slot, seed + 99.0)) * 2.99); // 3-5 planets
     const float ORBIT_SPEED = 0.08; // innermost planet's angular speed, rad/s (~80 s per orbit)
 
     float aMax = halfExtent().x * 0.92;
-    float a0 = max(starR * 2.6, aMax / pow(1.55, float(count - 1)));
+    float a0 = max(starR * 3.2, aMax / pow(1.55, float(count - 1))); // clear of the star's glow
     float spacing = pow(aMax / a0, 1.0 / float(count - 1));
 
     vec2 p = rotate(-sysTilt) * (uv - center); // into the orbit frame
@@ -45,9 +45,15 @@ vec4 solarSystem(vec2 uv, float seed, float slot, float t, float fade, out float
         float theta = h * 6.2831 + ORBIT_SPEED * pow(a0 / a, 1.5) * t;
         vec2 o = a * vec2(cos(theta), sin(theta));
         vec2 pc = center + rotate(sysTilt) * vec2(o.x, o.y * k);
-        float prad = mix(0.008, 0.026, pow(hash12(vec2(h, 5.0)), 1.5));
+        // Rocky planets mostly inside, gas giants mostly outside, like our solar system. Sizes are
+        // relative to the star: rocky 6-11% of its radius, gas giants 16-28%.
+        bool gas = (float(i) + hash12(vec2(h, 9.0)) * 1.5) / float(count) > 0.55;
+        float prad = starR * (gas ? mix(0.16, 0.28, hash12(vec2(h, 5.0))) : mix(0.06, 0.11, hash12(vec2(h, 5.0))));
+        // Slight perspective: a little bigger on the near side of the orbit, smaller on the far side.
+        prad *= 1.0 - 0.12 * (o.y / a) * depthK;
+        prad = max(prad, 2.5 * pxScale() / minDim()); // never smaller than a few pixels
         vec3 rel = vec3(pc - center, -o.y * depthK); // view space; far side of the orbit is away from us
-        vec4 pl = miniPlanet(uv, pc, prad, -rel, t, h * 97.0);
+        vec4 pl = miniPlanet(uv, pc, prad, -rel, t, h * 97.0, gas);
         if (o.y > 0.0) {
             backPlanets = over(pl, backPlanets);
         } else {

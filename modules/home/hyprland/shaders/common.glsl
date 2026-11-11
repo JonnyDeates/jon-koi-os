@@ -18,11 +18,12 @@ const int EV_SYSTEM = 3;
 const int EV_COMET = 4;
 const int EV_FIELD = 5;
 const int EV_PLANET = 6;
-const int EV_GALAXY = 7;
+const int EV_SPIRAL = 7;
 const int EV_PILLARS = 8;
 const int EV_CRAB = 9;
 const int EV_RING = 10;
 const int EV_BIPOLAR = 11;
+const int EV_ELLIPTICAL = 12;
 
 // Set to an EV_* id to always show that event (space-wallpaper-preview does this).
 const int FORCE_EVENT = -1;
@@ -42,13 +43,14 @@ const float CRAB_CHANCE = 0.11;      // -1.1%
 const float RING_CHANCE = 0.10;      //  0.0%
 const float PLANET_CHANCE = 0.10;    // +0.2%
 const float COMET_CHANCE = 0.09;     // +0.7%
-const float BIPOLAR_CHANCE = 0.08;   // +2.2%
-const float GALAXY_CHANCE = 0.07;    // +2.4%
-const float SYSTEM_CHANCE = 0.07;    // +2.5%
+const float ELLIPTICAL_CHANCE = 0.07; // +2.0%
+const float BIPOLAR_CHANCE = 0.07;   // +2.2%
+const float SPIRAL_CHANCE = 0.06;    // +3.0%
+const float SYSTEM_CHANCE = 0.06;    // +3.1%
 const float STAR_CHANCE = 0.05;      // +3.0%
 const float PILLARS_CHANCE = 0.04;   // +3.9%
 const float BLACKHOLE_CHANCE = 0.04; // +4.1%
-// The rest (~12%) is plain sky.
+// The rest (~9%) is plain sky.
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -66,8 +68,10 @@ int pickEvent(float roll) {
     if (roll < c) return EV_FIELD;
     c += PLANET_CHANCE;
     if (roll < c) return EV_PLANET;
-    c += GALAXY_CHANCE;
-    if (roll < c) return EV_GALAXY;
+    c += SPIRAL_CHANCE;
+    if (roll < c) return EV_SPIRAL;
+    c += ELLIPTICAL_CHANCE;
+    if (roll < c) return EV_ELLIPTICAL;
     c += RING_CHANCE;
     if (roll < c) return EV_RING;
     c += PILLARS_CHANCE;

@@ -17,7 +17,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
-    bool hasGalaxy = ev == EV_GALAXY;
+    bool hasSpiral = ev == EV_SPIRAL;
+    bool hasElliptical = ev == EV_ELLIPTICAL;
     bool hasPillars = ev == EV_PILLARS;
     bool hasRing = ev == EV_RING;
     bool hasBipolar = ev == EV_BIPOLAR;
@@ -80,8 +81,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if (hasCrab) {
         col += crabNebula(uv, eventSeed, slot, t, fade).rgb;
     }
-    if (hasGalaxy) {
-        vec4 g = galaxy(uv, eventSeed, slot, t, fade);
+    if (hasElliptical) {
+        vec4 g = ellipticalGalaxy(uv, eventSeed, slot, t, fade);
+        col = col * (1.0 - g.a) + g.rgb;
+    }
+    if (hasSpiral) {
+        vec4 g = spiralGalaxy(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - g.a) + g.rgb;
     }
     if (hasPlanet) {

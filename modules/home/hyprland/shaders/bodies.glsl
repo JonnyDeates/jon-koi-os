@@ -101,7 +101,7 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
 
 // A small planet lit by a star in direction toStar (view space, z toward the camera), with a thin
 // atmosphere. Premultiplied colour/coverage; the atmosphere glow is folded into .rgb.
-vec4 miniPlanet(vec2 uv, vec2 c, float rad, vec3 toStar, float t, float pseed) {
+vec4 miniPlanet(vec2 uv, vec2 c, float rad, vec3 toStar, float t, float pseed, bool gas) {
     vec2 d = (uv - c) / rad;
     float r2 = dot(d, d);
     if (r2 > 2.5) {
@@ -110,7 +110,6 @@ vec4 miniPlanet(vec2 uv, vec2 c, float rad, vec3 toStar, float t, float pseed) {
     float r = sqrt(r2);
     float px = 1.5 / (rad * minDim());
     vec3 L = normalize(toStar);
-    bool gas = hash12(vec2(pseed, 1.0)) < 0.45;
     float hueA = hash12(vec2(pseed, 2.0));
     vec3 palA = planetHue(hueA);
     vec3 palB = planetHue(fract(hueA + mix(0.12, 0.45, hash12(vec2(pseed, 3.0)))));
