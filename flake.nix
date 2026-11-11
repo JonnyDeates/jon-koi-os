@@ -41,6 +41,7 @@
         in {
           bambu-studio = unstable.bambu-studio;
           r2modman = unstable.r2modman;
+          claude-code = unstable.claude-code;
         };
     in
     {

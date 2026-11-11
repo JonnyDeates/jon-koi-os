@@ -189,6 +189,7 @@ in
       inherit username;
     })
     (import ../../scripts/zed-open.nix { inherit pkgs; })
+    (import ../../scripts/lot-map-window.nix { inherit pkgs; })
     (import ../../scripts/shutdown-postpone.nix { inherit pkgs; })
     pkgs.papirus-icon-theme
     pkgs.xdg-desktop-portal-gtk

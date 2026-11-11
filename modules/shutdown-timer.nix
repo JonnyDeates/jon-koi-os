@@ -20,6 +20,15 @@ let
     HOUR=$(date +%-H)
     NOW=$(date +%s)
 
+    # Enforcement window is 22:00-01:59. If this script runs outside that
+    # window (e.g. because switch-to-configuration restarted the oneshot
+    # during a nixos-rebuild), exit immediately — the deadline logic below
+    # assumes we are inside the window.
+    if [ "$HOUR" -lt 22 ] && [ "$HOUR" -ge 2 ]; then
+      log "Outside enforcement window (hour=$HOUR). Exiting."
+      exit 0
+    fi
+
     # Determine which "night" we're in
     if [ "$HOUR" -lt 2 ]; then
       # Past midnight — this night started yesterday
@@ -137,6 +146,11 @@ in
       after = [ "shutdown-timer-init.service" ];
       # Layer 1: refuse `systemctl stop shutdown-check.service`.
       unitConfig.RefuseManualStop = true;
+      # Prevent switch-to-configuration from starting/restarting this oneshot
+      # when the unit definition changes. It should only ever be triggered by
+      # its timer, never as a side effect of a rebuild.
+      restartIfChanged = false;
+      stopIfChanged = false;
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = false;
@@ -173,6 +187,9 @@ in
       requires = [ "shutdown-timer-init.service" ];
       after = [ "shutdown-timer-init.service" ];
       unitConfig.RefuseManualStop = true;
+      # See shutdown-check: oneshot must only fire from its timer.
+      restartIfChanged = false;
+      stopIfChanged = false;
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = false;

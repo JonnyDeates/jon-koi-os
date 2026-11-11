@@ -104,6 +104,9 @@ with lib;
                          windowrule = float, title:pavucontrol
                          windowrule = float, title:swayimg
                          windowrule = float, title:nwg-look
+                         windowrule = float, title:^(lot-map)$
+                         windowrule = size 520 500, title:^(lot-map)$
+                         windowrule = pin, title:^(lot-map)$
                          windowrule = float, title:qt5ct
                          windowrule = float, title:mpv
                          windowrule = float, title:zoom
