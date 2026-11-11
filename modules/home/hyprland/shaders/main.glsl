@@ -14,6 +14,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasHole = ev == EV_HOLE;
     bool hasStar = ev == EV_STAR;
     bool hasSystem = ev == EV_SYSTEM;
+    bool hasBinary = ev == EV_BINARY;
+    bool hasEaten = ev == EV_EATEN;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -47,6 +49,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         sun = star(uv, center, radius, kind, eventSeed, slot, t, fade, sunGlow, shimmer);
     }
     vec4 system = vec4(0.0);
+    if (hasBinary) {
+        system = binaryStars(uv, eventSeed, slot, t, fade, shimmer);
+    }
+    if (hasEaten) {
+        system = starEaten(uv, eventSeed, slot, t, fade, shimmer);
+    }
     if (hasSystem) {
         system = solarSystem(uv, eventSeed, slot, t, fade, shimmer);
     }
