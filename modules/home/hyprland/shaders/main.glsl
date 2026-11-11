@@ -22,6 +22,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasSurface = ev == EV_SURFACE;
     bool hasCollision = ev == EV_COLLISION;
     bool hasQuasar = ev == EV_QUASAR;
+    bool hasRogue = ev == EV_ROGUE;
+    bool hasHorizon = ev == EV_HORIZON;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -74,7 +76,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // Asteroid fields get plain dark space behind them: the nebula fades out as the field fades in.
     // A nebula close-up replaces the background nebula the same way.
-    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar ? 1.0 - fade : 1.0;
+    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar || hasRogue || hasHorizon ? 1.0 - fade : 1.0;
 
     // A new random sky every SKY_PERIOD, cross-fading into the next one over the last SKY_FADE.
     float hour = floor(t / SKY_PERIOD);
@@ -86,6 +88,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         col = mix(col, sky(screen, bgUv, skySeedB, t, lens, nebulaAmount), skyBlend);
     }
 
+    // How much of each pixel is covered by something solid (planets, moons, rocks); meteors are
+    // hidden behind it.
+    float solid = 0.0;
     if (hasPillars) {
         vec4 n = pillarNebula(uv, eventSeed, slot, t) * fade;
         col = col * (1.0 - n.a) + n.rgb;
@@ -99,6 +104,17 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
     if (hasCrab) {
         col += crabNebula(uv, eventSeed, slot, t, fade).rgb;
+    }
+    if (hasRogue) {
+        vec4 rp = roguePlanet(uv, eventSeed, slot, t, fade);
+        col = col * (1.0 - rp.a) + rp.rgb;
+        solid = rp.a;
+    }
+    if (hasHorizon) {
+        vec4 hz = planetHorizon(uv, eventSeed, slot, t, fade);
+        col = col * (1.0 - hz.a) + hz.rgb;
+        // From orbit, meteors burn up far below us, so none streak across this sky.
+        solid = fade;
     }
     if (hasQuasar) {
         col += quasar(uv, eventSeed, slot, t, fade).rgb;
@@ -119,17 +135,21 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         vec3 glow;
         vec4 p = planet(uv, eventSeed, slot, lt, t, fade, glow);
         col = col * (1.0 - p.a) + p.rgb + glow;
+        solid = max(solid, p.a);
     }
     col = col * (1.0 - sun.a) + sun.rgb + sunGlow;
     col = col * (1.0 - system.a) + system.rgb;
+    solid = max(solid, system.a);
     if (hasField) {
         vec4 field = asteroidField(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - field.a) + field.rgb;
+        solid = max(solid, field.a);
     }
     col += nova;
     if (hasSurface) {
         vec4 ss = starSurface(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - ss.a) + ss.rgb;
+        solid = max(solid, ss.a);
     }
     if (hasPulsarClose) {
         col += pulsarCloseUp(uv, eventSeed, slot, t, fade).rgb;
@@ -140,6 +160,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if (hasCometClose) {
         vec4 cc = cometCloseUp(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - cc.a) + cc.rgb;
+        solid = max(solid, cc.a);
     }
     if (hasComet) {
         col += comet(uv, eventSeed, slot, lt, t, fade);
@@ -148,8 +169,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     col = col * shadow;
     col = col * (1.0 - holeOverlay.a) + holeOverlay.rgb;
 
-    // Shooting stars over everything.
-    col += meteors(uv, eventSeed, t);
+    // Shooting stars, behind anything solid in the scene.
+    col += meteors(uv, eventSeed, t) * (1.0 - clamp(max(solid, holeOverlay.a), 0.0, 1.0));
 
     vec2 c = screen - 0.5;
     col *= 1.0 - 0.35 * dot(c, c);

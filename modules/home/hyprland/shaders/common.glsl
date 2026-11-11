@@ -33,6 +33,8 @@ const int EV_SUPERNOVA = 18;
 const int EV_SURFACE = 19;
 const int EV_COLLISION = 20;
 const int EV_QUASAR = 21;
+const int EV_ROGUE = 22;
+const int EV_HORIZON = 23;
 
 // Set to an EV_* id to always show that event (space-wallpaper-preview does this).
 const int FORCE_EVENT = -1;
@@ -49,15 +51,15 @@ const float SKY_FADE = 60.0;
 // Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
 const float FIELD_CHANCE = 0.07;      // -3.3%
 const float COMETCLOSE_CHANCE = 0.07; // -2.9%
-const float CRAB_CHANCE = 0.07;       // -1.1%
-const float RING_CHANCE = 0.05;       //  0.0%
-const float PLANET_CHANCE = 0.05;     // +0.2%
-const float COMET_CHANCE = 0.05;      // +0.7%
-const float ELLIPTICAL_CHANCE = 0.05; // +2.0%
-const float BIPOLAR_CHANCE = 0.05;    // +2.2%
+const float CRAB_CHANCE = 0.06;       // -1.1%
+const float RING_CHANCE = 0.04;       //  0.0%
+const float PLANET_CHANCE = 0.04;     // +0.2%
+const float COMET_CHANCE = 0.04;      // +0.7%
+const float ELLIPTICAL_CHANCE = 0.04; // +2.0%
+const float BIPOLAR_CHANCE = 0.04;    // +2.2%
 const float PULSAR_CHANCE = 0.05;     // +2.2%
-const float SPIRAL_CHANCE = 0.05;     // +3.0%
-const float SYSTEM_CHANCE = 0.05;     // +3.1%
+const float SPIRAL_CHANCE = 0.04;     // +3.0%
+const float SYSTEM_CHANCE = 0.04;     // +3.1%
 const float STAR_CHANCE = 0.04;       // +3.0%
 const float PILLARS_CHANCE = 0.04;    // +3.9%
 const float BLACKHOLE_CHANCE = 0.04;  // +4.1%
@@ -65,9 +67,11 @@ const float BINARY_CHANCE = 0.03;     // +4.0%
 const float EATEN_CHANCE = 0.02;      // +5.4%
 const float PULSARCLOSE_CHANCE = 0.02; // +7.3%
 const float SUPERNOVA_CHANCE = 0.02;   // +5.0% (peak, during the shell)
-const float SURFACE_CHANCE = 0.05;     // +2.1%
-const float COLLISION_CHANCE = 0.05;   // +0.2%
+const float SURFACE_CHANCE = 0.04;     // +2.1%
+const float COLLISION_CHANCE = 0.04;   // +0.2%
 const float QUASAR_CHANCE = 0.07;      // -3.6%
+const float ROGUE_CHANCE = 0.06;      // -4.0%
+const float HORIZON_CHANCE = 0.02;    // +8.8%
 // The rest (~1%) is plain sky.
 
 int pickEvent(float roll) {
@@ -108,6 +112,10 @@ int pickEvent(float roll) {
     if (roll < c) return EV_COLLISION;
     c += QUASAR_CHANCE;
     if (roll < c) return EV_QUASAR;
+    c += ROGUE_CHANCE;
+    if (roll < c) return EV_ROGUE;
+    c += HORIZON_CHANCE;
+    if (roll < c) return EV_HORIZON;
     c += RING_CHANCE;
     if (roll < c) return EV_RING;
     c += PILLARS_CHANCE;
