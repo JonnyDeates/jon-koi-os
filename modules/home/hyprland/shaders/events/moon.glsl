@@ -7,6 +7,9 @@
 // on the ground; its day side throws a faint coloured light of its own. Sometimes the sun has
 // set, and the giant alone lights the ground. Worlds vary: grey and cratered, cracked water ice,
 // sulphur-yellow volcanic, or dark and battered. We slowly turn our head.
+// Sometimes the sun slides behind the giant over the event: the land goes dark under a ring of
+// sunlight glowing through the giant's air, then the sun re-emerges. And sometimes a small inner
+// moon races across the sky every few minutes, its phase lit by the same sun.
 // Units are metres. Premultiplied colour/coverage.
 
 const float MOON_R = 60000.0;  // moon radius: the ground curves away beyond a few hundred metres
@@ -263,7 +266,34 @@ vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade) {
     float gR = mix(0.16, 0.4, hash12(vec2(slot, seed + 615.0)));
     vec2 gs0 = vec2((hash12(vec2(slot, seed + 617.0)) - 0.5) * 1.2 * ext.x,
                     mix(hy + gR * 0.5, ext.y * 0.55, hash12(vec2(slot, seed + 619.0))));
+    bool eclipse = !night && hash12(vec2(slot, seed + 627.0)) < 0.25;
+    if (eclipse) {
+        // Keep the giant well clear of the horizon, so the sun's path beside it stays in the sky.
+        gs0.y = max(gs0.y, hy + gR * 1.3 + 0.06);
+    }
     vec3 G = moonRx(normalize(vec3(gs0, -f)), -pitch);
+    float gA = gR / f;          // the giant's angular radius
+    const float SUN_R = 0.011;  // the sun's screen radius
+    float sunA = SUN_R / f;
+
+    // Eclipse, sometimes: the sun is up beside the giant and creeps behind it over the event, then
+    // out the other side. Its path passes a little off centre.
+    float sunVis = 1.0;
+    float sunNear = 0.0;
+    if (eclipse) {
+        vec3 tx = normalize(cross(G, vec3(0.0, 1.0, 0.0)));
+        vec3 ty = cross(tx, G);
+        // Mostly sideways, so it neither rises from nor sets into the ground on the way.
+        float tAng = (hash12(vec2(slot, seed + 629.0)) - 0.5) * 0.9 + (hash12(vec2(slot, seed + 630.0)) < 0.5 ? 0.0 : 3.1416);
+        vec2 tdir = vec2(cos(tAng), sin(tAng));
+        float miss = (hash12(vec2(slot, seed + 631.0)) - 0.5) * gA * 0.9;
+        float along = mix(-2.6, 2.6, lt / EVENT_PERIOD) * gA;
+        vec2 o = tdir * along + vec2(-tdir.y, tdir.x) * miss;
+        L = normalize(G + tx * o.x + ty * o.y);
+        float dAng = acos(clamp(dot(L, G), -1.0, 1.0));
+        sunVis = smoothstep(gA - sunA, gA + sunA, dAng);
+        sunNear = smoothstep(gA * 1.7, gA * 0.95, dAng);
+    }
     vec3 Gc = moonRx(moonRy(G, -yaw), pitch);
     vec2 gCenter = f * Gc.xy / -Gc.z;
     vec3 Lc = moonRx(moonRy(L, -yaw), pitch);
@@ -276,7 +306,66 @@ vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade) {
     // Light from the giant's day side: brighter the fuller it is and the more sky it fills.
     float gPhase = 0.5 + 0.5 * dot(L, -G);
     vec3 gShine = gTint * gPhase * min(gR * gR / (f * f) * 16.0, 1.2);
-    vec3 sunC = vec3(1.0, 0.97, 0.92) * 0.45 * smoothstep(-0.01, 0.03, L.y);
+    // During the eclipse the ring of light around the giant still casts a faint coppery glow.
+    gShine += vec3(1.0, 0.55, 0.3) * sunNear * (1.0 - sunVis) * 0.05;
+    vec3 sunC = vec3(1.0, 0.97, 0.92) * 0.45 * smoothstep(-0.01, 0.03, L.y) * sunVis;
+    float pxU = 1.0 / minDim();
+
+    // The sky behind the ground: the sun (only ever in view during an eclipse), the giant, and
+    // sometimes a small inner moon racing across.
+    vec4 sunDisc = vec4(0.0);
+    vec2 sunSp = vec2(1e3);
+    if (eclipse && Lc.z < 0.0) {
+        sunSp = f * Lc.xy / -Lc.z;
+        float dsn = length(uv - sunSp);
+        float disc = smoothstep(SUN_R + pxU, SUN_R - pxU, dsn);
+        sunDisc = vec4(vec3(1.0, 0.97, 0.9) * 6.0 * disc, 0.0);
+    }
+    vec4 skyL = over(giant, sunDisc);
+    if (hash12(vec2(slot, seed + 633.0)) < 0.5) {
+        // Inner moon: a pass every few minutes, crossing the sky in a couple of minutes.
+        const float PASS = 330.0;
+        float pi = floor(lt / PASS);
+        float pt = (lt - pi * PASS) / 140.0;
+        if (pt < 1.0) {
+            float hp = hash12(vec2(pi + slot * 7.0, seed + 635.0));
+            vec2 a0 = vec2(-ext.x - 0.08, mix(hy + 0.12, ext.y * 0.75, hp));
+            vec2 a1 = vec2(ext.x + 0.08, mix(hy + 0.12, ext.y * 0.75, hash12(vec2(pi, seed + 637.0))));
+            if (hash12(vec2(pi, seed + 639.0)) < 0.5) {
+                vec2 tmp = a0; a0 = a1; a1 = tmp;
+            }
+            vec2 mc = mix(a0, a1, pt) + vec2(0.0, sin(pt * 3.1416) * 0.06);
+            float mr = mix(0.022, 0.045, hash12(vec2(pi, seed + 641.0)));
+            vec2 md = (uv - mc) / mr;
+            float rr = length(md);
+            if (rr < 1.0 + pxU / mr) {
+                vec3 n = vec3(md, sqrt(max(1.0 - rr * rr, 0.0)));
+                float mu = max(n.z, 0.05);
+                // Cratered grey rock, lit by the same sun (so its phase matches) and by the giant.
+                float tex = fbm(md * 2.5 + hp * 40.0) * 0.6 + fbm(md * 7.0 - hp * 20.0) * 0.4;
+                vec3 malb = vec3(0.34, 0.32, 0.3) * (0.6 + 0.8 * tex);
+                vec3 mcol = malb * (sunC * 2.2 * moonLS(n, Lc, mu) + gShine * moonLS(n, Gc, mu) + 0.004);
+                float mcov = smoothstep(1.0 + pxU / mr, 1.0 - pxU / mr, rr);
+                vec4 inner = vec4(mcol * mcov, mcov);
+                // Some passes go in front of the giant, some behind it.
+                skyL = hash12(vec2(pi, seed + 643.0)) < 0.6 ? over(inner, skyL) : over(giant, over(inner, sunDisc));
+            }
+        }
+    }
+    if (eclipse) {
+        // Sunlight glowing through the giant's atmosphere as a thin ring around its dark disc,
+        // brightest on the side nearest the sun, reddened low in the air.
+        vec2 gv = uv - gCenter;
+        float rg = length(gv) / gR;
+        vec2 toSun = normalize(sunSp - gCenter + 1e-5);
+        float side = mix(0.25, 1.0, pow(0.5 + 0.5 * dot(gv / max(length(gv), 1e-5), toSun), 2.0));
+        float ringW = 0.012 + 0.02 * sunNear;
+        float ring = exp(-pow((rg - 1.0) / ringW, 2.0)) + exp(-max(rg - 1.0, 0.0) / 0.06) * step(1.0, rg) * 0.25;
+        skyL.rgb += mix(vec3(1.0, 0.45, 0.2), vec3(1.0, 0.9, 0.75), side) * ring * side * sunNear * (1.0 - sunVis * 0.6) * 1.2;
+        // Glare from whatever part of the sun still shows.
+        float dsn = length(uv - sunSp);
+        skyL.rgb += vec3(1.0, 0.95, 0.85) * (exp(-dsn / 0.025) * 0.8 + exp(-dsn / 0.12) * 0.2) * sunVis * smoothstep(-0.01, 0.02, L.y);
+    }
 
     vec3 rd = moonRy(moonRx(normalize(vec3(uv, -f)), -pitch), yaw);
 
@@ -442,5 +531,5 @@ vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade) {
         col += alb * gShine * moonLS(n, G, mu) + alb * 0.01;
     }
 
-    return over(vec4(col * cov, cov), giant) * fade;
+    return over(vec4(col * cov, cov), skyL) * fade;
 }
