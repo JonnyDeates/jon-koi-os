@@ -63,9 +63,9 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
         // Faculae: bright, veined patches that show up near the limb.
         float fac = smoothstep(0.55, 0.75, fbm(sp.xz * 6.0 + sp.y * 5.0 + seed * 3.0));
         b += fac * 0.25 * (1.0 - z) * (blue ? 0.3 : 1.0);
-        if (!blue) {
+        if (!blue && !giant) {
             // Sunspot groups: a few dark umbras, each in a lighter penumbra streaked with radial
-            // filaments, riding round with the star.
+            // filaments, riding round with the star. Giants show huge convection cells instead.
             for (int k = 0; k < 6; k++) {
                 float fk = float(k);
                 float grp = floor(fk / 2.0);
@@ -198,8 +198,14 @@ float diskLayer(float rho, vec2 dirp, float angle, float seed, float fpRho, floa
     vec2 p = rotate(angle) * dirp;
     float warp = fbmAA(p * 1.2 + vec2(rho * 0.8) + seed, 1.2 * fpDir + 0.8 * fpRho);
     float streak = fbmAA(vec2(rho * 5.0 + warp * 4.0, seed) + p * 1.6, 5.0 * fpRho + 1.6 * fpDir);
+    // Each streak is only a partial arc: break the bands up along the orbit so they read as
+    // sheared clumps of gas rather than grooves.
+    float arcs = fbmAA(p * 4.5 + vec2(rho * 3.0 + warp * 3.0, seed * 2.0), 4.5 * fpDir + 3.0 * fpRho);
+    streak = mix(0.5, streak, smoothstep(0.3, 0.65, arcs));
     float clump = fbmAA(p * 2.5 + vec2(rho * 1.5 + warp * 2.0), 2.5 * fpDir + 1.5 * fpRho);
-    return streak * 0.45 + clump * 0.7;
+    // Fine turbulence riding on top.
+    float fine = fbmAA(p * 9.0 + vec2(rho * 6.0 + warp * 5.0), 9.0 * fpDir + 6.0 * fpRho);
+    return streak * 0.28 + clump * 0.75 + (fine - 0.5) * 0.3;
 }
 
 // Accretion disk material at radius rho (units of R) along in-plane direction dirp: turbulent,
@@ -231,7 +237,7 @@ vec4 diskSample(float rho, vec2 dirp, float t, float spin, float seed, float fpR
     float n = mean + ((nA - mean) * wA + (nB - mean) * wB) / sqrt(wA * wA + wB * wB);
 
     // The innermost gas is always dense and hot, giving an even bright rim around the hole.
-    float dens = max(smoothstep(0.2, 0.85, n), smoothstep(1.4, 0.7, rho) * 0.75);
+    float dens = max(smoothstep(0.12, 0.95, n), smoothstep(1.4, 0.7, rho) * 0.75);
     float heat = clamp(2.4 / rho, 0.0, 1.0);
     float b = dens * (0.35 + 0.9 * heat);
     vec3 c = mix(dustC, midC, smoothstep(0.08, 0.45, b));

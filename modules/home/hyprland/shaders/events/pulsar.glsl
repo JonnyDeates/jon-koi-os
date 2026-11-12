@@ -47,7 +47,8 @@ vec4 pulsar(vec2 uv, float seed, float slot, float t, float fade) {
     for (int i = 0; i < 3; i++) {
         float L = 0.08 + float(i) * 0.06;
         float fl = abs(r - L * s2th);
-        col += BEAM * exp(-fl / 0.003) * 0.22 * smoothstep(0.005, 0.02, r) * (0.6 + 0.4 * noise(vec2(th * 6.0, float(i))));
+        // Seen only as a faint haze of plasma trapped along the field, not as drawn lines.
+        col += BEAM * exp(-fl / 0.012) * 0.045 * smoothstep(0.005, 0.03, r) * (0.4 + 0.6 * noise(vec2(th * 4.0 - t * 0.5, float(i))));
     }
 
     // Two beams from the magnetic poles: narrow cones, foreshortened when they point at or away from
@@ -167,9 +168,10 @@ vec4 pulsarCloseUp(vec2 uv, float seed, float slot, float t, float fade) {
             }
             float hidden = (bestZ < 0.0 && r < Rs) ? 1.0 : 0.0;
             float w = ps * 1.3;
-            float flow = 0.45 + 0.55 * pow(0.5 + 0.5 * sin(bestS * 40.0 - t * 5.0 + float(k) * 2.0), 3.0);
+            // Clumps of plasma streaming along the field; between them the line is barely there.
+            float flow = 0.12 + 0.88 * pow(0.5 + 0.5 * sin(bestS * 26.0 - t * 4.0 + float(k) * 2.0), 6.0) * (0.5 + 0.5 * noise(vec2(bestS * 12.0, float(k))));
             float fadeOut = 0.55 + 0.45 * max(bestZ, 0.0) / (Rs * 2.0); // lines toward the back are dimmer
-            col += BEAM * (exp(-best * best / (w * w)) * 0.45 + exp(-best / (w * 8.0)) * 0.14) * flow * (1.0 - hidden) * clamp(fadeOut, 0.4, 1.0);
+            col += BEAM * (exp(-best * best / (w * w * 4.0)) * 0.16 + exp(-best / (w * 10.0)) * 0.06) * flow * (1.0 - hidden) * clamp(fadeOut, 0.4, 1.0);
         }
     }
 
@@ -179,7 +181,8 @@ vec4 pulsarCloseUp(vec2 uv, float seed, float slot, float t, float fade) {
         float z = sqrt(max(Rs * Rs - r * r, 0.0));
         vec3 n = vec3(d, z) / Rs;
         vec2 ab = rotate(-phi) * vec2(dot(n, e1), dot(n, e2));
-        float tex = fbm(vec2(atan(ab.y, ab.x) * 2.0, dot(n, S) * 4.0) + seed);
+        // Textured from the turning surface point itself (an angle would wrap and leave a seam).
+        float tex = fbm(ab * 2.5 + vec2(dot(n, S) * 3.0, -dot(n, S) * 2.0) + seed);
         float cap = exp(-(1.0 - dot(n, M)) * 14.0) + exp(-(1.0 + dot(n, M)) * 14.0);
         vec3 surf = HOT * (0.55 + 0.35 * tex) * (0.65 + 0.35 * n.z) + vec3(1.0) * cap * 2.0;
         ns = smoothstep(Rs + ps * 1.5, Rs - ps * 1.5, r);
@@ -189,5 +192,6 @@ vec4 pulsarCloseUp(vec2 uv, float seed, float slot, float t, float fade) {
     col += HOT * (exp(-max(r - Rs, 0.0) / (Rs * 0.35)) * 0.5 + exp(-r / (Rs * 3.0)) * 0.15) * (1.0 + 2.0 * flash) * (1.0 - ns * 0.7);
     col += frontBeam;
     col += BEAM * flash * (0.18 * exp(-r / 0.5) + 0.06);   // the flash lights up everything
-    return vec4(col * fade, 0.0);
+    // The star itself is solid: it hides the sky behind it.
+    return vec4(col, ns) * fade;
 }

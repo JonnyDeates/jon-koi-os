@@ -35,23 +35,38 @@ vec4 spiralGalaxy(vec2 uv, float seed, float slot, float t, float fade) {
         // Logarithmic spiral arms, wobbled a little by noise so they look clumpy rather than drawn.
         float warp = fbmAA(dp * 4.0 + seed, px * 4.0) - 0.5;
         float phase = arms * (theta - log(max(r, 1e-3)) / tan(pitch)) + warp * 1.4;
-        float arm = pow(0.5 + 0.5 * cos(phase), 2.2);
+        float arm = pow(0.5 + 0.5 * cos(phase), 1.7);
         // Faint spurs and feathering between the main arms.
         arm += 0.25 * pow(0.5 + 0.5 * cos(phase * 2.0 + 1.3 + warp * 3.0), 4.0)
                 * smoothstep(0.3, 0.6, fbmAA(dp * 6.0 + seed * 1.3, px * 6.0));
-        float mottle = 0.6 + 0.8 * fbmAA(dp * 8.0 - seed, px * 8.0);
+        float mottle = 0.7 + 0.6 * fbmAA(dp * 8.0 - seed, px * 8.0);
         float diskLight = exp(-r / 0.4);
         float armLight = arm * mottle * exp(-r / 0.55) * (barred ? smoothstep(0.18, 0.3, r) : smoothstep(0.04, 0.18, r));
 
-        // Star-forming knots (pink) and young blue stars, mostly along the arms.
-        float knotN = fbmAA(dp * 16.0 + seed * 2.0, px * 16.0);
-        float knots = smoothstep(0.62, 0.8, knotN) * armLight;
-        float young = smoothstep(0.58, 0.78, fbmAA(dp * 24.0 - seed, px * 24.0)) * armLight;
+        // The stellar disk glows smoothly between the arms too: old yellow stars inside, turning
+        // bluer outward where the young stars of the arms dominate.
+        vec3 diskCol = mix(vec3(1.0, 0.86, 0.68), mix(armTint, vec3(0.85, 0.85, 0.95), 0.4), smoothstep(0.08, 0.6, r));
+        vec3 col = diskCol * diskLight * 0.6;
+        col += mix(vec3(1.0, 0.9, 0.75), armTint, smoothstep(0.1, 0.5, r)) * armLight * 1.1;
 
-        vec3 col = vec3(0.85, 0.82, 0.92) * diskLight * 0.5;
-        col += armTint * armLight * 1.2;
-        col += vec3(1.0, 0.42, 0.6) * knots * 1.8;
-        col += vec3(0.7, 0.82, 1.0) * young * 1.1;
+        // Star-forming regions: many small pink-red knots with bright cores, strung along the arms,
+        // each beside a little cluster of hot blue stars.
+        vec2 kg = dp * 34.0 + seed;
+        vec2 kid = floor(kg);
+        vec2 kh = hash22(kid);
+        vec2 kf = fract(kg) - 0.25 - 0.5 * kh;
+        float kSize = mix(0.006, 0.05, pow(hash12(kid + 3.0), 4.0));
+        // Clustered into complexes along the arms, with quiet stretches between.
+        float complexes = smoothstep(0.5, 0.68, fbmAA(dp * 7.0 + seed * 4.0, px * 7.0));
+        float kOn = step(hash12(kid + 7.0), 0.6 * complexes) * smoothstep(0.3, 0.7, arm) * smoothstep(1.1, 0.35, r) * smoothstep(0.22, 0.38, r);
+        float knot = exp(-dot(kf, kf) / kSize) * kOn * mix(0.4, 1.4, hash12(kid + 9.0));
+        vec2 bf = kf + (hash22(kid + 5.0) - 0.5) * 0.25;
+        float blueC = exp(-dot(bf, bf) / (kSize * 0.6)) * kOn * step(0.4, hash12(kid + 11.0));
+        col += vec3(1.0, 0.38, 0.52) * knot * 2.2 * exp(-r / 0.8);
+        col += vec3(0.65, 0.78, 1.0) * blueC * 1.4 * exp(-r / 0.8);
+        // Unresolved young blue stars hazing the arms.
+        float young = smoothstep(0.58, 0.78, fbmAA(dp * 24.0 - seed, px * 24.0)) * armLight;
+        col += vec3(0.7, 0.82, 1.0) * young * 0.7;
 
         // Warm, bright bulge.
         col += vec3(1.0, 0.85, 0.62) * (exp(-r / (0.06 * bulge)) * 1.2 + exp(-r / (0.2 * bulge)) * 0.5);
@@ -65,18 +80,21 @@ vec4 spiralGalaxy(vec2 uv, float seed, float slot, float t, float fade) {
             col += mix(armTint, vec3(1.0, 0.88, 0.7), 0.6) * bar * 0.7;
         }
 
-        // Dust lanes hugging the inner (trailing) edge of each arm.
-        float lanes = pow(0.5 + 0.5 * cos(phase + 0.55 * spinDir), 8.0);
-        float dust = lanes * fbmAA(dp * 10.0 + seed * 3.0, px * 10.0) * 1.6
-                * smoothstep(0.08, 0.25, r) * exp(-r / 0.7);
-        dust = clamp(dust, 0.0, 0.85);
-        col *= 1.0 - dust;
+        // Dust lanes along the inner (trailing) edge of each arm, all the way out: brownish and
+        // translucent, broken into filaments, with feathery spurs reaching across the arms.
+        float lanes = pow(0.5 + 0.5 * cos(phase + 0.55 * spinDir), 5.0);
+        float filaments = fbmAA(dp * 22.0 + vec2(warp * 3.0) + seed * 3.0, px * 22.0);
+        float feathers = pow(0.5 + 0.5 * cos(phase * 3.0 + theta * 9.0 + warp * 6.0), 6.0) * smoothstep(0.55, 0.75, fbmAA(dp * 9.0 - seed * 2.0, px * 9.0));
+        float dust = (lanes * (0.35 + 0.9 * filaments) + feathers * 0.35) * fbmAA(dp * 6.0 + seed * 5.0, px * 6.0) * 1.5
+                * smoothstep(0.06, 0.2, r) * smoothstep(1.3, 0.5, r);
+        dust = clamp(dust, 0.0, 0.7);
+        col = mix(col, col * vec3(0.42, 0.33, 0.28), dust);
 
         // Resolved stars scattered through the disk, denser where the disk is bright.
         col += starLayer(dp * size, 70.0, 0.25, 1.0, seed + 5.0, t, 1.0) * (diskLight + armLight) * 1.5;
 
         col *= smoothstep(1.6, 1.0, r); // soft outer edge
-        result = vec4(col, dust * 0.6 * smoothstep(1.2, 0.6, r));
+        result = vec4(col, dust * 0.5 * smoothstep(1.2, 0.6, r));
     }
 
     // A small companion galaxy, sometimes.
@@ -117,10 +135,13 @@ vec4 ellipticalGalaxy(vec2 uv, float seed, float slot, float t, float fade) {
     float dust = 0.0;
     if (lane) {
         // A thin, wavy dust lane across the core, like Centaurus A.
-        float ly = (p.y * axis + (noise(vec2(p.x / re * 1.5, seed)) - 0.5) * re * 0.3) / (re * 0.18);
-        dust = exp(-ly * ly) * smoothstep(2.5, 0.8, abs(p.x) / re) * (0.6 + 0.4 * fbm(p / re * 3.0 + seed));
-        col *= 1.0 - dust * 0.8;
-        col += vec3(0.25, 0.12, 0.06) * dust * 0.15;
+        // Slightly off the nucleus, warped, thin, and only as long as the galaxy's bright body.
+        float ly = (p.y * axis - re * 0.06 + (noise(vec2(p.x / re * 1.5, seed)) - 0.5) * re * 0.25) / (re * 0.09);
+        dust = exp(-ly * ly) * smoothstep(1.4, 0.3, abs(p.x) / re) * (0.5 + 0.5 * fbm(p / re * 5.0 + seed));
+        col *= 1.0 - dust * 0.75;
+        col += vec3(0.25, 0.12, 0.06) * dust * 0.08 * I;
+        // It only hides the sky where there's galaxy light behind it to block.
+        dust *= clamp(I * 0.6, 0.0, 1.0);
     }
 
     // Globular clusters: faint, tight points swarming around the galaxy.

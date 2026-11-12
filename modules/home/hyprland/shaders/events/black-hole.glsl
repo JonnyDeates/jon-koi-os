@@ -77,7 +77,8 @@ void blackHole(vec2 uv, float seed, float slot, float lt, float t, float fade,
                     hitDir[hits] = vec2(hit.x, dot(hit, V)) / rhoRs;
                     // Gas orbiting toward us is brighter.
                     vec3 orbit = normalize(cross(N, hit)) * spinDir;
-                    hitBeam[hits] = 1.0 + 0.3 * dot(orbit, -normalize(vel));
+                    // Doppler beaming: gas coming toward us is brighter, gas moving away dimmer.
+                    hitBeam[hits] = pow(1.0 + 0.32 * dot(orbit, -normalize(vel)), 2.5);
                     hitNear[hits] = dot(hit, V);
                     hits++;
                 }

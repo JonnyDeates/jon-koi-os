@@ -177,7 +177,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         solid = max(solid, ss.a);
     }
     if (hasPulsarClose) {
-        col += pulsarCloseUp(uv, eventSeed, slot, t, fade).rgb;
+        vec4 pc = pulsarCloseUp(uv, eventSeed, slot, t, fade);
+        col = col * (1.0 - pc.a) + pc.rgb;
+        solid = max(solid, pc.a);
     }
     if (hasPulsar) {
         col += pulsar(uv, eventSeed, slot, t, fade).rgb;

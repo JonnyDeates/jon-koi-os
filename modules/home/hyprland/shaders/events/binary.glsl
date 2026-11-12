@@ -12,12 +12,23 @@ vec3 transferLight(vec2 uv, vec2 tip, vec2 dwarf, vec2 axis, float side, float r
     vec2 e = vec2(dot(dq, axis), dot(dq, perp) / 0.42) / rd;
     float er = length(e);
     if (er < 1.6) {
-        vec2 sw = rotate(-t * 0.5 / pow(max(er, 0.12), 1.5)) * e;
-        float swirl = fbm(sw * 3.0 + vec2(er * 6.0));
-        float spiral = 0.5 + 0.5 * sin(atan(sw.y, sw.x) * 2.0 + log(max(er, 0.05)) * 6.0);
+        // Inner gas orbits faster. Two copies of the swirl cross-fade, each restarting while it's
+        // invisible, so the shear never winds the texture into fine rings however long it runs.
+        const float FLOW = 12.0;
+        float phA = fract(t / FLOW);
+        float phB = fract(phA + 0.5);
+        float wA = 1.0 - abs(2.0 * phA - 1.0);
+        float om = 0.07 / pow(max(er, 0.3), 1.5);
+        vec2 swA = rotate(-om * phA * FLOW) * e;
+        vec2 swB = rotate(-om * phB * FLOW) * e;
+        float swirl = mix(fbm(swB * 3.0 + vec2(er * 2.0) + 9.0), fbm(swA * 3.0 + vec2(er * 2.0)), wA);
+        // Two loose spiral arms of denser gas.
+        float spiral = 0.5 + 0.5 * sin(atan(e.y, e.x) * 2.0 - t * 0.3 + log(max(er, 0.05)) * 2.0 + swirl * 2.0);
+        // Clumpy, turbulent gas rather than smooth bands.
+        swirl = swirl * (0.7 + 0.6 * fbm(e * 7.0 + vec2(t * 0.05, 0.0)));
         float ring = smoothstep(1.1, 0.75, er) * smoothstep(0.04, 0.15, er);
         vec3 dc = mix(vec3(0.9, 0.95, 1.3), GAS, smoothstep(0.15, 0.95, er));
-        light += dc * ring * (0.4 + 0.7 * swirl + 0.3 * spiral) * 1.1;
+        light += dc * ring * (0.35 + 0.8 * swirl * swirl + 0.2 * spiral) * 1.1;
         light += mix(vec3(0.9, 0.95, 1.2), GAS, 0.5) * exp(-er / 0.5) * 0.35; // glow over the disk
     }
 
