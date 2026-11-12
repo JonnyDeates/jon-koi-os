@@ -101,6 +101,7 @@ reads about a third lower at today's 20 fps.
 | `giant` | 25 | .05 | +4% | Gas giant close-up: storms, eddies, rings, a moon |
 | `moon` | 26 | .02 | +16% | Standing on a moon under a giant; eclipses, an inner moon |
 | `ringplane` | 27 | .03 | 0% | Hanging over a giant's rings, Cassini-style |
+| `starforge` | 28 | .06 | +5% | Full-screen star-forming nebula: Cosmic Cliffs, Orion, Lagoon/Trifid or Rosette |
 
 ## Changing things
 

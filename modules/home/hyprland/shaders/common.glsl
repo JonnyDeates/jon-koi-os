@@ -39,6 +39,7 @@ const int EV_CLUSTER = 24;
 const int EV_GIANT = 25;
 const int EV_MOON = 26;
 const int EV_RINGPLANE = 27;
+const int EV_STARFORGE = 28;
 
 // Set to an EV_* id to always show that event. The launcher does this: each scene runs as its own
 // shader with only that scene compiled in (one shader holding them all takes the GPU driver 20+
@@ -90,6 +91,7 @@ const float ROGUE_CHANCE = 0.05;      // -4.0%
 const float HORIZON_CHANCE = 0.02;    // +13% (up to +22% with an aurora at night)
 const float CLUSTER_CHANCE = 0.05;    // -1.6% globular, +0.7% open
 const float GIANT_CHANCE = 0.05;      // +4%
+const float STARFORGE_CHANCE = 0.06;  // +5% (+14% the cliffs)
 const float RINGPLANE_CHANCE = 0.03;  // ~0%
 const float MOON_CHANCE = 0.02;       // +15-20%
 
@@ -98,7 +100,7 @@ const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE 
     SPIRAL_CHANCE + SYSTEM_CHANCE + STAR_CHANCE + PILLARS_CHANCE + BLACKHOLE_CHANCE +
     BINARY_CHANCE + EATEN_CHANCE + PULSARCLOSE_CHANCE + SUPERNOVA_CHANCE + SURFACE_CHANCE +
     COLLISION_CHANCE + QUASAR_CHANCE + ROGUE_CHANCE + HORIZON_CHANCE + CLUSTER_CHANCE +
-    GIANT_CHANCE + MOON_CHANCE + RINGPLANE_CHANCE;
+    GIANT_CHANCE + MOON_CHANCE + RINGPLANE_CHANCE + STARFORGE_CHANCE;
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -150,6 +152,8 @@ int pickEvent(float roll) {
     if (roll < c) return EV_MOON;
     c += RINGPLANE_CHANCE;
     if (roll < c) return EV_RINGPLANE;
+    c += STARFORGE_CHANCE;
+    if (roll < c) return EV_STARFORGE;
     c += CLUSTER_CHANCE;
     if (roll < c) return EV_CLUSTER;
     c += RING_CHANCE;
