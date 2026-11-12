@@ -25,7 +25,6 @@ let
     ./shaders/bodies.glsl
     ./shaders/events/solar-system.glsl
     ./shaders/events/comet.glsl
-    ./shaders/events/asteroid-field.glsl
     ./shaders/events/black-hole.glsl
     ./shaders/events/galaxy.glsl
     ./shaders/events/nebula.glsl
@@ -43,6 +42,7 @@ let
     ./shaders/events/cluster.glsl
     ./shaders/events/giant.glsl
     ./shaders/events/planet.glsl
+    ./shaders/events/asteroid-field.glsl
     ./shaders/events/moon.glsl
     ./shaders/meteors.glsl
     ./shaders/main.glsl
