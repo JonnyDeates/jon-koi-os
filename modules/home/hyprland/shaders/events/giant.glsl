@@ -69,9 +69,9 @@ float giantRings(float rho, float fw, float sc, float seed, int kind) {
     return clamp(op, 0.0, 0.98);
 }
 
-vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
-    float lt = eventTime(t);
-    vec2 ext = halfExtent();
+// The planet itself, centred at center with screen radius R, lit from direction L (z toward us).
+// tint returns its overall colour, for light it throws on things nearby.
+vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, float lt, out vec3 tint) {
     float pick = hash12(vec2(slot, seed + 511.0));
     // Palette: zone (light bands), belt (dark bands), accent (storms), polar haze, turbulence.
     vec3 zone, belt, accent, polar;
@@ -109,10 +109,7 @@ vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
         ringKind = 1;
     }
     float ringSc = mix(0.92, 1.1, hash12(vec2(slot, seed + 515.0)));
-
-    float R = mix(0.26, 0.62, hash12(vec2(slot, seed + 517.0)));
-    vec2 center = (hash22(vec2(slot * 5.1, seed + 519.0)) - 0.5) * 2.0 * ext * mix(0.2, 0.85, smoothstep(0.3, 0.62, R));
-    center += (hash22(vec2(slot, seed + 521.0)) - 0.5) * 0.0002 * lt;
+    tint = mix(zone, belt, 0.35);
 
     // Pole: tipped toward or away from us, and rolled on screen.
     float tip = mix(0.1, 0.42, hash12(vec2(slot, seed + 523.0))) * (hash12(vec2(slot, seed + 525.0)) < 0.5 ? -1.0 : 1.0);
@@ -121,11 +118,6 @@ vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
     P.xy = rotate(roll) * P.xy;
     vec3 Q = normalize(cross(P, vec3(0.0, 0.0, 1.0)));
     vec3 F = cross(Q, P);
-    // Sun: usually behind us and off to one side, so the planet's shadow falls back across the
-    // far rings like the classic views; now and then from behind for a dramatic crescent.
-    float sa = hash12(vec2(slot, seed + 529.0)) * 6.2831;
-    float sz = hash12(vec2(slot, seed + 531.0));
-    vec3 L = normalize(vec3(cos(sa), sin(sa) * 0.7, sz < 0.12 ? mix(-0.4, -0.1, sz / 0.12) : mix(0.35, 1.3, (sz - 0.12) / 0.88)));
 
     vec2 d = (uv - center) / R;
     float r = length(d);
@@ -302,6 +294,20 @@ vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
     if (zb > za) { vec4 tv = a; a = b; b = tv; float tz = za; za = zb; zb = tz; }
     if (zc > zb) { vec4 tv = b; b = c3; c3 = tv; float tz = zb; zb = zc; zc = tz; }
     if (zb > za) { vec4 tv = a; a = b; b = tv; float tz = za; za = zb; zb = tz; }
-    vec4 res = over(a, over(b, c3));
-    return res * fade;
+    return over(a, over(b, c3));
+}
+
+vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
+    float lt = eventTime(t);
+    vec2 ext = halfExtent();
+    float R = mix(0.26, 0.62, hash12(vec2(slot, seed + 517.0)));
+    vec2 center = (hash22(vec2(slot * 5.1, seed + 519.0)) - 0.5) * 2.0 * ext * mix(0.2, 0.85, smoothstep(0.3, 0.62, R));
+    center += (hash22(vec2(slot, seed + 521.0)) - 0.5) * 0.0002 * lt;
+    // Sun: usually behind us and off to one side, so the planet's shadow falls back across the
+    // far rings like the classic views; now and then from behind for a dramatic crescent.
+    float sa = hash12(vec2(slot, seed + 529.0)) * 6.2831;
+    float sz = hash12(vec2(slot, seed + 531.0));
+    vec3 L = normalize(vec3(cos(sa), sin(sa) * 0.7, sz < 0.12 ? mix(-0.4, -0.1, sz / 0.12) : mix(0.35, 1.3, (sz - 0.12) / 0.88)));
+    vec3 tint;
+    return giantBody(uv, center, R, L, seed, slot, lt, tint) * fade;
 }

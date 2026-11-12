@@ -37,6 +37,7 @@ const int EV_ROGUE = 22;
 const int EV_HORIZON = 23;
 const int EV_CLUSTER = 24;
 const int EV_GIANT = 25;
+const int EV_MOON = 26;
 
 // Set to an EV_* id to always show that event (space-wallpaper-preview does this).
 const int FORCE_EVENT = -1;
@@ -79,13 +80,14 @@ const float ROGUE_CHANCE = 0.05;      // -4.0%
 const float HORIZON_CHANCE = 0.02;    // +10%
 const float CLUSTER_CHANCE = 0.05;    // -1.6% globular, +0.7% open
 const float GIANT_CHANCE = 0.05;      // +2-3%
+const float MOON_CHANCE = 0.02;       // +15-20%
 
 const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE + RING_CHANCE +
     PLANET_CHANCE + COMET_CHANCE + ELLIPTICAL_CHANCE + BIPOLAR_CHANCE + PULSAR_CHANCE +
     SPIRAL_CHANCE + SYSTEM_CHANCE + STAR_CHANCE + PILLARS_CHANCE + BLACKHOLE_CHANCE +
     BINARY_CHANCE + EATEN_CHANCE + PULSARCLOSE_CHANCE + SUPERNOVA_CHANCE + SURFACE_CHANCE +
     COLLISION_CHANCE + QUASAR_CHANCE + ROGUE_CHANCE + HORIZON_CHANCE + CLUSTER_CHANCE +
-    GIANT_CHANCE;
+    GIANT_CHANCE + MOON_CHANCE;
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -133,6 +135,8 @@ int pickEvent(float roll) {
     if (roll < c) return EV_HORIZON;
     c += GIANT_CHANCE;
     if (roll < c) return EV_GIANT;
+    c += MOON_CHANCE;
+    if (roll < c) return EV_MOON;
     c += CLUSTER_CHANCE;
     if (roll < c) return EV_CLUSTER;
     c += RING_CHANCE;

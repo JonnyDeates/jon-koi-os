@@ -26,6 +26,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasHorizon = ev == EV_HORIZON;
     bool hasCluster = ev == EV_CLUSTER;
     bool hasGiant = ev == EV_GIANT;
+    bool hasMoon = ev == EV_MOON;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -78,16 +79,24 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // Asteroid fields get plain dark space behind them: the nebula fades out as the field fades in.
     // A nebula close-up replaces the background nebula the same way.
-    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar || hasRogue || hasHorizon || hasCluster ? 1.0 - fade : 1.0;
+    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar || hasRogue || hasHorizon || hasCluster || hasMoon ? 1.0 - fade : 1.0;
 
     // A new random sky every SKY_PERIOD, cross-fading into the next one over the last SKY_FADE.
     float hour = floor(t / SKY_PERIOD);
-    vec2 skySeedA = resSeed + hash22(vec2(hour, RANDOM_SEED)) * 100.0;
-    vec3 col = sky(screen, bgUv, skySeedA, t, lens, nebulaAmount);
-    float skyBlend = smoothstep(SKY_PERIOD - SKY_FADE, SKY_PERIOD, t - hour * SKY_PERIOD);
-    if (skyBlend > 0.0) {
-        vec2 skySeedB = resSeed + hash22(vec2(hour + 1.0, RANDOM_SEED)) * 100.0;
-        col = mix(col, sky(screen, bgUv, skySeedB, t, lens, nebulaAmount), skyBlend);
+    // The moon's ground is drawn first: where it hides the sky completely, the sky is skipped.
+    vec4 moonFg = vec4(0.0);
+    if (hasMoon) {
+        moonFg = moonSurface(uv, eventSeed, slot, t, fade);
+    }
+    vec3 col = vec3(0.0);
+    if (moonFg.a < 0.999) {
+        vec2 skySeedA = resSeed + hash22(vec2(hour, RANDOM_SEED)) * 100.0;
+        col = sky(screen, bgUv, skySeedA, t, lens, nebulaAmount);
+        float skyBlend = smoothstep(SKY_PERIOD - SKY_FADE, SKY_PERIOD, t - hour * SKY_PERIOD);
+        if (skyBlend > 0.0) {
+            vec2 skySeedB = resSeed + hash22(vec2(hour + 1.0, RANDOM_SEED)) * 100.0;
+            col = mix(col, sky(screen, bgUv, skySeedB, t, lens, nebulaAmount), skyBlend);
+        }
     }
 
     // How much of each pixel is covered by something solid (planets, moons, rocks); meteors are
@@ -122,6 +131,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         vec4 gp = giantPlanet(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - gp.a) + gp.rgb;
         solid = max(solid, gp.a);
+    }
+    if (hasMoon) {
+        col = col * (1.0 - moonFg.a) + moonFg.rgb;
+        // No air on the moon, so no shooting stars.
+        solid = fade;
     }
     if (hasCluster) {
         vec4 sc = starCluster(uv, eventSeed, slot, t, fade);
