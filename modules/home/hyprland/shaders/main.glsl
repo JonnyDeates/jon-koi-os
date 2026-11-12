@@ -7,7 +7,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     float slot = floor(t / EVENT_PERIOD);
     float lt = t - slot * EVENT_PERIOD;
-    float fade = smoothstep(0.0, EVENT_FADE, lt) * smoothstep(EVENT_PERIOD, EVENT_PERIOD - EVENT_FADE, lt);
+    float fade = smoothstep(0.0, EVENT_FADE, lt)
+               * smoothstep(EVENT_PERIOD - SWAP_GAP, EVENT_PERIOD - SWAP_GAP - EVENT_FADE, lt)
+               * step(SHOW_FROM, t) * step(t, SHOW_UNTIL);
     float eventSeed = resSeed.x + resSeed.y * 3.0 + RANDOM_SEED;
     float roll = hash12(vec2(slot, eventSeed));
     int ev = pickEvent(roll); // same for every pixel, so derivatives inside events stay valid

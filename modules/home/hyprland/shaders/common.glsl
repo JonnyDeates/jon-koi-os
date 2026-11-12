@@ -40,8 +40,17 @@ const int EV_GIANT = 25;
 const int EV_MOON = 26;
 const int EV_RINGPLANE = 27;
 
-// Set to an EV_* id to always show that event (space-wallpaper-preview does this).
+// Set to an EV_* id to always show that event. The launcher does this: each scene runs as its own
+// shader with only that scene compiled in (one shader holding them all takes the GPU driver 20+
+// seconds to compile), and space-wallpaper-preview does it to show one on demand.
 const int FORCE_EVENT = -1;
+
+// The launcher swaps in the next scene's shader during the last SWAP_GAP seconds of each slot,
+// which are always plain sky, so old and new draw the same picture while they hand over. Each
+// scene's shader only shows its event between SHOW_FROM and SHOW_UNTIL (in shader time).
+const float SWAP_GAP = 30.0;
+const float SHOW_FROM = -1.0e9;
+const float SHOW_UNTIL = 1.0e9;
 
 // Replaced at launch with the run's seed (0-999.99), so every launch has its own sky and events.
 const float RANDOM_SEED = 0.0;

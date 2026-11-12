@@ -15,7 +15,11 @@ let
 
   # Upstream ignores the output scale, so on 2x monitors it renders at half resolution and gets upscaled.
   shaderbg = pkgs.shaderbg.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./shaderbg-hidpi.patch ];
+    # Plus SHADERBG_EPOCH, so a scene swapped in by a new process carries on the same clock.
+    patches = (old.patches or [ ]) ++ [
+      ./shaderbg-hidpi.patch
+      ./shaderbg-epoch.patch
+    ];
   });
 
   # GLSL needs definitions before use, so the parts are joined in dependency order.
@@ -67,14 +71,97 @@ let
   '';
   seedSed = "s|const float RANDOM_SEED = 0.0;|const float RANDOM_SEED = $seed.0 / 100.0;|";
 
-  # Starts the wallpaper on one output with this launch's seed ($SPACE_WALLPAPER_SEED, or random).
+  # Runs the wallpaper on one output with this launch's seed ($SPACE_WALLPAPER_SEED, or random).
+  # One shader holding every scene takes the GPU driver 20+ seconds to compile, so each 30-minute
+  # scene runs as its own shader with just that scene compiled in (a few seconds). This script picks
+  # each scene, and near the end of a slot - during its plain-sky gap - starts the next scene's
+  # shader, then stops the old one once the new one is drawing. All of them share one clock
+  # (SHADERBG_EPOCH), so the sky carries on seamlessly across the swap.
   launch = pkgs.writeShellScript "space-wallpaper-launch" ''
     output=$1
     seed=''${SPACE_WALLPAPER_SEED:-}
     ${pickSeed}
-    frag="$XDG_RUNTIME_DIR/space-wallpaper-$output.frag"
-    ${pkgs.gnused}/bin/sed -e "${seedSed}" ${spaceShader} > "$frag"
-    exec ${shaderbg}/bin/shaderbg --fps 20 --layer background "$output" "$frag"
+    dir="$XDG_RUNTIME_DIR/space-wallpaper"
+    ${pkgs.coreutils}/bin/mkdir -p "$dir"
+    base="$dir/$output.frag"
+    ${pkgs.gnused}/bin/sed -e "${seedSed}" ${spaceShader} > "$base"
+
+    # Event ids, odds and names, read from the shader: pickEvent pairs each *_CHANCE with an EV_*.
+    table=$(${pkgs.gawk}/bin/awk '
+      /^const int EV_[A-Z]+ = [0-9]+;/ { n = $3; sub(/^EV_/, "", n); v = $5; sub(/;/, "", v); id[n] = v }
+      /^const float [A-Z]+_CHANCE = / && $3 != "SHOWER_CHANCE" { w = $5; sub(/;/, "", w); ch[$3] = w }
+      /^const float PLAIN_SKY_SHARE = / { p = $5; sub(/;/, "", p); print "plain", p }
+      /^int pickEvent/ { inPick = 1 }
+      inPick && /_CHANCE;/ { match($0, /[A-Z]+_CHANCE/); last = substr($0, RSTART, RLENGTH) }
+      inPick && /return EV_/ && last != "" { match($0, /EV_[A-Z]+/); e = substr($0, RSTART + 3, RLENGTH - 3); print id[e], ch[last], tolower(e); last = "" }
+      inPick && /^}/ { inPick = 0 }
+    ' "$base")
+    period=$(${pkgs.gawk}/bin/awk '/^const float EVENT_PERIOD = / { v = $5; sub(/;/, "", v); print int(v) }' "$base")
+    gap=$(${pkgs.gawk}/bin/awk '/^const float SWAP_GAP = / { v = $5; sub(/;/, "", v); print int(v) }' "$base")
+    outHash=$(printf %s "$output" | ${pkgs.coreutils}/bin/cksum | ${pkgs.coreutils}/bin/cut -d' ' -f1)
+
+    # Which event slot k shows: id and name, the same every time for this seed and output.
+    pick() {
+      printf '%s\n' "$table" | ${pkgs.gawk}/bin/awk -v s="$seed" -v k="$1" -v o="$outHash" '
+        $1 == "plain" { plain = $2; next }
+        { ids[++n] = $1; ws[n] = $2; nm[n] = $3; tot += $2 }
+        END {
+          srand((s * 7919 + k * 104729 + o) % 2147483647); r = rand()
+          if (r < plain) { print 0, "plain"; exit }
+          x = (r - plain) / (1 - plain) * tot
+          for (i = 1; i <= n; i++) { x -= ws[i]; if (x < 0) { print ids[i], nm[i]; exit } }
+          print ids[n], nm[n]
+        }'
+    }
+
+    # Take the scene shaders down with this script, however it ends.
+    trap 'kill $(jobs -p) 2>/dev/null' EXIT
+    trap 'exit 0' TERM INT
+    export SHADERBG_EPOCH=''${EPOCHREALTIME%.*}
+    cur=""
+    curSlot=-1
+    old=""
+    killAt=0
+    while true; do
+      t=$(( ''${EPOCHREALTIME%.*} - SHADERBG_EPOCH ))
+      k=$(( t / period ))
+      # Hand over to the next slot's scene a moment into this slot's plain-sky gap.
+      want=$k
+      if [ $t -ge $(( (k + 1) * period - gap + 2 )) ]; then
+        want=$(( k + 1 ))
+      fi
+      if [ "$want" != "$curSlot" ]; then
+        read -r id name <<< "$(pick "$want")"
+        frag="$dir/$output-$want.frag"
+        ${pkgs.gnused}/bin/sed -e "s/const int FORCE_EVENT = -1;/const int FORCE_EVENT = $id;/" \
+          -e "s/const float SHOW_FROM = -1.0e9;/const float SHOW_FROM = $(( want * period )).0;/" \
+          -e "s/const float SHOW_UNTIL = 1.0e9;/const float SHOW_UNTIL = $(( (want + 1) * period - gap )).0;/" \
+          "$base" > "$frag"
+        echo "slot $want: $name"
+        ${shaderbg}/bin/shaderbg --fps 20 --layer background "$output" "$frag" &
+        if [ -n "$cur" ]; then
+          old=$cur
+          oldFrag=$curFrag
+          # Long enough for the new shader to compile and start drawing.
+          killAt=$(( t + 20 ))
+        fi
+        cur=$!
+        curFrag=$frag
+        curSlot=$want
+      fi
+      if [ -n "$old" ] && [ $t -ge $killAt ]; then
+        kill "$old" 2>/dev/null
+        wait "$old" 2>/dev/null
+        ${pkgs.coreutils}/bin/rm -f "$oldFrag"
+        old=""
+      fi
+      # If the scene's shader died, exit so systemd restarts the wallpaper.
+      if ! kill -0 "$cur" 2>/dev/null; then
+        echo "shaderbg exited" >&2
+        exit 1
+      fi
+      ${pkgs.coreutils}/bin/sleep 2
+    done
   '';
 
   # Show one event on demand instead of waiting for the random roll.
