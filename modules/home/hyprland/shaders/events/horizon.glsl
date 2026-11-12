@@ -3,6 +3,7 @@
 // the ground recedes with real perspective (clouds big and detailed near the bottom, squashed into
 // streaks toward the horizon), distant ground fades into pale-blue haze, and the atmosphere above
 // the horizon is a soft band - white at the surface deepening to blue, orange at sunrise/sunset.
+// On the night side an aurora often hangs in the upper air, its curtains rising off the limb.
 // The sun is anywhere: in view with glare, ahead with a glint path on the ocean, behind or to the
 // side, or below the horizon at dusk with city lights. Premultiplied colour/coverage.
 float hazeLitG(float mu) {
@@ -37,6 +38,90 @@ float hzPuffs(vec2 cq, vec2 cqw, vec2 cw, float systems, float fp, vec3 w) {
     float fStrat = fbmAA(cq * 0.35 + cw * 0.5, fp * 0.35) * 0.75 + (1.0 - abs(2.0 * noise(cq * 6.0) - 1.0)) * 0.08
                  + (systems - 0.5) * 0.25 + 0.12;
     return dot(vec3(fCum, fStreet, fStrat), w) / max(w.x + w.y + w.z, 1e-3);
+}
+
+// Aurora: curtains of light hanging in the upper air on the night side, along an oval around a
+// magnetic pole (Pm, angular radius thA). Each curtain is a thin folded sheet, two or three side by
+// side, streaked with fine vertical rays and brightening in pulses that travel along it. Colour
+// follows height: a sharp purple-pink fringe at the bottom edge, bright oxygen green around
+// 100-150 km, faint red above. Ray-marched through the shell they live in, up to tEnd.
+vec3 hzAurora(vec3 C, vec3 rd, float tEnd, vec3 S, vec3 Pm, float thA, float t, float seed, vec2 jit) {
+    const float R2 = 1.055;
+    float b = dot(C, rd);
+    float disc = b * b - (dot(C, C) - R2 * R2);
+    if (disc <= 0.0) {
+        return vec3(0.0);
+    }
+    float sq = sqrt(disc);
+    float t0 = max(-b - sq, 0.0);
+    float t1 = min(-b + sq, tEnd);
+    if (t1 <= t0) {
+        return vec3(0.0);
+    }
+    // Most rays pass nowhere near the curtains or only through daylit air: check the start,
+    // middle and end, and skip the march unless the ray crosses or comes close to the oval at night.
+    vec3 Xa = normalize(C + rd * t0), Xm = normalize(C + rd * (0.5 * (t0 + t1))), Xb = normalize(C + rd * t1);
+    float da = acos(clamp(dot(Xa, Pm), -1.0, 1.0)) - thA;
+    float dm = acos(clamp(dot(Xm, Pm), -1.0, 1.0)) - thA;
+    float db = acos(clamp(dot(Xb, Pm), -1.0, 1.0)) - thA;
+    bool crosses = sign(da) != sign(db) || sign(da) != sign(dm);
+    if (!crosses && min(min(abs(da), abs(db)), abs(dm)) > 0.07) {
+        return vec3(0.0);
+    }
+    if (max(max(dot(Xa, S), dot(Xm, S)), dot(Xb, S)) < -1.0 || min(min(dot(Xa, S), dot(Xm, S)), dot(Xb, S)) > 0.03) {
+        return vec3(0.0);
+    }
+    // Where the ray crosses the oval just once, march only a short window around the crossing,
+    // so all the samples land where the curtains are.
+    if ((da - dm) * (dm - db) > 0.0 && sign(da) != sign(db)) {
+        float tc = t0 + (t1 - t0) * da / (da - db);
+        float w = 0.06 * (t1 - t0) / max(abs(db - da), 1e-4);
+        float tn0 = max(t0, tc - w);
+        t1 = min(t1, tc + w);
+        t0 = tn0;
+    }
+    // Frame around the pole, with the seam of the angle on the far side from us.
+    vec3 e1 = normalize(vec3(0.0, 1.0, 0.0) - Pm * Pm.y + 1e-5);
+    vec3 e2 = cross(Pm, e1);
+    const int STEPS = 16;
+    float dt = (t1 - t0) / float(STEPS);
+    float tt = t0 + dt * hash12(jit);
+    vec3 acc = vec3(0.0);
+    for (int i = 0; i < STEPS; i++) {
+        vec3 X = C + rd * tt;
+        float r = length(X);
+        float alt = r - 1.0;
+        tt += dt;
+        if (alt < 0.012 || alt > 0.055) {
+            continue;
+        }
+        vec3 Xn = X / r;
+        // Only where the upper air is in darkness.
+        float night = smoothstep(0.02, -0.12, dot(Xn, S));
+        if (night <= 0.0) {
+            continue;
+        }
+        float th = acos(clamp(dot(Xn, Pm), -1.0, 1.0));
+        float along = atan(dot(Xn, e2), dot(Xn, e1));
+        // The curtains fold and ripple, slowly shifting.
+        float fold = sin(along * 7.0 + t * 0.05 + seed) * 0.012
+                   + (noise(vec2(along * 30.0 + t * 0.12, seed)) - 0.5) * 0.018
+                   + (noise(vec2(along * 120.0 - t * 0.3, seed * 2.0)) - 0.5) * 0.005;
+        float sd = th - thA - fold;
+        float sheets = exp(-pow(sd / 0.0025, 2.0)) + 0.6 * exp(-pow((sd - 0.022) / 0.0035, 2.0))
+                     + 0.35 * exp(-pow((sd + 0.028) / 0.004, 2.0));
+        if (sheets < 0.01) {
+            continue;
+        }
+        float rays = 0.4 + 0.6 * noise(vec2(along * 600.0 + fold * 900.0, t * 0.6 + seed));
+        float pulse = 0.55 + 0.45 * sin(along * 13.0 - t * 0.4 + seed);
+        float green = smoothstep(0.012, 0.0165, alt) * exp(-(alt - 0.0165) / 0.009);
+        float red = smoothstep(0.022, 0.032, alt) * exp(-(alt - 0.032) / 0.015);
+        float fringe = exp(-pow((alt - 0.0135) / 0.0015, 2.0));
+        vec3 em = vec3(0.15, 1.0, 0.4) * green + vec3(1.0, 0.15, 0.2) * red * 0.35 + vec3(0.8, 0.2, 0.7) * fringe * 0.4;
+        acc += em * sheets * rays * pulse * night;
+    }
+    return acc * dt * 26.0;
 }
 
 vec4 planetHorizon(vec2 uv, float seed, float slot, float t, float fade) {
@@ -335,6 +420,18 @@ vec4 planetHorizon(vec2 uv, float seed, float slot, float t, float fade) {
     float airglow = exp(-pow((aUp - H * 2.4) / (H * 0.35), 2.0));
     glow += vec3(0.3, 1.0, 0.45) * airglow * 0.07 * (1.0 - limbLit);
     col = col + glow * (1.0 - cover);
+
+    // Aurora, on most visits: an oval around a magnetic pole placed so its arc crosses our view.
+    if (hash12(vec2(slot, seed + 471.0)) < 0.7) {
+        float thA = mix(0.25, 0.35, hash12(vec2(slot, seed + 473.0)));
+        float pd = thA + mix(-0.06, 0.12, hash12(vec2(slot, seed + 475.0)));
+        float paz = (hash12(vec2(slot, seed + 477.0)) - 0.5) * 2.4;
+        vec3 Pm = vec3(sin(paz) * sin(pd), cos(pd), cos(paz) * sin(pd));
+        float tSurf = (b < 0.0 && disc > 0.0) ? -b - sqrt(disc) : 1e3;
+        vec3 aur = hzAurora(C, rd, tSurf, S, Pm, thA, t, seed, uv * minDim());
+        col += aur;
+        glow += aur * 0.5; // the brightest curtains dim the stars behind them too
+    }
 
     // The sun itself, only if it's above the horizon and happens to be in view: disc, glare, spikes.
     if (dot(S, fwd) > 0.0) {
