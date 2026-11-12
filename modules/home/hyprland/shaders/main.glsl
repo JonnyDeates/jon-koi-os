@@ -30,7 +30,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasGiant = ev == EV_GIANT;
     bool hasMoon = ev == EV_MOON;
     bool hasRingPlane = ev == EV_RINGPLANE;
-    bool hasStarForge = ev == EV_STARFORGE;
+    // The full-screen nebulae share one renderer; which one it is picks the style.
+    int forgeStyle = ev >= EV_CLIFFS && ev <= EV_RHO ? ev - EV_CLIFFS : -1;
+    bool hasStarForge = forgeStyle >= 0;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -170,7 +172,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         solid = fade;
     }
     if (hasStarForge) {
-        vec4 sf = starForge(uv, eventSeed, slot, t, fade);
+        vec4 sf = starForge(uv, eventSeed, slot, t, fade, forgeStyle);
         col = col * (1.0 - sf.a) + sf.rgb;
     }
     if (hasCluster) {

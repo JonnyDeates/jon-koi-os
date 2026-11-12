@@ -101,7 +101,14 @@ reads about a third lower at today's 20 fps.
 | `giant` | 25 | .05 | +4% | Gas giant close-up: storms, eddies, rings, a moon |
 | `moon` | 26 | .02 | +16% | Standing on a moon under a giant; eclipses, an inner moon |
 | `ringplane` | 27 | .03 | 0% | Hanging over a giant's rings, Cassini-style |
-| `starforge` | 28 | .06 | +5% | Full-screen star-forming nebula: Cosmic Cliffs, Orion, Lagoon/Trifid or Rosette |
+| `cliffs` | 28 | .015 | +14% | JWST Cosmic Cliffs: ranges of dust receding into blue haze |
+| `orion` | 29 | .02 | +5% | Orion: pink-red cloud around a blazing core, teal gas, dust lanes |
+| `lagoon` | 30 | .02 | +5% | Lagoon/Trifid: magenta and orange, snaking dust, a blue lobe |
+| `rosette` | 31 | .02 | +5% | Rosette: a ring of red gas around a blown-clear cavity |
+| `horsehead` | 32 | .02 | +6% | Horsehead: a dark pillar against a glowing red curtain |
+| `tarantula` | 33 | .02 | +4% | Tarantula: a web of pink, teal and gold filaments and bubbles |
+| `veil` | 34 | .02 | +4% | Veil: braided red and blue shock filaments in great arcs |
+| `rho` | 35 | .02 | +3% | Rho Ophiuchi: golden, blue and red glows in a dusty starfield |
 
 ## Changing things
 

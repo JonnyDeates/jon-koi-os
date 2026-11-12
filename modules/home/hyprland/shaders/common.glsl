@@ -39,7 +39,14 @@ const int EV_CLUSTER = 24;
 const int EV_GIANT = 25;
 const int EV_MOON = 26;
 const int EV_RINGPLANE = 27;
-const int EV_STARFORGE = 28;
+const int EV_CLIFFS = 28;      // the full-screen nebulae, in starforge.glsl
+const int EV_ORION = 29;
+const int EV_LAGOON = 30;
+const int EV_ROSETTE = 31;
+const int EV_HORSEHEAD = 32;
+const int EV_TARANTULA = 33;
+const int EV_VEIL = 34;
+const int EV_RHO = 35;
 
 // Set to an EV_* id to always show that event. The launcher does this: each scene runs as its own
 // shader with only that scene compiled in (one shader holding them all takes the GPU driver 20+
@@ -91,7 +98,14 @@ const float ROGUE_CHANCE = 0.05;      // -4.0%
 const float HORIZON_CHANCE = 0.02;    // +13% (up to +22% with an aurora at night)
 const float CLUSTER_CHANCE = 0.05;    // -1.6% globular, +0.7% open
 const float GIANT_CHANCE = 0.05;      // +4%
-const float STARFORGE_CHANCE = 0.06;  // +5% (+14% the cliffs)
+const float CLIFFS_CHANCE = 0.015;    // +14%
+const float ORION_CHANCE = 0.02;      // +5%
+const float LAGOON_CHANCE = 0.02;     // +5%
+const float ROSETTE_CHANCE = 0.02;    // +5%
+const float HORSEHEAD_CHANCE = 0.02;  // +6%
+const float TARANTULA_CHANCE = 0.02;  // +4%
+const float VEIL_CHANCE = 0.02;       // +4%
+const float RHO_CHANCE = 0.02;        // +3%
 const float RINGPLANE_CHANCE = 0.03;  // ~0%
 const float MOON_CHANCE = 0.02;       // +15-20%
 
@@ -100,7 +114,8 @@ const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE 
     SPIRAL_CHANCE + SYSTEM_CHANCE + STAR_CHANCE + PILLARS_CHANCE + BLACKHOLE_CHANCE +
     BINARY_CHANCE + EATEN_CHANCE + PULSARCLOSE_CHANCE + SUPERNOVA_CHANCE + SURFACE_CHANCE +
     COLLISION_CHANCE + QUASAR_CHANCE + ROGUE_CHANCE + HORIZON_CHANCE + CLUSTER_CHANCE +
-    GIANT_CHANCE + MOON_CHANCE + RINGPLANE_CHANCE + STARFORGE_CHANCE;
+    GIANT_CHANCE + MOON_CHANCE + RINGPLANE_CHANCE + CLIFFS_CHANCE + ORION_CHANCE + LAGOON_CHANCE +
+    ROSETTE_CHANCE + HORSEHEAD_CHANCE + TARANTULA_CHANCE + VEIL_CHANCE + RHO_CHANCE;
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -152,8 +167,22 @@ int pickEvent(float roll) {
     if (roll < c) return EV_MOON;
     c += RINGPLANE_CHANCE;
     if (roll < c) return EV_RINGPLANE;
-    c += STARFORGE_CHANCE;
-    if (roll < c) return EV_STARFORGE;
+    c += CLIFFS_CHANCE;
+    if (roll < c) return EV_CLIFFS;
+    c += ORION_CHANCE;
+    if (roll < c) return EV_ORION;
+    c += LAGOON_CHANCE;
+    if (roll < c) return EV_LAGOON;
+    c += ROSETTE_CHANCE;
+    if (roll < c) return EV_ROSETTE;
+    c += HORSEHEAD_CHANCE;
+    if (roll < c) return EV_HORSEHEAD;
+    c += TARANTULA_CHANCE;
+    if (roll < c) return EV_TARANTULA;
+    c += VEIL_CHANCE;
+    if (roll < c) return EV_VEIL;
+    c += RHO_CHANCE;
+    if (roll < c) return EV_RHO;
     c += CLUSTER_CHANCE;
     if (roll < c) return EV_CLUSTER;
     c += RING_CHANCE;

@@ -1,4 +1,4 @@
-// Star factory: a stellar nursery filling the whole display, in one of four styles -
+// Full-screen nebulae, eight separate scenes sharing this code (style picks which) -
 //  0. Cosmic Cliffs, like JWST's Carina image: ranges of billowing dust one behind another - far
 //     ones pale in the glowing haze, near ones dark - each lit gold along its skyline, under a
 //     blue cavity full of young stars with 8-point spikes;
@@ -7,7 +7,15 @@
 //  2. Lagoon/Trifid: vivid magenta gas split by snaking dark dust lanes, with a blue reflection
 //     lobe and a hot pink core;
 //  3. Rosette: a great ring of red-pink gas around a cavity its central cluster has blown clear,
-//     teal inside, dotted with dark globules.
+//     teal inside, dotted with dark globules;
+//  4. Horsehead: a glowing red curtain over a dark dust floor, a dark pillar with a bent-over head
+//     rearing out of it, a bright star in a blue reflection haze;
+//  5. Tarantula: a chaotic web of pink, teal and gold filaments blown into bubbles around a
+//     blazing central cluster;
+//  6. Veil: braided ropes of shocked gas, teal-blue and red side by side, sweeping in great arcs
+//     across dark sky;
+//  7. Rho Ophiuchi: a dense Milky Way starfield cut by dark dust, with a golden glow, a blue
+//     reflection nebula and red emission.
 // Everything is lit by the young cluster: gas glows brighter near it, dust is rimmed where it
 // faces it. The view drifts and pushes in very slowly. Premultiplied colour; .a is how much of
 // the background it covers.
@@ -34,11 +42,11 @@ vec3 forgeStar(vec2 uv, vec2 p, float b, vec3 c, bool jwst) {
     return col + c * spikes * 0.6 * b;
 }
 
-vec4 starForge(vec2 uv, float seed, float slot, float t, float fade) {
+vec4 starForge(vec2 uv, float seed, float slot, float t, float fade, int style) {
+    // Each nebula gets its own shapes, not the same clouds in different colours.
+    seed += float(style) * 13.7;
     float lt = eventTime(t);
     vec2 ext = halfExtent();
-    float sp = hash12(vec2(slot, seed + 801.0));
-    int style = sp < 0.3 ? 0 : sp < 0.55 ? 1 : sp < 0.8 ? 2 : 3;
 
     // A very slow push-in and drift.
     float dr = eventDrift(lt);
@@ -157,7 +165,7 @@ vec4 starForge(vec2 uv, float seed, float slot, float t, float fade) {
         col = mix(col, vec3(0.3, 0.45, 1.0) * (0.15 + 1.1 * gas2 * gas2), lobe * 0.7);
         dust = clamp(lanes * 1.0 + patches * 0.3, 0.0, 0.93);
         rimC = vec3(1.0, 0.7, 0.8);
-    } else {
+    } else if (style == 3) {
         // Rosette: a great ring of gas around a cavity blown clear by the central cluster.
         float R0 = mix(0.42, 0.58, hash12(vec2(slot, seed + 811.0)));
         float rr = dc / R0 + (gas - 0.5) * 0.45 + w2.y * 0.2;
@@ -171,9 +179,109 @@ vec4 starForge(vec2 uv, float seed, float slot, float t, float fade) {
         float glob = smoothstep(0.72, 0.82, fbm(p * 7.0 + w2 * 2.0 + seed * 6.0)) * ring;
         dust = clamp(lanes * 0.6 * ring + glob * 0.85, 0.0, 0.92);
         rimC = vec3(1.0, 0.65, 0.6);
+    } else if (style == 4) {
+        // Horsehead: a glowing red curtain of gas streaked vertically along its ionisation front,
+        // a dark dust floor, and a dark pillar rearing out of it with a bulging, bent-over head.
+        float streak = fbm(vec2(p.x * 2.0 + w1.x, p.y * 9.0 + w2.y * 2.0) + seed * 2.0);
+        vec3 ha = vec3(1.0, 0.18, 0.22);
+        float curtain = (0.2 + 1.3 * pow(gas, 1.8)) * (0.55 + 0.6 * streak) * (0.6 + 0.5 * smoothstep(-0.4, 0.4, p.y));
+        col = ha * curtain;
+        col = mix(col, vec3(1.0, 0.45, 0.3) * curtain, smoothstep(0.5, 0.8, gas2) * 0.4);
+        // The floor of dark dust.
+        float floorY = mix(-0.32, -0.18, hash12(vec2(slot, seed + 825.0))) + (fbm(vec2(p.x * 1.3, s1)) - 0.5) * 0.12 + w2.x * 0.04;
+        float fl = smoothstep(0.025, -0.05, p.y - floorY + (fine - 0.5) * 0.06 + (fbm(p * 12.0 + seed) - 0.5) * 0.03);
+        // The pillar: a column of dust rising from the floor, swelling into a head that leans to
+        // one side, every edge eaten away by the radiation into ragged billows.
+        float hx = (hash12(vec2(slot, seed + 827.0)) - 0.5) * ext.x * 0.9;
+        float hside = hash12(vec2(slot, seed + 829.0)) < 0.5 ? -1.0 : 1.0;
+        float H = mix(0.3, 0.42, hash12(vec2(slot, seed + 831.0)));
+        vec2 q = p - vec2(hx, floorY);
+        q += (vec2(fbm(q * 4.0 + seed), fbm(q * 4.0 - seed)) - 0.5) * 0.06;
+        float up = clamp(q.y / H, 0.0, 1.2);
+        float lean = hside * 0.07 * smoothstep(0.55, 1.0, up);
+        float w = mix(0.075, 0.045, up) + 0.055 * exp(-pow((up - 0.88) / 0.12, 2.0));
+        float erode = (fbm(q * 9.0 + seed * 3.0) - 0.5) * 0.06 + (fbm(q * 25.0 - seed) - 0.5) * 0.025;
+        // A soft edge: thin dust at the fringe lets the glow through.
+        float horse = smoothstep(0.012, -0.022, abs(q.x - lean) - w + erode) * smoothstep(1.04, 0.86, up + erode * 3.0);
+        float body = max(fl, horse);
+        // Glowing rim where the curtain's light wraps the dark shapes.
+        float rimH = smoothstep(0.0, 0.5, body) * smoothstep(1.0, 0.5, body);
+        // The dust is faintly lit from the curtain behind and above, so it isn't flat black.
+        col = col * (1.0 - body * 0.93) + vec3(0.18, 0.05, 0.05) * body * (0.3 + 0.7 * fine) * smoothstep(-0.5, 0.0, p.y)
+            + vec3(1.0, 0.45, 0.35) * rimH * 0.6 * curtain;
+        dust = body * 0.95;
+        // A bright star in a blue reflection haze, low in a corner.
+        vec2 rsp = vec2(-hside * ext.x * 0.6, floorY + 0.08);
+        float rh = exp(-length(p - rsp) / 0.18);
+        col = mix(col, vec3(0.35, 0.55, 1.0) * (0.3 + 0.9 * gas2), rh * 0.75);
+        col += forgeStar(uv, rsp, 0.9, vec3(0.85, 0.9, 1.0), false);
+        rimC = vec3(1.0, 0.5, 0.4);
+    } else if (style == 5) {
+        // Tarantula: a chaotic web of bright filaments blown into overlapping bubbles by a blazing
+        // central cluster, in pink, teal and gold.
+        float bub = 0.0;
+        for (int k = 0; k < 5; k++) {
+            float fk = float(k);
+            vec2 bc = cl + (hash22(vec2(fk, seed + 833.0)) - 0.5) * 0.9;
+            float br = mix(0.12, 0.3, hash12(vec2(fk, seed + 835.0)));
+            float e = length(p - bc) / br + (gas - 0.5) * 0.35;
+            bub = max(bub, exp(-pow((e - 1.0) / 0.12, 2.0)));
+        }
+        float web = pow(1.0 - abs(2.0 * fbm(p * 3.0 + w2 * 3.0 + seed * 4.0) - 1.0), 6.0);
+        vec3 pink = vec3(1.0, 0.3, 0.5);
+        vec3 teal = vec3(0.25, 0.85, 0.8);
+        vec3 gold = vec3(1.0, 0.75, 0.35);
+        vec3 tint = mix(mix(pink, teal, smoothstep(0.4, 0.65, gas2)), gold, smoothstep(0.6, 0.8, gas) * 0.5);
+        col = tint * (g * 0.45 + web * 0.9 + bub * 0.8 * (0.5 + gas)) * (0.45 + 1.1 * nearC);
+        col += vec3(0.9, 0.95, 1.0) * (exp(-dc / 0.05) * 1.6 + exp(-dc / 0.15) * 0.5);
+        dust = clamp(lanes * 0.55 + patches * 0.25, 0.0, 0.8);
+        rimC = vec3(1.0, 0.75, 0.6);
+    } else if (style == 6) {
+        // Veil: delicate braided ropes of shocked gas sweeping across dark sky in great arcs, the
+        // teal-blue and red emission running side by side.
+        vec2 ac = cl + vec2(0.0, -0.9) * (hash12(vec2(slot, seed + 837.0)) < 0.5 ? 1.0 : -1.0);
+        float ar = mix(0.8, 1.2, hash12(vec2(slot, seed + 839.0)));
+        float da = length(p - ac) - ar;
+        // Ropes run along the arc: noise stretched along it, gently wavering.
+        float along = atan(p.y - ac.y, p.x - ac.x) * ar;
+        // Strong, slow wavering makes neighbouring ropes wander across each other into braids.
+        vec2 rq = vec2(da * 14.0 + (fbm(vec2(along * 0.9, seed)) - 0.5) * 7.0 + (fbm(vec2(along * 3.0, seed + 4.0)) - 0.5) * 2.0, along * 1.2) + w2 * 1.2;
+        float ropeN = noise(rq + seed * 3.0) * 0.7 + noise(rq * 2.1 + seed) * 0.3;
+        float ropeN2 = noise(rq + vec2(0.55, 0.0) + seed * 3.0) * 0.7 + noise(rq * 2.1 + vec2(1.1, 0.0) + seed) * 0.3;
+        // In bright stretches and faint gaps along the arc, not one continuous line.
+        float band = exp(-pow(da / 0.32, 2.0)) * smoothstep(0.3, 0.65, fbm(vec2(along * 1.6, seed + 9.0)) + gas * 0.3);
+        float ropeB = pow(1.0 - abs(2.0 * ropeN - 1.0), 22.0) * band;
+        float ropeR = pow(1.0 - abs(2.0 * ropeN2 - 1.0), 22.0) * band;
+        // Only a few bundles at any point: the rest of the ropes are gated off, so they come and go.
+        float bundle = smoothstep(0.38, 0.62, noise(vec2(da * 4.0 + w1.x * 2.0, along * 0.6) + seed * 5.0));
+        ropeB *= bundle;
+        ropeR *= bundle;
+        float haze = g * band * 0.08;
+        col = vec3(0.2, 0.6, 1.0) * (ropeB * 0.9 + haze) + vec3(1.0, 0.22, 0.25) * (ropeR * 0.8 + haze * 0.6);
+        // Fainter wisps all around.
+        col += vec3(0.6, 0.4, 0.8) * pow(1.0 - abs(2.0 * fine - 1.0), 10.0) * 0.15 * (0.3 + band);
+        dust = 0.0;
+    } else {
+        // Rho Ophiuchi: a dense starfield cut by dark dust lanes, around a golden glow (a bright
+        // orange giant lighting its dust), a blue reflection nebula and a red emission patch.
+        vec2 goldP = cl;
+        vec2 blueP = cl + (hash22(vec2(slot, seed + 841.0)) - 0.5) * vec2(1.2, 0.6);
+        vec2 redP = cl + (hash22(vec2(slot, seed + 843.0)) - 0.5) * vec2(1.0, 0.8);
+        float gG = exp(-length(p - goldP) / 0.4);
+        float gB = exp(-length(p - blueP) / 0.32);
+        float gR = exp(-length(p - redP) / 0.32);
+        float cloud = 0.35 + 1.3 * gas * gas;
+        col = vec3(1.0, 0.72, 0.18) * gG * cloud * 1.8 + vec3(0.2, 0.42, 1.0) * gB * cloud * 1.8
+            + vec3(1.0, 0.15, 0.32) * gR * cloud * 1.5;
+        col += forgeStar(uv, goldP, 1.0, vec3(1.0, 0.7, 0.4), false);
+        col += forgeStar(uv, blueP, 0.8, vec3(0.75, 0.85, 1.0), false);
+        // The Milky Way's crowd of stars behind it all.
+        col += starLayer(p, 170.0, 0.4, 0.4, seed + 31.0, t, 1.0);
+        dust = clamp(lanes * 0.9 + patches * 0.3, 0.0, 0.95);
+        rimC = vec3(1.0, 0.8, 0.6);
     }
 
-    if (style != 0) {
+    if (style != 0 && style != 4 && style != 6) {
         // Dust darkens and slightly reddens the glow behind it.
         col = col * (1.0 - dust) + col * vec3(0.25, 0.12, 0.08) * dust;
         // Its edges facing the cluster are lit: brighter where the dust is thin and near the light.
