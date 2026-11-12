@@ -79,7 +79,7 @@ const float QUASAR_CHANCE = 0.05;      // -3.6%
 const float ROGUE_CHANCE = 0.05;      // -4.0%
 const float HORIZON_CHANCE = 0.02;    // +10%
 const float CLUSTER_CHANCE = 0.05;    // -1.6% globular, +0.7% open
-const float GIANT_CHANCE = 0.05;      // +2-3%
+const float GIANT_CHANCE = 0.05;      // +4%
 const float MOON_CHANCE = 0.02;       // +15-20%
 
 const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE + RING_CHANCE +

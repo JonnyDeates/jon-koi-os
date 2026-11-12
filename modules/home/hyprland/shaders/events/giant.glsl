@@ -4,7 +4,8 @@
 // thin F ring; or a few narrow dark ringlets like Uranus. The planet's shadow falls across the
 // rings and the rings' shadow across the clouds; seen from the unlit side, thin rings glow and the
 // dense ones go dark. A small moon circles in the ring plane, passing in front of or behind the
-// planet and dropping its shadow on the clouds. Premultiplied colour/coverage.
+// planet and dropping its shadow on the clouds. Along the band edges, chains of small eddies curl
+// the clouds into waves and hooks. Premultiplied colour/coverage.
 
 float giantHash(vec3 p) {
     p = fract(p * 0.1031);
@@ -35,6 +36,18 @@ float giantFbm(vec3 p, int oct) {
         a *= 0.5;
     }
     return v;
+}
+
+// One layer of small vortices: each cell holds an eddy that turns the flow around its centre,
+// strongest in the middle and fading to nothing well inside the cell, so cells join seamlessly.
+// Each slowly winds up over the event. Returns the displacement, in cell units.
+vec2 giantEddy(vec2 q, float seed, float lt) {
+    vec2 id = floor(q);
+    vec2 o = fract(q) - (0.5 + (hash22(id + seed) - 0.5) * 0.3);
+    float fall = smoothstep(0.35, 0.0, length(o));
+    float h = hash12(id + seed + 3.7);
+    float spin = (h < 0.5 ? -1.0 : 1.0) * (1.5 + 2.0 * h + lt * 0.012) * fall * fall;
+    return rotate(spin) * o - o;
 }
 
 // How opaque the rings are at distance rho (in planet radii). kind 0 = Saturn-like, 1 = narrow.
@@ -159,6 +172,7 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
         // Storms: one big oval and a few smaller ones, each spinning slowly.
         vec3 sw = vec3(0.0);
         float stormC = 0.0;
+        float collar = 0.0;
         for (int i = 0; i < 4; i++) {
             float fi = float(i);
             float big = i == 0 ? 1.0 : 0.0;
@@ -183,26 +197,50 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
             vec2 qs = rotate(swirl) * q;
             sw += (east * qs.x * 1.8 + north * qs.y - east * q.x * 1.8 - north * q.y) * sz * fall;
             stormC = max(stormC, smoothstep(1.0, 0.3, rr) * (0.6 + 0.4 * big));
+            // A pale collar of cloud wrapped around the big storm.
+            collar = max(collar, big * exp(-pow((sqrt(rr) - 1.12) / 0.2, 2.0)));
         }
         vec3 ps = pr + sw;
+
+        // Eddies: chains of small vortices rolling along the band edges, where neighbouring jets
+        // shear past each other, curling the edges into waves and hooks. Two sizes.
+        float edge0 = noise(vec2(ps.y * 10.0, seed));
+        float edgeMask = (1.0 - smoothstep(0.06, 0.24, abs(edge0 - 0.5))) * turb;
+        if (edgeMask > 0.0) {
+            float lon = atan(ps.x, ps.z);
+            // Whole numbers of cells around the planet, so there's no seam.
+            vec2 e = giantEddy(vec2(lon * 44.0 / 6.2832, ps.y * 14.0), seed, lt) / vec2(44.0 / 6.2832, 14.0)
+                   + giantEddy(vec2(lon * 150.0 / 6.2832, ps.y * 52.0), seed + 7.0, lt) / vec2(150.0 / 6.2832, 52.0) * 0.7;
+            e *= edgeMask;
+            float cl = length(ps.xz);
+            ps = vec3(sin(lon + e.x) * cl, ps.y + e.y, cos(lon + e.x) * cl);
+        }
 
         // Bands: irregular light zones and dark belts, edges churned by turbulence that's
         // strongest where neighbouring jets shear past each other.
         float shear = abs(cos(sLat * nb * 3.1416));
         float w1 = giantFbm(ps * vec3(2.2, 9.0, 2.2) + seed, 5) - 0.5;
         float w2 = giantFbm(ps * vec3(5.0, 22.0, 5.0) - seed + vec3(lt * 0.004, 0.0, lt * 0.006), 4) - 0.5;
+        // A second warp fed by the first curls the flow into finer filaments.
+        float w3 = giantFbm(ps * vec3(9.0, 34.0, 9.0) + vec3(w1, w2, w1) * 3.0 + seed * 3.0, 4) - 0.5;
         float warp = (w1 * (0.6 + 0.8 * shear) + w2 * 0.5) * turb;
-        float lat = ps.y + warp * 0.08;
+        float lat = ps.y + warp * 0.08 + w3 * 0.03 * turb;
         float bandA = noise(vec2(lat * 10.0, seed));
         float bandB = noise(vec2(lat * 34.0, seed + 5.0));
-        float zoneAmt = smoothstep(0.3, 0.7, bandA) * 0.75 + bandB * 0.25;
+        float zoneAmt = smoothstep(0.38, 0.62, bandA) * 0.75 + bandB * 0.25;
         zoneAmt = mix(0.5, zoneAmt, contrast);
         vec3 c = mix(belt, zone, zoneAmt);
+        // Belts are mottled: darker knots and lighter rifts in the turbulence.
+        c = mix(c, c * mix(0.7, 1.25, smoothstep(-0.25, 0.25, w3)), (1.0 - zoneAmt) * 0.7 * turb);
         // Fine streaky texture along the flow.
-        float streak = giantFbm(ps * vec3(4.0, 60.0, 4.0) + vec3(warp * 2.0, 0.0, 0.0) + seed * 2.0, 3);
+        float streak = giantFbm(ps * vec3(7.0, 42.0, 7.0) + vec3(warp * 2.0 + w3, 0.0, 0.0) + seed * 2.0, 3);
         c *= 0.88 + 0.24 * streak * (0.4 + 0.6 * turb);
-        // Storm colours: the big one takes the accent, small ones are pale ovals.
-        c = mix(c, accent, stormC * 0.75);
+        // Zones carry puffy, brighter cloud tops.
+        c = mix(c, mix(zone, vec3(1.0), 0.2), smoothstep(0.02, 0.28, w3) * zoneAmt * 0.35 * turb);
+        // Storms: the big one takes the accent, small ones are pale ovals, both with the swirling
+        // cloud texture showing through; a pale collar rings the big one.
+        c = mix(c, mix(zone, vec3(1.0), 0.15), collar * 0.55);
+        c = mix(c, accent * (0.7 + 0.6 * streak + 0.4 * w3), stormC * 0.75);
         // Hazy poles.
         c = mix(c, polar, smoothstep(0.7, 0.92, abs(sLat)) * 0.8);
 
