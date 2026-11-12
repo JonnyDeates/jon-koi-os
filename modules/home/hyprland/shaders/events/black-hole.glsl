@@ -18,7 +18,7 @@ void blackHole(vec2 uv, float seed, float slot, float lt, float t, float fade,
     // Mostly small-to-medium, occasionally huge.
     float R = mix(0.035, 0.12, pow(hash12(vec2(slot, seed + 43.0)), 1.6));
     vec2 center = (rnd - 0.5) * 2.0 * halfExtent() * vec2(0.6, 0.45);
-    center += (hash22(vec2(slot, seed + 47.0)) - 0.5) * 0.0004 * lt;
+    center += (hash22(vec2(slot, seed + 47.0)) - 0.5) * 0.0004 * eventDrift(lt);
     float tilt = (hash12(vec2(slot, seed + 53.0)) - 0.5) * 0.35;
     // Camera a few degrees above the disk plane: usually nearly edge-on like in the film,
     // sometimes tilted a bit more so more of the disk's face shows.

@@ -250,7 +250,7 @@ vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade) {
     vec3 ro = vec3(0.0, H0 + 1.7, 0.0);
     float hy = mix(-0.3, -0.14, hash12(vec2(slot, seed + 603.0)));
     float pitch = atan(hy / f);
-    float yaw = (hash12(vec2(slot, seed + 605.0)) - 0.5) * 0.0012 * lt;
+    float yaw = (hash12(vec2(slot, seed + 605.0)) - 0.5) * 0.0012 * eventDrift(lt);
 
     // Sun: low, off to one side (out of frame). Now and then it has set.
     bool night = hash12(vec2(slot, seed + 607.0)) < 0.2;

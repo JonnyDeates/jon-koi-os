@@ -163,7 +163,7 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
         // Kept small so over an event the bands slide past each other without shredding the clouds.
         float u = (0.0012 * sin(sLat * nb * 3.1416) + 0.002 * exp(-sLat * sLat / 0.02)) * mix(0.6, 1.0, turb);
         float a0 = lt * 0.006;
-        float ang = a0 + lt * u;
+        float ang = a0 + eventDrift(lt) * u;
         vec3 pf = vec3(dot(N, Q), sLat, dot(N, F));
         vec3 pr = vec3(pf.x * cos(ang) - pf.z * sin(ang), pf.y, pf.x * sin(ang) + pf.z * cos(ang));
         // Storms ride with the planet's overall spin, so they keep their shape.
@@ -193,7 +193,7 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
             vec2 q = vec2(dot(rel, east), dot(rel, north)) / (sz * vec2(1.8, 1.0));
             float rr = dot(q, q);
             float fall = exp(-rr * 1.2);
-            float swirl = (1.5 + 2.0 * fall) * fall * (hash12(vec2(fi, seed + 549.0)) < 0.5 ? -1.0 : 1.0) + lt * 0.02 * fall;
+            float swirl = (1.5 + 2.0 * fall) * fall * (hash12(vec2(fi, seed + 549.0)) < 0.5 ? -1.0 : 1.0) + eventDrift(lt) * 0.02 * fall;
             vec2 qs = rotate(swirl) * q;
             sw += (east * qs.x * 1.8 + north * qs.y - east * q.x * 1.8 - north * q.y) * sz * fall;
             stormC = max(stormC, smoothstep(1.0, 0.3, rr) * (0.6 + 0.4 * big));
@@ -209,8 +209,8 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
         if (edgeMask > 0.0) {
             float lon = atan(ps.x, ps.z);
             // Whole numbers of cells around the planet, so there's no seam.
-            vec2 e = giantEddy(vec2(lon * 44.0 / 6.2832, ps.y * 14.0), seed, lt) / vec2(44.0 / 6.2832, 14.0)
-                   + giantEddy(vec2(lon * 150.0 / 6.2832, ps.y * 52.0), seed + 7.0, lt) / vec2(150.0 / 6.2832, 52.0) * 0.7;
+            vec2 e = giantEddy(vec2(lon * 44.0 / 6.2832, ps.y * 14.0), seed, eventDrift(lt)) / vec2(44.0 / 6.2832, 14.0)
+                   + giantEddy(vec2(lon * 150.0 / 6.2832, ps.y * 52.0), seed + 7.0, eventDrift(lt)) / vec2(150.0 / 6.2832, 52.0) * 0.7;
             e *= edgeMask;
             float cl = length(ps.xz);
             ps = vec3(sin(lon + e.x) * cl, ps.y + e.y, cos(lon + e.x) * cl);
@@ -340,7 +340,7 @@ vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
     vec2 ext = halfExtent();
     float R = mix(0.26, 0.62, hash12(vec2(slot, seed + 517.0)));
     vec2 center = (hash22(vec2(slot * 5.1, seed + 519.0)) - 0.5) * 2.0 * ext * mix(0.2, 0.85, smoothstep(0.3, 0.62, R));
-    center += (hash22(vec2(slot, seed + 521.0)) - 0.5) * 0.0002 * lt;
+    center += (hash22(vec2(slot, seed + 521.0)) - 0.5) * 0.0002 * eventDrift(lt);
     // Sun: usually behind us and off to one side, so the planet's shadow falls back across the
     // far rings like the classic views; now and then from behind for a dramatic crescent.
     float sa = hash12(vec2(slot, seed + 529.0)) * 6.2831;

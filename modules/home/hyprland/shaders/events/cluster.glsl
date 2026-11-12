@@ -65,12 +65,13 @@ vec4 starCluster(vec2 uv, float seed, float slot, float t, float fade) {
     bool globular = hash12(vec2(slot, seed + 471.0)) < 0.55;
     vec2 center = (hash22(vec2(slot * 7.7, seed + 473.0)) - 0.5) * 2.0 * ext * vec2(0.3, 0.2);
     float lt = eventTime(t);
-    center += (hash22(vec2(slot, seed + 475.0)) - 0.5) * 0.0003 * lt;
+    float dr = eventDrift(lt);
+    center += (hash22(vec2(slot, seed + 475.0)) - 0.5) * 0.0003 * dr;
     // We drift slowly toward the cluster while the view turns a little. Nearer (brighter) stars
     // spread outward faster than the distant crowd, giving a sense of depth.
-    float spin = (hash12(vec2(slot, seed + 497.0)) - 0.5) * 0.002 * lt;
+    float spin = (hash12(vec2(slot, seed + 497.0)) - 0.5) * 0.002 * dr;
     vec2 d0 = rotate(spin) * (uv - center);
-    float zoom = 1.0 + 0.001 * lt;
+    float zoom = 1.0 + 0.001 * dr;
     vec2 d = d0 / zoom;
     float r = length(d);
     float spikeAng = (hash12(vec2(slot, seed + 477.0)) - 0.5) * 0.5;
@@ -91,7 +92,7 @@ vec4 starCluster(vec2 uv, float seed, float slot, float t, float fade) {
             col += vec3(1.0, 0.9, 0.75) * smoothGlow * pow(grain, 4.0) * 0.5;
             alpha = clamp(smoothGlow * 0.8, 0.0, 0.9);
             // Resolved stars at three sizes.
-            float z1 = 1.0 + 0.0016 * lt, z2 = 1.0 + 0.0012 * lt, z3 = zoom, z4 = 1.0 + 0.0008 * lt;
+            float z1 = 1.0 + 0.0016 * dr, z2 = 1.0 + 0.0012 * dr, z3 = zoom, z4 = 1.0 + 0.0008 * dr;
             col += clusterStarLayer(d0 / z1, 150.0, 0.0, seed + 11.0, 1.2, rc, rt, true, 1.2, z1, t);
             col += clusterStarLayer(d0 / z2, 260.0, 0.7, seed + 23.0, 1.2, rc, rt, true, 0.9, z2, t);
             col += clusterStarLayer(d0 / z3, 430.0, 1.9, seed + 37.0, 1.1, rc, rt, true, 0.65, z3, t);
@@ -101,7 +102,7 @@ vec4 starCluster(vec2 uv, float seed, float slot, float t, float fade) {
         for (int i = 0; i < 10; i++) {
             float fi = float(i);
             vec2 h = hash22(vec2(fi * 3.1 + slot, seed + 481.0));
-            vec2 p = center + rotate(-spin) * vec2(cos(h.x * 6.2831), sin(h.x * 6.2831)) * R * 0.9 * sqrt(-log(max(h.y, 0.02))) * (1.0 + 0.002 * lt);
+            vec2 p = center + rotate(-spin) * vec2(cos(h.x * 6.2831), sin(h.x * 6.2831)) * R * 0.9 * sqrt(-log(max(h.y, 0.02))) * (1.0 + 0.002 * dr);
             float b = mix(0.35, 0.8, hash12(vec2(fi, seed + 483.0)));
             // A few of the giants are slow pulsating variables.
             b *= 1.0 + 0.35 * step(0.6, hash12(vec2(fi, seed + 499.0))) * sin(t * mix(0.3, 0.8, h.y) + fi * 2.0);
@@ -115,7 +116,7 @@ vec4 starCluster(vec2 uv, float seed, float slot, float t, float fade) {
         for (int i = 0; i < 12; i++) {
             float fi = float(i);
             vec2 h = hash22(vec2(fi * 5.3 + slot, seed + 489.0));
-            vec2 p = center + rotate(-spin) * (h - 0.5) * 2.0 * spread * vec2(1.3, 1.0) * (1.0 + 0.002 * lt);
+            vec2 p = center + rotate(-spin) * (h - 0.5) * 2.0 * spread * vec2(1.3, 1.0) * (1.0 + 0.002 * dr);
             float b = mix(0.3, 1.1, pow(hash12(vec2(fi, seed + 491.0)), 2.0));
             vec3 c = mix(vec3(0.62, 0.76, 1.0), vec3(0.9, 0.94, 1.0), hash12(vec2(fi, seed + 493.0)));
             col += clusterBrightStar(uv, p, b, c, spikeAng, 90.0);
@@ -132,7 +133,7 @@ vec4 starCluster(vec2 uv, float seed, float slot, float t, float fade) {
         col += vec3(0.35, 0.55, 1.0) * neb * illum * 0.35;
         col += vec3(0.5, 0.65, 1.0) * illum * 0.02;
         // Fainter members, concentrated toward the middle.
-        float z1 = 1.0 + 0.0015 * lt, z2 = 1.0 + 0.0008 * lt;
+        float z1 = 1.0 + 0.0015 * dr, z2 = 1.0 + 0.0008 * dr;
         col += clusterStarLayer(d0 / z1, 110.0, 0.4, seed + 51.0, 0.35, 0.0, spread * 1.5, false, 0.8, z1, t);
         col += clusterStarLayer(d0 / z2, 210.0, 1.3, seed + 67.0, 0.3, 0.0, spread * 1.8, false, 0.5, z2, t);
     }

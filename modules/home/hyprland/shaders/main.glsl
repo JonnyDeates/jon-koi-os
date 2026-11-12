@@ -56,7 +56,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         bool giant = kind >= STAR_GIANT && kind < STAR_BLUE;
         float radius = giant ? mix(0.25, 0.45, sz) : kind >= STAR_BLUE ? mix(0.07, 0.13, sz) : mix(0.12, 0.22, sz);
         vec2 center = (hash22(vec2(slot * 3.1, eventSeed + 75.0)) - 0.5) * 2.0 * halfExtent() * 0.8;
-        center += (hash22(vec2(slot, eventSeed + 77.0)) - 0.5) * 0.0004 * lt;
+        center += (hash22(vec2(slot, eventSeed + 77.0)) - 0.5) * 0.0004 * eventDrift(lt);
         sun = star(uv, center, radius, kind, eventSeed, slot, t, fade, sunGlow, shimmer);
     }
     vec3 nova = vec3(0.0);

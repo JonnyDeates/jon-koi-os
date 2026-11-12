@@ -4,7 +4,7 @@
 // moon, just as faintly lit, circles it, passing in front and behind. Premultiplied colour/coverage.
 vec4 roguePlanet(vec2 uv, float seed, float slot, float t, float fade) {
     vec2 center = (hash22(vec2(slot * 9.3, seed + 411.0)) - 0.5) * 2.0 * halfExtent() * vec2(0.3, 0.2);
-    center += (hash22(vec2(slot, seed + 413.0)) - 0.5) * 0.0003 * eventTime(t);
+    center += (hash22(vec2(slot, seed + 413.0)) - 0.5) * 0.0003 * eventDrift(eventTime(t));
     float R = mix(0.14, 0.24, hash12(vec2(slot, seed + 415.0)));
     float tilt = (hash12(vec2(slot, seed + 417.0)) - 0.5) * 0.8;
     vec3 L = normalize(vec3((hash22(vec2(slot, seed + 419.0)) - 0.5) * 2.0, -0.3));  // faint starlight, mostly from behind

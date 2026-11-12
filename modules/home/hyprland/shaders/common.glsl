@@ -8,7 +8,7 @@ const vec3 VIOLET = vec3(0.55, 0.28, 0.85);
 
 // Events: each monitor rolls once per period for one event (or nothing). The event fades in,
 // drifts, then fades out before the next roll.
-const float EVENT_PERIOD = 150.0;
+const float EVENT_PERIOD = 1800.0;
 const float EVENT_FADE = 20.0;
 
 const int EV_NONE = 0;
@@ -50,7 +50,7 @@ const float SKY_PERIOD = 3600.0;
 const float SKY_FADE = 60.0;
 
 // Share of event slots that show just the plain sky, so there are quiet stretches between events.
-const float PLAIN_SKY_SHARE = 0.12;
+const float PLAIN_SKY_SHARE = 0.25;
 
 // Relative weights of the events (they share the rest). The more GPU an event costs, the rarer it
 // is (extra cost over plain sky at 4K in comments, measured from /proc/<pid>/fdinfo).
@@ -153,6 +153,13 @@ int pickEvent(float roll) {
 // Seconds since the current event started (t is the wallpaper's total running time).
 float eventTime(float t) {
     return t - floor(t / EVENT_PERIOD) * EVENT_PERIOD;
+}
+
+// Slow one-way motions (drifting positions, zooms, a turning view, clouds winding up) were tuned
+// for 150 s events. This spreads that same amount of motion over the whole event, however long,
+// so nothing wanders off screen or winds itself into knots. lt is the time since the event began.
+float eventDrift(float lt) {
+    return lt * (150.0 / EVENT_PERIOD);
 }
 
 // Sizes are measured against the screen's short side, so portrait and landscape screens match.
