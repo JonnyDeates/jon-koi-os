@@ -48,8 +48,11 @@ const float RANDOM_SEED = 0.0;
 const float SKY_PERIOD = 3600.0;
 const float SKY_FADE = 60.0;
 
-// Chances per roll. The more GPU an event costs, the rarer it is (extra cost over plain sky at
-// 4K in comments, measured from /proc/<pid>/fdinfo).
+// Share of event slots that show just the plain sky, so there are quiet stretches between events.
+const float PLAIN_SKY_SHARE = 0.12;
+
+// Relative weights of the events (they share the rest). The more GPU an event costs, the rarer it
+// is (extra cost over plain sky at 4K in comments, measured from /proc/<pid>/fdinfo).
 // Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
 const float FIELD_CHANCE = 0.05;      // -3.3%
 const float COMETCLOSE_CHANCE = 0.06; // -2.9%
@@ -76,12 +79,20 @@ const float ROGUE_CHANCE = 0.05;      // -4.0%
 const float HORIZON_CHANCE = 0.02;    // +10%
 const float CLUSTER_CHANCE = 0.05;    // -1.6% globular, +0.7% open
 const float GIANT_CHANCE = 0.05;      // +2-3%
-// The rest (~1%) is plain sky.
+
+const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE + RING_CHANCE +
+    PLANET_CHANCE + COMET_CHANCE + ELLIPTICAL_CHANCE + BIPOLAR_CHANCE + PULSAR_CHANCE +
+    SPIRAL_CHANCE + SYSTEM_CHANCE + STAR_CHANCE + PILLARS_CHANCE + BLACKHOLE_CHANCE +
+    BINARY_CHANCE + EATEN_CHANCE + PULSARCLOSE_CHANCE + SUPERNOVA_CHANCE + SURFACE_CHANCE +
+    COLLISION_CHANCE + QUASAR_CHANCE + ROGUE_CHANCE + HORIZON_CHANCE + CLUSTER_CHANCE +
+    GIANT_CHANCE;
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
         return FORCE_EVENT;
     }
+    // Spread the weights over the non-plain share of rolls; anything past them is plain sky.
+    roll *= EVENT_WEIGHT_TOTAL / (1.0 - PLAIN_SKY_SHARE);
     float c = BLACKHOLE_CHANCE;
     if (roll < c) return EV_HOLE;
     c += STAR_CHANCE;
