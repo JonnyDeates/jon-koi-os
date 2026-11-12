@@ -83,8 +83,10 @@ float giantRings(float rho, float fw, float sc, float seed, int kind) {
 }
 
 // The planet itself, centred at center with screen radius R, lit from direction L (z toward us).
-// tint returns its overall colour, for light it throws on things nearby.
-vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, float lt, out vec3 tint) {
+// tint returns its overall colour, for light it throws on things nearby. ctl lets a scene take
+// over: with ctl.z = 1, ctl.x and ctl.y are the pole's tip and roll; ctl.w = 1 means the scene draws the
+// rings itself, so here they only cast their shadow (always Saturn-like) and the moon is left out.
+vec4 giantBodyEx(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, float lt, out vec3 tint, vec4 ctl) {
     float pick = hash12(vec2(slot, seed + 511.0));
     // Palette: zone (light bands), belt (dark bands), accent (storms), polar haze, turbulence.
     vec3 zone, belt, accent, polar;
@@ -121,12 +123,20 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
     } else if (ringRoll < 0.45) {
         ringKind = 1;
     }
+    bool sceneRings = ctl.w > 0.5;
+    if (sceneRings) {
+        ringKind = 0;
+    }
     float ringSc = mix(0.92, 1.1, hash12(vec2(slot, seed + 515.0)));
     tint = mix(zone, belt, 0.35);
 
     // Pole: tipped toward or away from us, and rolled on screen.
     float tip = mix(0.1, 0.42, hash12(vec2(slot, seed + 523.0))) * (hash12(vec2(slot, seed + 525.0)) < 0.5 ? -1.0 : 1.0);
     float roll = (hash12(vec2(slot, seed + 527.0)) - 0.5) * 0.9;
+    // A scene can set the pole's tip and roll itself (ctl.z = 1). Passing a pole vector in
+    // instead sends the GPU driver's optimiser into minutes of work.
+    tip = mix(tip, ctl.x, ctl.z);
+    roll = mix(roll, ctl.y, ctl.z);
     vec3 P = vec3(0.0, cos(tip), sin(tip));
     P.xy = rotate(roll) * P.xy;
     vec3 Q = normalize(cross(P, vec3(0.0, 0.0, 1.0)));
@@ -255,7 +265,8 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
             float s = -dot(N, P) / dot(L, P);
             if (s > 0.0) {
                 vec3 Y = N + L * s;
-                lit *= 1.0 - 0.85 * giantRings(length(Y), 0.01, ringSc, seed, ringKind);
+                // Softer in the ring-plane scene, where we look straight into the shadowed band.
+                lit *= 1.0 - mix(0.85, 0.55, ctl.w) * giantRings(length(Y), 0.01, ringSc, seed, ringKind);
             }
             // Ringshine: the hemisphere facing the rings' sunlit face glows faintly at night.
             float faceLit = sign(dot(L, P));
@@ -277,7 +288,7 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
         zPlanet = z;
     }
 
-    if (ringKind >= 0 && rho < 2.45 * ringSc) {
+    if (ringKind >= 0 && !sceneRings && rho < 2.45 * ringSc) {
         float op = giantRings(rho, fw, ringSc, seed, ringKind);
         if (op > 0.001) {
             float x = rho / ringSc;
@@ -310,7 +321,7 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
 
     vec2 md = (d - M.xy) / mR;
     float mrr = length(md);
-    if (mrr < 1.0 + px / mR) {
+    if (mrr < 1.0 + px / mR && !sceneRings) {
         float mz = sqrt(max(1.0 - mrr * mrr, 0.0));
         vec3 mn = vec3(md, mz);
         float crater = 0.6 + 0.4 * fbm(md * 3.0 + seed);
@@ -335,7 +346,27 @@ vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, fl
     return over(a, over(b, c3));
 }
 
-vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
+vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, float lt, out vec3 tint) {
+    return giantBodyEx(uv, center, R, L, seed, slot, lt, tint, vec4(0.0));
+}
+
+// Where a scene wants the giant drawn: screen centre and radius, sun direction in its view frame,
+// the giantBodyEx control vector, and whether to draw it at all. main renders the giant once from
+// this (each extra copy of the renderer in the shader multiplies the driver's compile time).
+struct GiantView {
+    vec2 center;
+    float R;
+    vec3 L;
+    vec4 ctl;
+    float on;
+};
+
+GiantView noGiant() {
+    return GiantView(vec2(0.0), 1.0, vec3(0.0, 0.0, 1.0), vec4(0.0), 0.0);
+}
+
+// The gas giant close-up.
+GiantView giantPlanetView(float seed, float slot, float t) {
     float lt = eventTime(t);
     vec2 ext = halfExtent();
     float R = mix(0.26, 0.62, hash12(vec2(slot, seed + 517.0)));
@@ -346,6 +377,5 @@ vec4 giantPlanet(vec2 uv, float seed, float slot, float t, float fade) {
     float sa = hash12(vec2(slot, seed + 529.0)) * 6.2831;
     float sz = hash12(vec2(slot, seed + 531.0));
     vec3 L = normalize(vec3(cos(sa), sin(sa) * 0.7, sz < 0.12 ? mix(-0.4, -0.1, sz / 0.12) : mix(0.35, 1.3, (sz - 0.12) / 0.88)));
-    vec3 tint;
-    return giantBody(uv, center, R, L, seed, slot, lt, tint) * fade;
+    return GiantView(center, R, L, vec4(0.0), 1.0);
 }

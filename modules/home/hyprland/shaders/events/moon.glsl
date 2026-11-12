@@ -225,32 +225,24 @@ float moonLS(vec3 n, vec3 l, float mu) {
     return 2.0 * mu0 / (mu0 + mu);
 }
 
-vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade) {
+// Everything about the moon's sky that doesn't depend on the ground: camera, sun, giant, eclipse.
+struct MoonSky {
+    float hy, pitch, yaw;
+    bool night, eclipse;
+    vec3 L, G, Gc, Lc;
+    float gR, sunVis, sunNear;
+    vec2 gCenter;
+    GiantView gv;
+};
+
+const float MOON_F = 1.2;    // focal length (screen short side = 1)
+const float SUN_R = 0.011;   // the sun's screen radius during an eclipse
+
+MoonSky moonSky(float seed, float slot, float t) {
     float lt = eventTime(t);
     vec2 ext = halfExtent();
-    const float f = 1.2; // focal length (screen short side = 1)
-    float pxA = 1.0 / (f * minDim());
-
-    // World kind: albA is the main ground, albB the darker patches or crack colour.
-    float pick = hash12(vec2(slot, seed + 601.0));
-    vec3 albA, albB;
-    float cdens;
-    int kind;
-    if (pick < 0.4) {           // grey, like our Moon: bright highlands, dark maria
-        albA = vec3(0.3, 0.29, 0.28); albB = vec3(0.16, 0.155, 0.15); cdens = 0.85; kind = 0;
-    } else if (pick < 0.62) {   // icy, like Europa: white ice crossed by rusty cracks
-        albA = vec3(0.5, 0.55, 0.6); albB = vec3(0.36, 0.22, 0.15); cdens = 0.3; kind = 1;
-    } else if (pick < 0.77) {   // volcanic sulphur, like Io: hardly any craters
-        albA = vec3(0.52, 0.44, 0.2); albB = vec3(0.42, 0.18, 0.08); cdens = 0.03; kind = 2;
-    } else {                    // dark and old, like Callisto: crater on crater
-        albA = vec3(0.19, 0.165, 0.14); albB = vec3(0.11, 0.095, 0.08); cdens = 0.95; kind = 3;
-    }
-    vec2 mtn = vec2(mix(600.0, 1200.0, hash12(vec2(slot, seed + 625.0))), mix(25.0, 120.0, hash12(vec2(slot, seed + 621.0))));
-
-    // Camera: at eye height above the ground where we stand, horizon low on screen, slowly turning.
-    float fr0, bo0;
-    float H0 = moonGround(vec2(0.0), 0.05, seed, cdens, mtn, 0.0, fr0, bo0).x;
-    vec3 ro = vec3(0.0, H0 + 1.7, 0.0);
+    const float f = MOON_F;
+    // Camera: horizon low on screen, slowly turning.
     float hy = mix(-0.3, -0.14, hash12(vec2(slot, seed + 603.0)));
     float pitch = atan(hy / f);
     float yaw = (hash12(vec2(slot, seed + 605.0)) - 0.5) * 0.0012 * eventDrift(lt);
@@ -273,7 +265,6 @@ vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade) {
     }
     vec3 G = moonRx(normalize(vec3(gs0, -f)), -pitch);
     float gA = gR / f;          // the giant's angular radius
-    const float SUN_R = 0.011;  // the sun's screen radius
     float sunA = SUN_R / f;
 
     // Eclipse, sometimes: the sun is up beside the giant and creeps behind it over the event, then
@@ -301,8 +292,50 @@ vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade) {
     vec3 zg = -Gc;
     vec3 xg = normalize(cross(vec3(0.0, 1.0, 0.0), zg));
     vec3 yg = cross(zg, xg);
-    vec3 gTint;
-    vec4 giant = giantBody(uv, gCenter, gR, vec3(dot(Lc, xg), dot(Lc, yg), dot(Lc, zg)), seed, slot, lt, gTint);
+    MoonSky ms;
+    ms.hy = hy; ms.pitch = pitch; ms.yaw = yaw;
+    ms.night = night; ms.eclipse = eclipse;
+    ms.L = L; ms.G = G; ms.Gc = Gc; ms.Lc = Lc;
+    ms.gR = gR; ms.sunVis = sunVis; ms.sunNear = sunNear;
+    ms.gCenter = gCenter;
+    ms.gv = GiantView(gCenter, gR, vec3(dot(Lc, xg), dot(Lc, yg), dot(Lc, zg)), vec4(0.0), 1.0);
+    return ms;
+}
+
+// ms: the sky set-up; giantIn/gTintIn: the giant, already drawn by the shared renderer.
+vec4 moonSurface(vec2 uv, float seed, float slot, float t, float fade, MoonSky ms, vec4 giantIn, vec3 gTintIn) {
+    float lt = eventTime(t);
+    vec2 ext = halfExtent();
+    const float f = MOON_F;
+    float pxA = 1.0 / (f * minDim());
+
+    // World kind: albA is the main ground, albB the darker patches or crack colour.
+    float pick = hash12(vec2(slot, seed + 601.0));
+    vec3 albA, albB;
+    float cdens;
+    int kind;
+    if (pick < 0.4) {           // grey, like our Moon: bright highlands, dark maria
+        albA = vec3(0.3, 0.29, 0.28); albB = vec3(0.16, 0.155, 0.15); cdens = 0.85; kind = 0;
+    } else if (pick < 0.62) {   // icy, like Europa: white ice crossed by rusty cracks
+        albA = vec3(0.5, 0.55, 0.6); albB = vec3(0.36, 0.22, 0.15); cdens = 0.3; kind = 1;
+    } else if (pick < 0.77) {   // volcanic sulphur, like Io: hardly any craters
+        albA = vec3(0.52, 0.44, 0.2); albB = vec3(0.42, 0.18, 0.08); cdens = 0.03; kind = 2;
+    } else {                    // dark and old, like Callisto: crater on crater
+        albA = vec3(0.19, 0.165, 0.14); albB = vec3(0.11, 0.095, 0.08); cdens = 0.95; kind = 3;
+    }
+    vec2 mtn = vec2(mix(600.0, 1200.0, hash12(vec2(slot, seed + 625.0))), mix(25.0, 120.0, hash12(vec2(slot, seed + 621.0))));
+
+    // Camera: at eye height above the ground where we stand.
+    float fr0, bo0;
+    float H0 = moonGround(vec2(0.0), 0.05, seed, cdens, mtn, 0.0, fr0, bo0).x;
+    vec3 ro = vec3(0.0, H0 + 1.7, 0.0);
+    float hy = ms.hy, pitch = ms.pitch, yaw = ms.yaw;
+    bool night = ms.night, eclipse = ms.eclipse;
+    vec3 L = ms.L, G = ms.G, Gc = ms.Gc, Lc = ms.Lc;
+    float gR = ms.gR, sunVis = ms.sunVis, sunNear = ms.sunNear;
+    vec2 gCenter = ms.gCenter;
+    vec4 giant = giantIn;
+    vec3 gTint = gTintIn;
     // Light from the giant's day side: brighter the fuller it is and the more sky it fills.
     float gPhase = 0.5 + 0.5 * dot(L, -G);
     vec3 gShine = gTint * gPhase * min(gR * gR / (f * f) * 16.0, 1.2);

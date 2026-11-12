@@ -87,7 +87,22 @@ float planetClouds(vec3 s, float seed, float slot, float t, float cover) {
     return max(base, cyc);
 }
 
-vec4 planet(vec2 uv, float seed, float slot, float lt, float t, float fade, out vec3 glowOut) {
+// A gas world is drawn by the shared giant renderer: where, how big, and how it's lit.
+GiantView planetGiantView(float seed, float slot, float lt) {
+    if (hash12(vec2(slot, seed + 13.0)) >= 0.5) {
+        return noGiant();
+    }
+    vec2 rnd = hash22(vec2(slot * 1.7, seed + 3.0));
+    float radius = mix(0.06, 0.26, pow(hash12(vec2(slot, seed + 5.0)), 1.8));
+    vec2 center = (rnd - 0.5) * 2.0 * halfExtent() * vec2(0.75, 0.6);
+    center += (hash22(vec2(slot, seed + 9.0)) - 0.5) * 0.0006 * eventDrift(lt);
+    vec2 lightDir = normalize(hash22(vec2(slot, seed + 29.0)) - 0.5);
+    vec3 light = normalize(vec3(lightDir, mix(-0.45, 0.6, hash12(vec2(slot, seed + 33.0)))));
+    return GiantView(center, radius, light, vec4(0.0), 1.0);
+}
+
+// giantIn/gTintIn: the gas world, already drawn by the shared giant renderer (if it is one).
+vec4 planet(vec2 uv, float seed, float slot, float lt, float t, float fade, vec4 giantIn, vec3 gTintIn, out vec3 glowOut) {
     glowOut = vec3(0.0);
     vec2 rnd = hash22(vec2(slot * 1.7, seed + 3.0));
     // Mostly small-to-medium, occasionally huge.
@@ -137,9 +152,8 @@ vec4 planet(vec2 uv, float seed, float slot, float lt, float t, float fade, out 
     vec4 body = vec4(0.0);
     if (gas) {
         // The gas giant renderer, at this size and lighting.
-        vec3 gTint;
-        body = giantBody(uv, center, radius, light, seed, slot, lt, gTint);
-        sky = mix(gTint, vec3(0.8, 0.9, 1.0), 0.4);
+        body = giantIn;
+        sky = mix(gTintIn, vec3(0.8, 0.9, 1.0), 0.4);
         thickness = 0.05;
         scaleH = 0.025;
     } else if (r < 1.0 + px) {

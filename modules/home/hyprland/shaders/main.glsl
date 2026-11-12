@@ -27,6 +27,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasCluster = ev == EV_CLUSTER;
     bool hasGiant = ev == EV_GIANT;
     bool hasMoon = ev == EV_MOON;
+    bool hasRingPlane = ev == EV_RINGPLANE;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
@@ -79,14 +80,36 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // Asteroid fields get plain dark space behind them: the nebula fades out as the field fades in.
     // A nebula close-up replaces the background nebula the same way.
-    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar || hasRogue || hasHorizon || hasCluster || hasMoon ? 1.0 - fade : 1.0;
+    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar || hasRogue || hasHorizon || hasCluster || hasMoon || hasRingPlane ? 1.0 - fade : 1.0;
 
     // A new random sky every SKY_PERIOD, cross-fading into the next one over the last SKY_FADE.
     float hour = floor(t / SKY_PERIOD);
+    // The gas giant renderer is big, so it's drawn from this one place for every scene that shows
+    // a giant (each extra copy multiplies the GPU driver's compile time).
+    GiantView gview = noGiant();
+    MoonSky msky;
+    RingCam rcam;
+    if (hasGiant) {
+        gview = giantPlanetView(eventSeed, slot, t);
+    } else if (hasPlanet) {
+        gview = planetGiantView(eventSeed, slot, lt);
+    } else if (hasMoon) {
+        msky = moonSky(eventSeed, slot, t);
+        gview = msky.gv;
+    } else if (hasRingPlane) {
+        rcam = ringPlaneCam(eventSeed, slot, t);
+        gview = rcam.gv;
+    }
+    vec4 giantL = vec4(0.0);
+    vec3 gTint = vec3(0.0);
+    if (gview.on > 0.5) {
+        giantL = giantBodyEx(uv, gview.center, gview.R, gview.L, eventSeed, slot, lt, gTint, gview.ctl);
+    }
+
     // The moon's ground is drawn first: where it hides the sky completely, the sky is skipped.
     vec4 moonFg = vec4(0.0);
     if (hasMoon) {
-        moonFg = moonSurface(uv, eventSeed, slot, t, fade);
+        moonFg = moonSurface(uv, eventSeed, slot, t, fade, msky, giantL, gTint);
     }
     vec3 col = vec3(0.0);
     if (moonFg.a < 0.999) {
@@ -128,13 +151,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         solid = fade;
     }
     if (hasGiant) {
-        vec4 gp = giantPlanet(uv, eventSeed, slot, t, fade);
+        vec4 gp = giantL * fade;
         col = col * (1.0 - gp.a) + gp.rgb;
         solid = max(solid, gp.a);
     }
     if (hasMoon) {
         col = col * (1.0 - moonFg.a) + moonFg.rgb;
         // No air on the moon, so no shooting stars.
+        solid = fade;
+    }
+    if (hasRingPlane) {
+        vec4 rp = ringPlane(uv, eventSeed, slot, t, fade, rcam, giantL, gTint);
+        col = col * (1.0 - rp.a) + rp.rgb;
+        // No air out here, so no shooting stars.
         solid = fade;
     }
     if (hasCluster) {
@@ -158,7 +187,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
     if (hasPlanet) {
         vec3 glow;
-        vec4 p = planet(uv, eventSeed, slot, lt, t, fade, glow);
+        vec4 p = planet(uv, eventSeed, slot, lt, t, fade, giantL, gTint, glow);
         col = col * (1.0 - p.a) + p.rgb + glow;
         solid = max(solid, p.a);
     }
