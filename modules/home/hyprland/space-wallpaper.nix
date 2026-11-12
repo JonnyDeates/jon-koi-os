@@ -73,7 +73,7 @@ let
     ${pickSeed}
     frag="$XDG_RUNTIME_DIR/space-wallpaper-$output.frag"
     ${pkgs.gnused}/bin/sed -e "${seedSed}" ${spaceShader} > "$frag"
-    exec ${shaderbg}/bin/shaderbg --fps 30 --layer background "$output" "$frag"
+    exec ${shaderbg}/bin/shaderbg --fps 20 --layer background "$output" "$frag"
   '';
 
   # Show one event on demand instead of waiting for the random roll.
@@ -109,7 +109,7 @@ let
     ${pkgs.gnused}/bin/sed -e "s/const int FORCE_EVENT = -1;/const int FORCE_EVENT = $id;/" \
       -e 's/const float EVENT_FADE = 20.0;/const float EVENT_FADE = 0.001;/' \
       -e "${seedSed}" -e "$extra" ${spaceShader} > "$frag"
-    ${pkgs.coreutils}/bin/timeout "$seconds" ${shaderbg}/bin/shaderbg --fps 30 --layer overlay "$output" "$frag"
+    ${pkgs.coreutils}/bin/timeout "$seconds" ${shaderbg}/bin/shaderbg --fps 20 --layer overlay "$output" "$frag"
     true
   '';
 
