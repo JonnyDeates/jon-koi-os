@@ -13,11 +13,11 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
     bool blue = kind >= STAR_BLUE;
 
     vec3 coreCol = giant ? vec3(1.35, 0.48, 0.1) : blue ? vec3(0.9, 1.1, 1.55) : vec3(1.45, 1.0, 0.4);
-    vec3 limbCol = giant ? vec3(0.6, 0.08, 0.01) : blue ? vec3(0.35, 0.55, 1.3) : vec3(1.0, 0.33, 0.04);
+    vec3 limbCol = giant ? vec3(0.9, 0.22, 0.05) : blue ? vec3(0.4, 0.6, 1.3) : vec3(1.0, 0.4, 0.08);
     vec3 coronaCol = giant ? vec3(1.0, 0.35, 0.1) : blue ? vec3(0.55, 0.75, 1.4) : vec3(1.0, 0.72, 0.38);
     vec3 promCol = blue ? vec3(0.8, 0.9, 1.5) : vec3(1.0, 0.35, 0.3);
-    float limbDark = giant ? 0.85 : blue ? 0.45 : 0.65;
-    float cellScale = giant ? 10.0 : blue ? 18.0 : 22.0; // giants have huge convection cells
+    float limbDark = giant ? 0.62 : blue ? 0.4 : 0.6;
+    float cellScale = giant ? 4.5 : blue ? 30.0 : 38.0; // giants have huge convection cells
     float plasmaScale = giant ? 2.0 : blue ? 2.5 : 3.0;
 
     vec2 d = (uv - center) / radius;
@@ -39,14 +39,16 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
         float rot = ts * 0.01;
         vec3 sp = vec3(d.x * cos(rot) + z * sin(rot), d.y, -d.x * sin(rot) + z * cos(rot));
 
-        // Boiling plasma: slowly churning domain-warped noise dominates the look...
+        // Supergranulation: a faint, slowly churning mottling across the whole disk.
         vec2 ps = sp.xy * plasmaScale + sp.z * 1.7;
         vec2 q = vec2(fbm(ps + vec2(0.0, ts * 0.06)), fbm(ps + vec2(5.2, 1.3) - ts * 0.06));
         float plasma = fbm(ps * 1.4 + q * 2.5 + vec2(sp.z * 2.0, ts * 0.09));
-        // ...with faint granulation (convection cells and darker lanes) on top.
-        // The grain boils: two cell patterns cross-fade, each re-seeded while it's invisible, so cells
-        // keep fading out and new ones forming, while drifting slowly across the surface.
-        vec3 gp = sp * cellScale + vec3(ts * 0.12, ts * 0.05, -ts * 0.08);
+        // Granulation: bright convection cells with dark lanes between them. The grain boils: two
+        // cell patterns cross-fade, each re-seeded while it's invisible, so cells keep fading out
+        // and new ones forming. Cells foreshorten and blur out toward the limb, and fade when too
+        // small to draw.
+        // Warped, so the cells are irregular blobs rather than tidy polygons.
+        vec3 gp = sp * cellScale + vec3(ts * 0.12, ts * 0.05, -ts * 0.08) + vec3(q - 0.5, q.x - q.y) * (giant ? 1.2 : 0.6);
         float phase = ts / 6.0;
         float wA = 0.5 + 0.5 * cos(phase * 3.14159);
         float wB = 1.0 - wA;
@@ -54,22 +56,45 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
         float seedB = floor(phase * 0.5) * 17.0 + 9.0;
         vec2 vA = voronoi3(gp + seedA, ts * 2.5);
         vec2 vB = voronoi3(gp + seedB, ts * 2.5);
-        float gran = smoothstep(0.0, 0.3, vA.y - vA.x) * wA + smoothstep(0.0, 0.3, vB.y - vB.x) * wB;
-        // Bright, thin plasma filaments threading through the surface.
-        float fil = 1.0 - abs(2.0 * fbm(ps * 2.2 + q * 3.0 - vec2(ts * 0.12, 0.0)) - 1.0);
-        float b = 0.5 + 0.8 * plasma * plasma + 0.35 * pow(fil, 4.0) + (giant ? 0.08 : 0.15) * (gran - 0.5);
+        float lane = giant ? 0.6 : 0.25;
+        float gran = smoothstep(0.0, lane, vA.y - vA.x) * wA + smoothstep(0.0, lane, vB.y - vB.x) * wB;
+        float granVis = smoothstep(4.0, 10.0, 1.0 / (cellScale * px)) * smoothstep(0.0, 0.5, z);
+        float b = 1.0 + (giant ? 0.45 : 0.12) * (plasma - 0.5) + (giant ? 0.3 : 0.22) * (gran - 0.6) * granVis;
+        // Faculae: bright, veined patches that show up near the limb.
+        float fac = smoothstep(0.55, 0.75, fbm(sp.xz * 6.0 + sp.y * 5.0 + seed * 3.0));
+        b += fac * 0.25 * (1.0 - z) * (blue ? 0.3 : 1.0);
         if (!blue) {
-            // Sunspots: a few small dark umbras with lighter penumbras.
-            float spots = fbm(sp.xz * 3.5 + sp.y * 4.0 + seed + slot);
-            b *= mix(1.0, 0.15, smoothstep(0.77, 0.82, spots));
-            b *= mix(1.0, 0.6, smoothstep(0.73, 0.77, spots));
+            // Sunspot groups: a few dark umbras, each in a lighter penumbra streaked with radial
+            // filaments, riding round with the star.
+            for (int k = 0; k < 6; k++) {
+                float fk = float(k);
+                float grp = floor(fk / 2.0);
+                float hk = hash12(vec2(grp + slot * 3.0, seed + 91.0));
+                if (hk > (giant ? 0.5 : 0.75)) {
+                    continue;
+                }
+                float lat = (hash12(vec2(grp, seed + 93.0)) - 0.5) * 1.0;
+                float lon = hash12(vec2(grp, seed + 95.0)) * 6.2831 + (fk - grp * 2.0) * mix(0.08, 0.16, hk);
+                lat += (fk - grp * 2.0) * 0.03;
+                vec3 c = vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon));
+                vec3 rel = sp - c;
+                float dd = length(rel);
+                float ru = mix(0.02, 0.045, hash12(vec2(fk, seed + 97.0))) * (giant ? 2.0 : 1.0) * (fk - grp * 2.0 > 0.5 ? 0.6 : 1.0);
+                if (dot(sp, c) < 0.0 || dd > ru * 3.0) {
+                    continue;
+                }
+                vec3 e1 = normalize(cross(c, vec3(0.0, 1.0, 0.0)));
+                float ang = atan(dot(rel, cross(c, e1)), dot(rel, e1));
+                float fib = 0.75 + 0.25 * noise(vec2(ang * 9.0, fk * 7.0));
+                float rp = ru * (2.1 + 0.3 * (noise(vec2(ang * 3.0, fk)) - 0.5));
+                b *= mix(1.0, 0.55 * fib, smoothstep(rp, rp * 0.85, dd));
+                b *= mix(1.0, 0.25, smoothstep(ru, ru * 0.7, dd));
+            }
         }
 
         // Limb darkening: the edge is dimmer and redder because we see cooler, higher layers there.
-        float limb = 1.0 - limbDark * (1.0 - pow(z, 0.6));
-        vec3 col = mix(limbCol, coreCol, pow(z, 0.7)) * b * limb;
-        // Glow from the hot corona spilling over the edge.
-        col += coronaCol * exp(-(1.0 - r) / 0.04) * 0.35;
+        float limb = 1.0 - limbDark * (1.0 - z) - 0.12 * (1.0 - z) * (1.0 - z);
+        vec3 col = mix(limbCol, coreCol, smoothstep(0.0, 0.8, z)) * b * max(limb, 0.32);
         float cover = smoothstep(edge + px, edge - px, r);
         body = vec4(col * cover, cover);
     }
@@ -83,8 +108,9 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
         // ...with waves of heat rippling outward through them.
         float waves = 0.75 + 0.25 * noise(vec2(h * 18.0 - t * 1.4, dot(dir, vec2(3.1, 1.7)) * 3.0));
         float tongues = exp(-h / reach) * waves;
-        float corona = exp(-h / 0.03) * 0.8 + exp(-h / 0.4) * 0.22 + exp(-h / 1.5) * 0.07;
-        vec3 g = coronaCol * (corona + tongues * 0.9);
+        // Kept no brighter at the edge than the darkened limb itself, so the disk doesn't look outlined.
+        float corona = exp(-h / 0.03) * 0.12 + exp(-h / 0.4) * 0.2 + exp(-h / 1.5) * 0.07;
+        vec3 g = coronaCol * (corona + tongues * 0.45);
 
         // Prominences: glowing arcs of plasma looping off the edge.
         for (int k = 0; k < 3; k++) {
@@ -103,7 +129,8 @@ vec4 star(vec2 uv, vec2 center, float radius, float kind, float seed, float slot
             float wisp = 0.4 + 0.6 * fbm(q * 14.0 + vec2(0.0, -t * 0.3));
             float width = 0.012 + 0.022 * wisp;
             float topFade = 1.0 - 0.55 * clamp(q.y / loopR, 0.0, 1.0); // brightest near the footpoints
-            g += promCol * exp(-dist / width) * step(0.0, q.y) * wisp * wisp * topFade * 1.3;
+            // No straight cut at the base: the star's disk itself hides the part of the loop behind it.
+            g += promCol * exp(-dist / width) * wisp * wisp * topFade * 1.3;
         }
         glowOut = g * smoothstep(1.0 - px, 1.0 + px, r) * fade;
         shimmer = exp(-h * 2.5) * fade;
