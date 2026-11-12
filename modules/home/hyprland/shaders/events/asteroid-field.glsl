@@ -107,10 +107,27 @@ vec4 asteroidField(vec2 uv, float seed, float slot, float t, float fade) {
                          + e.yxy * rockShape(M * (p + e.yxy), hs, squash, cuts) + e.xxx * rockShape(M * (p + e.xxx), hs, squash, cuts));
         // Craters tilt the surface; they live on the rock, so they turn with it.
         vec3 pb = M * p;
-        vec4 crat = planetCraterLayer(pb * 0.6, 3.0, 0.8, hs, px * 0.6) + planetCraterLayer(pb * 0.6, 7.0, 0.8, hs + 3.0, px * 0.6);
-        n = normalize(n - (crat.xyz * M) * 0.35);
+        vec4 crat = planetCraterLayer(pb * 0.6, 3.0, 0.8, hs, px * 0.6) + planetCraterLayer(pb * 0.6, 7.0, 0.8, hs + 3.0, px * 0.6)
+                  + planetCraterLayer(pb * 0.6, 15.0, 0.9, hs + 6.0, px * 0.6) * 0.7;
+        // Rubble and grit: bumps at two scales finer than the shape, tilting the normal; each
+        // fades out once too small to see on this rock.
+        vec3 bump = vec3(0.0);
+        float bs = 6.0;
+        for (int k = 0; k < 2; k++) {
+            float keepB = smoothstep(1.5, 4.0, 1.0 / (bs * px));
+            if (keepB > 0.0) {
+                vec3 bp = pb * bs + hs * float(k + 1);
+                float b0 = giantFbm(bp, 3);
+                const float eb = 0.2;
+                vec3 gb = vec3(giantFbm(bp + vec3(eb, 0.0, 0.0), 3), giantFbm(bp + vec3(0.0, eb, 0.0), 3),
+                               giantFbm(bp + vec3(0.0, 0.0, eb), 3)) - b0;
+                bump += gb / eb * keepB * (k == 0 ? 0.45 : 0.3);
+            }
+            bs *= 2.8;
+        }
+        n = normalize(n - ((crat.xyz * 0.35 + bump) * M));
         // Dusty regolith: patchy albedo, darker crater floors.
-        float alb = 0.75 + 0.5 * giantFbm(pb * 2.5 + hs, 4);
+        float alb = (0.75 + 0.5 * giantFbm(pb * 2.5 + hs, 4)) * (0.85 + 0.3 * giantNoise(pb * 22.0 - hs));
         vec3 surf = rockCol * alb * (1.0 - crat.w);
         // Dusty, airless reflectance: mostly lunar-like, some Lambert for shape.
         float mu0 = max(dot(n, L), 0.0);

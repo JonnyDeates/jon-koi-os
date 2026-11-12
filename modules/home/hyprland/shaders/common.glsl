@@ -55,7 +55,7 @@ const float PLAIN_SKY_SHARE = 0.25;
 // Relative weights of the events (they share the rest). The more GPU an event costs, the rarer it
 // is (extra cost over plain sky at 4K in comments, measured from /proc/<pid>/fdinfo).
 // Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
-const float FIELD_CHANCE = 0.05;      // +3%
+const float FIELD_CHANCE = 0.05;      // +5%
 const float COMETCLOSE_CHANCE = 0.06; // -2.9%
 const float CRAB_CHANCE = 0.05;       // -1.1%
 const float RING_CHANCE = 0.04;       //  0.0%
