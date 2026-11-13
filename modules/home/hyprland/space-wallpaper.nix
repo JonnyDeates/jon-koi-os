@@ -65,8 +65,8 @@ let
     ./shaders/events/nebulae/veil.glsl
     ./shaders/events/nebulae/rho.glsl
     ./shaders/events/nebulae/forge.glsl
-    ./shaders/meteors.glsl
     ./shaders/events/shower.glsl
+    ./shaders/meteors.glsl
     ./shaders/main.glsl
   ];
 
@@ -116,14 +116,9 @@ let
     dir="$XDG_RUNTIME_DIR/space-wallpaper"
     ${pkgs.coreutils}/bin/mkdir -p "$dir"
     base="$dir/$output.frag"
-    # One clock for every scene's shader. The sky changes at local midnight: tell the shader today's
-    # date (as a day number) and how far into the day the clock starts.
+    # One clock for every scene's shader.
     export SHADERBG_EPOCH=''${EPOCHREALTIME%.*}
-    midnight=$(${pkgs.coreutils}/bin/date -d "$(${pkgs.coreutils}/bin/date -d @$SHADERBG_EPOCH +%F)" +%s)
-    ${pkgs.gnused}/bin/sed -e "${seedSed}" \
-      -e "s/const float SKY_DAY = 0.0;/const float SKY_DAY = $(( midnight / 86400 )).0;/" \
-      -e "s/const float SKY_CLOCK = 0.0;/const float SKY_CLOCK = $(( SHADERBG_EPOCH - midnight )).0;/" \
-      ${spaceShader} > "$base"
+    ${pkgs.gnused}/bin/sed -e "${seedSed}" ${spaceShader} > "$base"
 
     # Event ids, odds and names (see eventTable).
     table=$(${pkgs.coreutils}/bin/cat ${eventTable})
@@ -163,9 +158,16 @@ let
       if [ "$want" != "$curSlot" ]; then
         read -r id name <<< "$(pick "$want")"
         frag="$dir/$output-$want.frag"
+        # The sky changes at local midnight: today's date as a day number, and when the next
+        # midnight falls in shader time (asked of date, so 23- and 25-hour days come out right).
+        today=$(${pkgs.coreutils}/bin/date +%F)
+        skyDay=$(( $(${pkgs.coreutils}/bin/date -d "$today" +%s) / 86400 ))
+        skyNext=$(( $(${pkgs.coreutils}/bin/date -d "$today + 1 day" +%s) - SHADERBG_EPOCH ))
         ${pkgs.gnused}/bin/sed -e "s/const int FORCE_EVENT = -1;/const int FORCE_EVENT = $id;/" \
           -e "s/const float SHOW_FROM = -1.0e9;/const float SHOW_FROM = $(( want * period )).0;/" \
           -e "s/const float SHOW_UNTIL = 1.0e9;/const float SHOW_UNTIL = $(( (want + 1) * period - gap )).0;/" \
+          -e "s/const float SKY_DAY = 0.0;/const float SKY_DAY = $skyDay.0;/" \
+          -e "s/const float SKY_NEXT = 1.0e9;/const float SKY_NEXT = $skyNext.0;/" \
           "$base" > "$frag"
         echo "slot $want: $name"
         ${shaderbg}/bin/shaderbg --fps 20 --layer background "$output" "$frag" &
@@ -180,7 +182,9 @@ let
         curSlot=$want
       fi
       if [ -n "$old" ] && [ $t -ge $killAt ]; then
+        # Continue it too: if the pauser has it stopped, it would only act on the TERM when continued.
         kill "$old" 2>/dev/null
+        kill -CONT "$old" 2>/dev/null
         wait "$old" 2>/dev/null
         ${pkgs.coreutils}/bin/rm -f "$oldFrag"
         old=""
@@ -245,12 +249,26 @@ let
   pauser = pkgs.writeShellScript "space-wallpaper-pauser" ''
     export PATH=${
       lib.makeBinPath [
+        pkgs.coreutils
         pkgs.jq
         pkgs.socat
         pkgs.systemd
         config.wayland.windowManager.hyprland.package
       ]
     }:$PATH
+
+    # Signal just the shaderbg processes of a monitor's wallpaper unit, not its launcher: the launcher
+    # keeps scenes swapping on time behind the windows. Plain kill, not systemctl kill, which logs a
+    # line for every process on every check.
+    signal() {
+      cg=$(systemctl --user show -P ControlGroup "space-wallpaper@$1.service")
+      [ -n "$cg" ] || return 0
+      for pid in $(cat "/sys/fs/cgroup$cg/cgroup.procs" 2>/dev/null); do
+        if [ "$(cat "/proc/$pid/comm" 2>/dev/null)" = shaderbg ]; then
+          kill -s "$2" "$pid" 2>/dev/null || true
+        fi
+      done
+    }
 
     update() {
       workspaces=$(hyprctl -j workspaces)
@@ -262,7 +280,7 @@ let
         else
           sig=CONT
         fi
-        systemctl --user kill --signal="$sig" "space-wallpaper@$mon.service" 2>/dev/null || true
+        signal "$mon" "$sig"
       done
     }
 

@@ -2,7 +2,8 @@
 // radiant far off screen, so they all run nearly the same way, fanning out only slightly. They
 // streak a long way across the sky at speeds that vary a lot, from brisk to slow crawls lasting
 // several seconds, and some of the bright ones leave a train that hangs and fades. The rate rises
-// and falls over the half hour, with a couple of outbursts. Additive light; needs meteors.glsl.
+// and falls over the half hour, with a couple of outbursts. Additive light; each meteor is drawn
+// by meteorLight (bodies.glsl).
 
 const int SHOWER_LANES = 24;
 const float SHOWER_SLOT = 2.5;   // each lane can start a meteor this often

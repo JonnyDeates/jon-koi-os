@@ -68,57 +68,59 @@ const float RANDOM_SEED = 0.0;
 // that background; space-wallpaper-preview does this for the sky names.
 const int FORCE_SKY = -1;
 
-// The background sky gets a new random kind and layout every day at midnight, cross-faded over
-// SKY_FADE. The launcher fills in SKY_DAY (the local date as a day number) and SKY_CLOCK (seconds
-// since local midnight when the clock started), so the sky stays the same all day, even across
-// restarts. The preview puts its seed in SKY_DAY instead, so each preview gets a different sky.
-const float SKY_PERIOD = 86400.0;
+// The background sky gets a new random kind and layout every day at local midnight, cross-faded
+// over SKY_FADE just before it. The launcher fills in, for each scene's shader, SKY_DAY (today's
+// local date as a day number) and SKY_NEXT (when the next local midnight falls, in shader time),
+// so the sky stays the same all day, even across restarts, and days that are 23 or 25 hours long
+// (clock changes) still switch at midnight. The preview puts its seed in SKY_DAY instead, so each
+// preview gets a different sky.
 const float SKY_FADE = 120.0;
 const float SKY_DAY = 0.0;
-const float SKY_CLOCK = 0.0;
+const float SKY_NEXT = 1.0e9;
 
 // Share of event slots that show just the plain sky, so there are quiet stretches between events.
 const float PLAIN_SKY_SHARE = 0.25;
 
 // Relative weights of the events (they share the rest). The more GPU an event costs, the rarer it
-// is (extra cost over plain sky at 4K in comments, measured from /proc/<pid>/fdinfo).
+// is (extra GPU busy over plain sky on a 4K monitor at 20 fps in comments, from /proc/<pid>/fdinfo;
+// plain sky with the nebula background is about 5.5%).
 // Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
-const float FIELD_CHANCE = 0.05;      // +5%
-const float BIGCOMET_CHANCE = 0.06;   // -2.9%
-const float CRAB_CHANCE = 0.05;       // -1.1%
-const float RING_CHANCE = 0.04;       // -0.5%
-const float PLANET_CHANCE = 0.04;     // +0.2%
-const float COMET_CHANCE = 0.04;      // +0.7%
-const float ELLIPTICAL_CHANCE = 0.04; // +2.0%
-const float BIPOLAR_CHANCE = 0.04;    // +5%
-const float PULSAR_CHANCE = 0.04;     // +2.2%
-const float SPIRAL_CHANCE = 0.04;     // +3.0%
-const float SYSTEM_CHANCE = 0.04;     // +3.1%
-const float STAR_CHANCE = 0.04;       // +3.0%
-const float PILLARS_CHANCE = 0.04;    // +7%
-const float BLACKHOLE_CHANCE = 0.04;  // +4.1%
-const float BINARY_CHANCE = 0.03;     // +4.0%
-const float EATEN_CHANCE = 0.02;      // +5.4%
-const float PULSARCLOSE_CHANCE = 0.02; // +7.3%
-const float SUPERNOVA_CHANCE = 0.02;   // +9% (the remnant, most of the event)
-const float SURFACE_CHANCE = 0.04;     // +2.1%
-const float COLLISION_CHANCE = 0.04;   // +0.2%
-const float QUASAR_CHANCE = 0.05;      // -3.6%
-const float ROGUE_CHANCE = 0.05;      // -4.0%
-const float HORIZON_CHANCE = 0.02;    // +13% (up to +22% with an aurora at night)
-const float CLUSTER_CHANCE = 0.05;    // -1.6% globular, +0.7% open
-const float GIANT_CHANCE = 0.05;      // +4%
-const float CLIFFS_CHANCE = 0.015;    // +14%
-const float ORION_CHANCE = 0.02;      // +5%
-const float LAGOON_CHANCE = 0.02;     // +5%
-const float ROSETTE_CHANCE = 0.02;    // +5%
-const float HORSEHEAD_CHANCE = 0.02;  // +6%
-const float TARANTULA_CHANCE = 0.02;  // +4%
-const float VEIL_CHANCE = 0.02;       // +4%
-const float RHO_CHANCE = 0.02;        // +3%
-const float RINGPLANE_CHANCE = 0.03;  // ~0%
-const float MOON_CHANCE = 0.02;       // +15-20%
-const float SHOWER_CHANCE = 0.04;
+const float FIELD_CHANCE = 0.05;      // +5.0%
+const float BIGCOMET_CHANCE = 0.06;   // -1.7%
+const float CRAB_CHANCE = 0.05;       // -1.0%
+const float RING_CHANCE = 0.04;       // -0.8%
+const float PLANET_CHANCE = 0.04;     // +0.3%
+const float COMET_CHANCE = 0.04;      // +0.6%
+const float ELLIPTICAL_CHANCE = 0.04; // +1.1%
+const float BIPOLAR_CHANCE = 0.04;    // +4.1%
+const float PULSAR_CHANCE = 0.04;     // +1.8%
+const float SPIRAL_CHANCE = 0.04;     // +3.6%
+const float SYSTEM_CHANCE = 0.04;     // +2.1%
+const float STAR_CHANCE = 0.04;       // +1.6%
+const float PILLARS_CHANCE = 0.04;    // +5.0%
+const float BLACKHOLE_CHANCE = 0.04;  // +1.6%
+const float BINARY_CHANCE = 0.03;     // +2.0%
+const float EATEN_CHANCE = 0.02;      // +3.7%
+const float PULSARCLOSE_CHANCE = 0.02; // +4.4%
+const float SUPERNOVA_CHANCE = 0.02;  // +5.8% (the remnant, most of the event)
+const float SURFACE_CHANCE = 0.04;    // +1.4%
+const float COLLISION_CHANCE = 0.04;  // +0.4%
+const float QUASAR_CHANCE = 0.05;     // -2.3%
+const float ROGUE_CHANCE = 0.05;      // -2.7%
+const float HORIZON_CHANCE = 0.02;    // +15.0% (more with an aurora at night)
+const float CLUSTER_CHANCE = 0.05;    // -0.4% (globular; open costs a little more)
+const float GIANT_CHANCE = 0.05;      // +1.5%
+const float CLIFFS_CHANCE = 0.015;    // +10.0%
+const float ORION_CHANCE = 0.02;      // +3.7%
+const float LAGOON_CHANCE = 0.02;     // +3.4%
+const float ROSETTE_CHANCE = 0.02;    // +3.4%
+const float HORSEHEAD_CHANCE = 0.02;  // +6.2%
+const float TARANTULA_CHANCE = 0.02;  // +3.9%
+const float VEIL_CHANCE = 0.02;       // +3.9%
+const float RHO_CHANCE = 0.02;        // +3.2%
+const float RINGPLANE_CHANCE = 0.03;  // -0.4%
+const float MOON_CHANCE = 0.02;       // +12.1%
+const float SHOWER_CHANCE = 0.04;     // +5.4%
 
 const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + BIGCOMET_CHANCE + CRAB_CHANCE + RING_CHANCE +
     PLANET_CHANCE + COMET_CHANCE + ELLIPTICAL_CHANCE + BIPOLAR_CHANCE + PULSAR_CHANCE +

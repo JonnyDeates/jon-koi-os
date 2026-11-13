@@ -87,10 +87,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // Scenes with their own backdrop (replacesSky) fade the sky's clouds out as they fade in.
     float nebulaAmount = replacesSky(ev) ? 1.0 - fade : 1.0;
 
-    // A new random sky every day (SKY_PERIOD) at local midnight, cross-fading into the next one
-    // over the last SKY_FADE of the day.
-    float skyT = t + SKY_CLOCK;
-    float day = floor(skyT / SKY_PERIOD);
+    // Today's sky, cross-fading into tomorrow's over the SKY_FADE before midnight (SKY_NEXT). Each
+    // scene's shader only runs for about half an hour, so it sees at most one midnight.
+    float day = SKY_DAY + step(SKY_NEXT, t);
     // The gas giant renderer is big, so it's drawn from this one place for every scene that shows
     // a giant (each extra copy multiplies the GPU driver's compile time).
     GiantView gview = noGiant();
@@ -120,11 +119,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
     vec3 col = vec3(0.0);
     if (moonFg.a < 0.999) {
-        vec2 skySeedA = resSeed + hash22(vec2(SKY_DAY + day, 17.0)) * 100.0;
+        vec2 skySeedA = resSeed + hash22(vec2(day, 17.0)) * 100.0;
         col = sky(screen, bgUv, skySeedA, t, lens, nebulaAmount);
-        float skyBlend = smoothstep(SKY_PERIOD - SKY_FADE, SKY_PERIOD, skyT - day * SKY_PERIOD);
+        float skyBlend = smoothstep(SKY_NEXT - SKY_FADE, SKY_NEXT, t) * (1.0 - step(SKY_NEXT, t));
         if (skyBlend > 0.0) {
-            vec2 skySeedB = resSeed + hash22(vec2(SKY_DAY + day + 1.0, 17.0)) * 100.0;
+            vec2 skySeedB = resSeed + hash22(vec2(day + 1.0, 17.0)) * 100.0;
             col = mix(col, sky(screen, bgUv, skySeedB, t, lens, nebulaAmount), skyBlend);
         }
     }

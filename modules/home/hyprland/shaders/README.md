@@ -30,8 +30,9 @@ systemctl --user unset-environment SPACE_WALLPAPER_SEED   # back to random next 
 
 Each monitor still differs under one seed, because the output name and resolution are mixed in.
 
-**Pausing.** `space-wallpaper-pauser` freezes a monitor's wallpaper (SIGSTOP) whenever a window is
-open on it, so it uses no GPU while you're working.
+**Pausing.** `space-wallpaper-pauser` freezes a monitor's wallpaper (SIGSTOP to its `shaderbg`
+processes) whenever a window is open on it, so it uses no GPU while you're working. The launcher
+isn't frozen, so scenes still change on time behind your windows.
 
 ## How it runs
 
@@ -67,12 +68,11 @@ Joined into `space.frag` in this order (GLSL needs everything defined before it'
 | `stars.glsl` | Star layers (`starLayer`, `heatStars`), for the sky and for scenes with their own stars |
 | `skies/*.glsl` | One file per background kind: `nebula`, `milkyway`, `deepfield`, `cirrus` |
 | `sky.glsl` | `skyKind` (which kind today) and `sky` (gradient, that kind, stars); the void lives here |
-| `bodies.glsl` | Shared bodies: stars (`star`), small planets, black-hole accretion disk |
+| `bodies.glsl` | Shared bodies: stars (`star`), small planets, black-hole accretion disk, meteors (`meteorLight`) |
 | `events/*.glsl` | One file per scene (or a pair of related ones, like `galaxy`, `pulsar`, `binary`) |
 | `events/giant.glsl` | The gas giant renderer, shared by `giant`, `planet`, `moon` and `ringplane` |
 | `events/nebulae/` | The eight full-screen nebulae: `field` (shared gas and dust), one file per nebula, then `forge` (picks one, adds the stars) |
-| `meteors.glsl` | Shooting stars (`meteorLight`), and the rare lone meteor over every scene |
-| `events/shower.glsl` | The meteor shower scene (after `meteors.glsl`, which it uses) |
+| `meteors.glsl` | The rare lone meteor, over every scene (the shower is `events/shower.glsl`) |
 | `main.glsl` | `mainImage`: picks the scene, draws the sky, composites the scene, meteors, tone map |
 
 ## How it all ties together
@@ -83,7 +83,7 @@ flowchart TB
         unit["systemd: space-wallpaper@#lt;output#gt;"] --> launch["space-wallpaper-launch<br/>seed · rolls each 30-min slot"]
         launch -- "FORCE_EVENT, SHOW_FROM/UNTIL,<br/>SHADERBG_EPOCH" --> procs["one shaderbg per scene<br/>(old and next overlap in the gap)"]
         preview["space-wallpaper-preview"] -- "FORCE_EVENT or FORCE_SKY" --> procs
-        pauser["space-wallpaper-pauser"] -. "SIGSTOP when a window is open" .-> procs
+        pauser["space-wallpaper-pauser"] -. "SIGSTOP shaderbg when a window is open" .-> procs
         toggle["Super+Alt+W: toggle"] -. "start / stop" .-> unit
     end
 
@@ -92,11 +92,11 @@ flowchart TB
         stars["stars.glsl"]
         skies["skies/<br/>nebula · milkyway · deepfield · cirrus"]
         skyf["sky.glsl<br/>skyKind · sky"]
-        bodies["bodies.glsl<br/>star · mini planets · accretion disk"]
+        bodies["bodies.glsl<br/>star · mini planets · accretion disk · meteors"]
         events["events/*.glsl<br/>one per scene"]
         giant["events/giant.glsl<br/>giantBodyEx"]
         nebulae["events/nebulae/<br/>field → 8 nebulae → forge"]
-        meteors["meteors.glsl<br/>then events/shower.glsl"]
+        meteors["meteors.glsl<br/>lone meteor"]
         main["main.glsl · mainImage"]
         common --> stars --> skies --> skyf --> bodies --> events --> meteors --> main
         events --- giant
@@ -121,7 +121,9 @@ flowchart TB
 
 Every day at local midnight the background changes to a new kind and layout, cross-fading over two
 minutes. It's picked from the date (each monitor its own), so it stays the same all day, even
-across restarts and logins. The launcher passes the date in as `SKY_DAY` and `SKY_CLOCK`. The kind
+across restarts and logins. The launcher gives each scene's shader the date as `SKY_DAY` and the
+time of the next local midnight as `SKY_NEXT` (from `date`, so clock-change days switch at
+midnight too). The kind
 is rolled in `skyKind` in `sky.glsl`, and each kind is drawn by its own file in `skies/`.
 Full-screen scenes hide it.
 
@@ -141,47 +143,48 @@ showers are their own scene (`shower`).
 ## Scenes
 
 Odds are relative weights (`*_CHANCE` in `common.glsl`). Together the scenes share the 75% of slots
-that aren't plain sky. The cost column is extra GPU over plain sky at 4K, measured at 30 fps, so it
-reads about a third lower at today's 20 fps.
+that aren't plain sky. The cost column is extra GPU busy time over plain sky on a 4K
+monitor at 20 fps, for one seed (plain sky with the nebula background is about 5.5%). Scenes that
+replace the background can come out below zero.
 
 | Preview name | Id | Weight | Cost | Scene |
 |---|---|---|---|---|
-| `hole` | 1 | .04 | +4% | Gargantua-style black hole, lensing the sky |
-| `star` | 2 | .04 | +3% | A sun, red giant or blue star with granulation, spots, prominences |
-| `system` | 3 | .04 | +3% | A star with orbiting planets |
-| `comet` | 4 | .04 | +1% | A comet crossing the screen: dust and ion tails |
-| `field` | 5 | .05 | +5% | Ray-marched tumbling asteroids |
-| `planet` | 6 | .04 | 0% | A planet: gas giant, Earth-like, ocean, desert, ice, lava or barren |
-| `spiral` | 7 | .04 | +3% | Spiral galaxy |
-| `pillars` | 8 | .04 | +7% | Pillars of Creation–style dust columns |
-| `crab` | 9 | .05 | −1% | Crab Nebula–style supernova remnant |
-| `ring` | 10 | .04 | −1% | Ring nebula (M57) |
-| `bipolar` | 11 | .04 | +5% | Butterfly/Hourglass nebula |
-| `elliptical` | 12 | .04 | +2% | Elliptical galaxy |
-| `bigcomet` | 13 | .06 | −3% | Comet nucleus close-up |
-| `binary` | 14 | .03 | +4% | Two stars orbiting each other |
-| `eaten` | 15 | .02 | +5% | A white dwarf stripping gas from a giant |
-| `pulsar` | 16 | .04 | +2% | Pulsar with sweeping beams |
-| `pulsarclose` | 17 | .02 | +7% | Neutron star close-up |
-| `supernova` | 18 | .02 | +9% | A star explodes, leaving a filamentary remnant |
-| `surface` | 19 | .04 | +2% | Skimming a star's surface |
-| `collision` | 20 | .04 | 0% | Two galaxies merging |
-| `quasar` | 21 | .05 | −4% | Quasar with jets |
-| `rogue` | 22 | .05 | −4% | Dark rogue planet against the stars |
-| `horizon` | 23 | .02 | +13% | Low orbit over a planet: clouds, oceans, city lights, aurora |
-| `cluster` | 24 | .05 | −1% | Globular or open star cluster |
-| `giant` | 25 | .05 | +4% | Gas giant close-up: storms, eddies, rings, a moon |
-| `moon` | 26 | .02 | +16% | Standing on a moon under a giant; eclipses, an inner moon |
-| `ringplane` | 27 | .03 | 0% | Hanging over a giant's rings, Cassini-style |
-| `cliffs` | 28 | .015 | +14% | JWST Cosmic Cliffs: ranges of dust receding into blue haze |
-| `orion` | 29 | .02 | +5% | Orion: pink-red cloud around a blazing core, teal gas, dust lanes |
-| `lagoon` | 30 | .02 | +5% | Lagoon/Trifid: magenta and orange, snaking dust, a blue lobe |
-| `rosette` | 31 | .02 | +5% | Rosette: a ring of red gas around a blown-clear cavity |
-| `horsehead` | 32 | .02 | +6% | Horsehead: a dark pillar against a glowing red curtain |
-| `tarantula` | 33 | .02 | +4% | Tarantula: a web of pink, teal and gold filaments and bubbles |
-| `veil` | 34 | .02 | +4% | Veil: braided red and blue shock filaments in great arcs |
-| `rho` | 35 | .02 | +3% | Rho Ophiuchi: golden, blue and red glows in a dusty starfield |
-| `shower` | 36 | .04 | +6% | A 30-minute meteor shower: long, near-parallel streaks at varied speeds, with outbursts |
+| `hole` | 1 | .04 | +1.6% | Gargantua-style black hole, lensing the sky |
+| `star` | 2 | .04 | +1.6% | A sun, red giant or blue star with granulation, spots, prominences |
+| `system` | 3 | .04 | +2.1% | A star with orbiting planets |
+| `comet` | 4 | .04 | +0.6% | A comet crossing the screen: dust and ion tails |
+| `field` | 5 | .05 | +5.0% | Ray-marched tumbling asteroids |
+| `planet` | 6 | .04 | +0.3% | A planet: gas giant, Earth-like, ocean, desert, ice, lava or barren |
+| `spiral` | 7 | .04 | +3.6% | Spiral galaxy |
+| `pillars` | 8 | .04 | +5.0% | Pillars of Creation–style dust columns |
+| `crab` | 9 | .05 | −1.0% | Crab Nebula–style supernova remnant |
+| `ring` | 10 | .04 | −0.8% | Ring nebula (M57) |
+| `bipolar` | 11 | .04 | +4.1% | Butterfly/Hourglass nebula |
+| `elliptical` | 12 | .04 | +1.1% | Elliptical galaxy |
+| `bigcomet` | 13 | .06 | −1.7% | Comet nucleus close-up |
+| `binary` | 14 | .03 | +2.0% | Two stars orbiting each other |
+| `eaten` | 15 | .02 | +3.7% | A white dwarf stripping gas from a giant |
+| `pulsar` | 16 | .04 | +1.8% | Pulsar with sweeping beams |
+| `pulsarclose` | 17 | .02 | +4.4% | Neutron star close-up |
+| `supernova` | 18 | .02 | +5.8% | A star explodes, leaving a filamentary remnant |
+| `surface` | 19 | .04 | +1.4% | Skimming a star's surface |
+| `collision` | 20 | .04 | +0.4% | Two galaxies merging |
+| `quasar` | 21 | .05 | −2.3% | Quasar with jets |
+| `rogue` | 22 | .05 | −2.7% | Dark rogue planet against the stars |
+| `horizon` | 23 | .02 | +15.0% | Low orbit over a planet: clouds, oceans, city lights, aurora |
+| `cluster` | 24 | .05 | −0.4% | Globular or open star cluster |
+| `giant` | 25 | .05 | +1.5% | Gas giant close-up: storms, eddies, rings, a moon |
+| `moon` | 26 | .02 | +12.1% | Standing on a moon under a giant; eclipses, an inner moon |
+| `ringplane` | 27 | .03 | −0.4% | Hanging over a giant's rings, Cassini-style |
+| `cliffs` | 28 | .015 | +10.0% | JWST Cosmic Cliffs: ranges of dust receding into blue haze |
+| `orion` | 29 | .02 | +3.7% | Orion: pink-red cloud around a blazing core, teal gas, dust lanes |
+| `lagoon` | 30 | .02 | +3.4% | Lagoon/Trifid: magenta and orange, snaking dust, a blue lobe |
+| `rosette` | 31 | .02 | +3.4% | Rosette: a ring of red gas around a blown-clear cavity |
+| `horsehead` | 32 | .02 | +6.2% | Horsehead: a dark pillar against a glowing red curtain |
+| `tarantula` | 33 | .02 | +3.9% | Tarantula: a web of pink, teal and gold filaments and bubbles |
+| `veil` | 34 | .02 | +3.9% | Veil: braided red and blue shock filaments in great arcs |
+| `rho` | 35 | .02 | +3.2% | Rho Ophiuchi: golden, blue and red glows in a dusty starfield |
+| `shower` | 36 | .04 | +5.4% | A 30-minute meteor shower: long, near-parallel streaks at varied speeds, with outbursts |
 
 ## Changing things
 
