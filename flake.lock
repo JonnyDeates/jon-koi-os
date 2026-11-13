@@ -327,15 +327,15 @@
       "locked": {
         "lastModified": 1794607949,
         "narHash": "sha256-QyaEb6LvLy0CmSui32VwNAT0VGNKI4ZetjEGS3Z3yU4=",
-        "ref": "refs/heads/main",
+        "owner": "JonnyDeates",
+        "repo": "nix-space-wallpaper",
         "rev": "871a92c9d0b0e344ecaae9db579f4b405a066aaf",
-        "revCount": 42,
-        "type": "git",
-        "url": "file:///home/jonkoi/Documents/Github/nix/space-wallpaper"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/jonkoi/Documents/Github/nix/space-wallpaper"
+        "owner": "JonnyDeates",
+        "repo": "nix-space-wallpaper",
+        "type": "github"
       }
     },
     "treefmt-nix": {

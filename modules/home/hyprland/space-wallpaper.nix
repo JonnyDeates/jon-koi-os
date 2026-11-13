@@ -1,5 +1,5 @@
-# The animated space wallpaper, from its own flake (github:JonnyDeates/space-wallpaper; for now the
-# local checkout). Super+Alt+W toggles it (hyprland.nix).
+# The animated space wallpaper, from its own flake (github:JonnyDeates/nix-space-wallpaper). Super+Alt+W
+# toggles it (hyprland.nix).
 { inputs, ... }:
 {
   imports = [ inputs.space-wallpaper.homeManagerModules.default ];

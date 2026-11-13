@@ -8,8 +8,7 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     affinity-nix.url = "github:mrshmllow/affinity-nix";
     openclaude-flake.url = "github:JonnyDeates/openclaude-flake";
-    # Local checkout until it's on GitHub; then "github:JonnyDeates/space-wallpaper".
-    space-wallpaper.url = "git+file:///home/jonkoi/Documents/Github/nix/space-wallpaper";
+    space-wallpaper.url = "github:JonnyDeates/nix-space-wallpaper";
     space-wallpaper.inputs.nixpkgs.follows = "nixpkgs";
   };
 
