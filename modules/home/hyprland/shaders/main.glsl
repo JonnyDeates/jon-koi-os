@@ -31,14 +31,14 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasMoon = ev == EV_MOON;
     bool hasRingPlane = ev == EV_RINGPLANE;
     // The full-screen nebulae share one renderer; which one it is picks the style.
-    int forgeStyle = ev >= EV_CLIFFS && ev <= EV_RHO ? ev - EV_CLIFFS : -1;
+    int forgeStyle = nebulaStyle(ev);
     bool hasStarForge = forgeStyle >= 0;
     bool hasComet = ev == EV_COMET;
     bool hasField = ev == EV_FIELD;
     bool hasPlanet = ev == EV_PLANET;
     bool hasSpiral = ev == EV_SPIRAL;
     bool hasElliptical = ev == EV_ELLIPTICAL;
-    bool hasCometClose = ev == EV_COMETCLOSE;
+    bool hasBigComet = ev == EV_BIGCOMET;
     bool hasPillars = ev == EV_PILLARS;
     bool hasRing = ev == EV_RING;
     bool hasBipolar = ev == EV_BIPOLAR;
@@ -84,9 +84,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 wob = vec2(noise(uv * 40.0 + vec2(0.0, t * 1.2)), noise(uv * 40.0 + vec2(t * 1.2, 7.0))) - 0.5;
     bgUv += wob * shimmer * 0.004;
 
-    // Asteroid fields get plain dark space behind them: the nebula fades out as the field fades in.
-    // A nebula close-up replaces the background nebula the same way.
-    float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar || hasRogue || hasHorizon || hasCluster || hasMoon || hasRingPlane || hasStarForge ? 1.0 - fade : 1.0;
+    // Scenes with their own backdrop (replacesSky) fade the sky's clouds out as they fade in.
+    float nebulaAmount = replacesSky(ev) ? 1.0 - fade : 1.0;
 
     // A new random sky every day (SKY_PERIOD) at local midnight, cross-fading into the next one
     // over the last SKY_FADE of the day.
@@ -225,7 +224,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if (hasPulsar) {
         col += pulsar(uv, eventSeed, slot, t, fade).rgb;
     }
-    if (hasCometClose) {
+    if (hasBigComet) {
         vec4 cc = cometCloseUp(uv, eventSeed, slot, t, fade);
         col = col * (1.0 - cc.a) + cc.rgb;
         solid = max(solid, cc.a);

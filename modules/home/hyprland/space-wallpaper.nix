@@ -86,6 +86,21 @@ let
     fi
     echo "seed: $seed"
   '';
+  # Event ids, odds and names, read from the shader at build time: pickEvent pairs each *_CHANCE
+  # with an EV_*, and the name is the EV_ name in lower case. One "id weight name" line per scene,
+  # plus "plain <share>". The launcher rolls from it and the preview looks names up in it.
+  eventTable = pkgs.runCommand "space-wallpaper-events" { } ''
+    ${pkgs.gawk}/bin/awk '
+      /^const int EV_[A-Z]+ = [0-9]+;/ { n = $3; sub(/^EV_/, "", n); v = $5; sub(/;/, "", v); id[n] = v }
+      /^const float [A-Z]+_CHANCE = / { w = $5; sub(/;/, "", w); ch[$3] = w }
+      /^const float PLAIN_SKY_SHARE = / { p = $5; sub(/;/, "", p); print "plain", p }
+      /^int pickEvent/ { inPick = 1 }
+      inPick && /_CHANCE;/ { match($0, /[A-Z]+_CHANCE/); last = substr($0, RSTART, RLENGTH) }
+      inPick && /return EV_/ && last != "" { match($0, /EV_[A-Z]+/); e = substr($0, RSTART + 3, RLENGTH - 3); print id[e], ch[last], tolower(e); last = "" }
+      inPick && /^}/ { inPick = 0 }
+    ' ${spaceShader} > $out
+  '';
+
   seedSed = "s|const float RANDOM_SEED = 0.0;|const float RANDOM_SEED = $seed.0 / 100.0;|";
 
   # Runs the wallpaper on one output with this launch's seed ($SPACE_WALLPAPER_SEED, or random).
@@ -110,16 +125,8 @@ let
       -e "s/const float SKY_CLOCK = 0.0;/const float SKY_CLOCK = $(( SHADERBG_EPOCH - midnight )).0;/" \
       ${spaceShader} > "$base"
 
-    # Event ids, odds and names, read from the shader: pickEvent pairs each *_CHANCE with an EV_*.
-    table=$(${pkgs.gawk}/bin/awk '
-      /^const int EV_[A-Z]+ = [0-9]+;/ { n = $3; sub(/^EV_/, "", n); v = $5; sub(/;/, "", v); id[n] = v }
-      /^const float [A-Z]+_CHANCE = / { w = $5; sub(/;/, "", w); ch[$3] = w }
-      /^const float PLAIN_SKY_SHARE = / { p = $5; sub(/;/, "", p); print "plain", p }
-      /^int pickEvent/ { inPick = 1 }
-      inPick && /_CHANCE;/ { match($0, /[A-Z]+_CHANCE/); last = substr($0, RSTART, RLENGTH) }
-      inPick && /return EV_/ && last != "" { match($0, /EV_[A-Z]+/); e = substr($0, RSTART + 3, RLENGTH - 3); print id[e], ch[last], tolower(e); last = "" }
-      inPick && /^}/ { inPick = 0 }
-    ' "$base")
+    # Event ids, odds and names (see eventTable).
+    table=$(${pkgs.coreutils}/bin/cat ${eventTable})
     period=$(${pkgs.gawk}/bin/awk '/^const float EVENT_PERIOD = / { v = $5; sub(/;/, "", v); print int(v) }' "$base")
     gap=$(${pkgs.gawk}/bin/awk '/^const float SWAP_GAP = / { v = $5; sub(/;/, "", v); print int(v) }' "$base")
     outHash=$(printf %s "$output" | ${pkgs.coreutils}/bin/cksum | ${pkgs.coreutils}/bin/cut -d' ' -f1)
@@ -190,7 +197,8 @@ let
   # Show one event, or one kind of background sky, on demand instead of waiting for the roll.
   preview = pkgs.writeShellScriptBin "space-wallpaper-preview" ''
     skies="nebula milkyway deepfield cirrus void"
-    events="hole star system comet field planet spiral pillars crab ring bipolar elliptical bigcomet binary eaten pulsar pulsarclose supernova surface collision quasar rogue horizon cluster giant moon ringplane cliffs orion lagoon rosette horsehead tarantula veil rho shower"
+    # Scene names in id order, from the shader's event table.
+    events=$(${pkgs.gawk}/bin/awk '$1 != "plain"' ${eventTable} | ${pkgs.coreutils}/bin/sort -n | ${pkgs.gawk}/bin/awk '{ print $3 }' | ${pkgs.coreutils}/bin/tr '\n' ' ')
     if [ $# -lt 1 ]; then
       echo "usage: space-wallpaper-preview <event|sky> [output] [seconds] [seed]"
       echo "events: $events"
@@ -210,15 +218,11 @@ let
         break
       fi
     done
-    if [ -n "$extra" ]; then
-      :
-    else
-      for name in $events; do
-        id=$((id + 1))
-        [ "$name" = "$1" ] && break
-      done
+    if [ -z "$extra" ]; then
+      name=$1
+      id=$(${pkgs.gawk}/bin/awk -v n="$1" '$3 == n { print $1 }' ${eventTable})
     fi
-    if [ "$name" != "$1" ]; then
+    if [ -z "$extra" ] && [ -z "$id" ]; then
       echo "unknown event '$1'; events: $events; skies: $skies"
       exit 1
     fi

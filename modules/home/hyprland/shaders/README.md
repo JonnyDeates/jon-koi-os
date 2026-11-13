@@ -40,9 +40,10 @@ open on it, so it uses no GPU while you're working.
 like this:
 
 1. **Seeding.** It picks the seed and writes a copy of the shader with the seed in it.
-2. **Scheduling.** It reads the scene list and odds straight from the shader: each `*_CHANCE` paired
-   with its `EV_*` in `pickEvent`, plus `PLAIN_SKY_SHARE`. Then it rolls each 30-minute slot's scene
-   from the seed.
+2. **Scheduling.** The scene list and odds come straight from the shader, read at build time into
+   an event table (`eventTable` in `space-wallpaper.nix`): each `*_CHANCE` paired with its `EV_*` in
+   `pickEvent`, plus `PLAIN_SKY_SHARE`. A scene's name is its `EV_` name in lower case; the preview
+   looks names up in the same table. The launcher rolls each 30-minute slot's scene from the seed.
 3. **One shader per scene.** It runs each scene as its own `shaderbg` process, from a copy of the
    shader with `FORCE_EVENT` set. With the event fixed, the GPU driver drops every other scene's
    code, and the shader compiles in about 3–5 s instead of 20+.
@@ -199,19 +200,20 @@ reads about a third lower at today's 20 fps.
    weight to `EVENT_WEIGHT_TOTAL`. Then add a `c += <NAME>_CHANCE; if (roll < c) return EV_<NAME>;`
    pair to `pickEvent`. The launcher finds scenes through these pairs.
 3. In `main.glsl`, add `bool has<Name> = ev == EV_<NAME>;` and composite the scene where it belongs
-   in the layer order. Add it to the `nebulaAmount` list if it replaces the background nebula, and
-   set `solid` if meteors shouldn't show (no air, or the scene fills the screen).
-4. In `space-wallpaper.nix`, add the file to the shader parts (after anything it calls) and the
-   preview name to `events` (in id order).
+   in the layer order. Set `solid` if meteors shouldn't show (no air, or the scene fills the
+   screen).
+4. If the scene brings its own backdrop or fills the screen, add it to `replacesSky` in
+   `common.glsl`, so the background sky's clouds fade out under it.
+5. In `space-wallpaper.nix`, add the file to the shader parts (after anything it calls). The
+   launcher and the preview pick the scene up by themselves, as `<name>` in lower case.
+6. Check its cost and its compile time (see Testing) before choosing a weight.
 
 A new full-screen nebula is a file in `events/nebulae/` returning a `NebulaLook` from the shared
-`NebulaField`, plus a branch in `forge.glsl`. `main` turns ids `EV_CLIFFS` to `EV_RHO` into the
-style (`ev - EV_CLIFFS`), so give it the id after `EV_RHO`, move the later scenes up one, and update
-that range.
+`NebulaField`, plus a branch in `forge.glsl`, and a line in `nebulaStyle` in `common.glsl` giving
+its event its style number. It's otherwise added like any scene, with the next free id.
 
 A new background sky is a file in `skies/`, a branch in `sky()`, its odds in `skyKind`, and its
 name in the preview's `skies`.
-5. Check its cost and its compile time (see Testing) before choosing a weight.
 
 ### Rules that save pain
 

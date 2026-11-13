@@ -24,7 +24,7 @@ const int EV_CRAB = 9;
 const int EV_RING = 10;
 const int EV_BIPOLAR = 11;
 const int EV_ELLIPTICAL = 12;
-const int EV_COMETCLOSE = 13;
+const int EV_BIGCOMET = 13;
 const int EV_BINARY = 14;
 const int EV_EATEN = 15;
 const int EV_PULSAR = 16;
@@ -39,7 +39,7 @@ const int EV_CLUSTER = 24;
 const int EV_GIANT = 25;
 const int EV_MOON = 26;
 const int EV_RINGPLANE = 27;
-const int EV_CLIFFS = 28;      // the full-screen nebulae, in events/nebulae/
+const int EV_CLIFFS = 28;      // the full-screen nebulae, in events/nebulae/ (see nebulaStyle)
 const int EV_ORION = 29;
 const int EV_LAGOON = 30;
 const int EV_ROSETTE = 31;
@@ -84,7 +84,7 @@ const float PLAIN_SKY_SHARE = 0.25;
 // is (extra cost over plain sky at 4K in comments, measured from /proc/<pid>/fdinfo).
 // Full-screen nebula events also skip the background nebula, so they can cost less than plain sky.
 const float FIELD_CHANCE = 0.05;      // +5%
-const float COMETCLOSE_CHANCE = 0.06; // -2.9%
+const float BIGCOMET_CHANCE = 0.06;   // -2.9%
 const float CRAB_CHANCE = 0.05;       // -1.1%
 const float RING_CHANCE = 0.04;       // -0.5%
 const float PLANET_CHANCE = 0.04;     // +0.2%
@@ -120,7 +120,7 @@ const float RINGPLANE_CHANCE = 0.03;  // ~0%
 const float MOON_CHANCE = 0.02;       // +15-20%
 const float SHOWER_CHANCE = 0.04;
 
-const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE + RING_CHANCE +
+const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + BIGCOMET_CHANCE + CRAB_CHANCE + RING_CHANCE +
     PLANET_CHANCE + COMET_CHANCE + ELLIPTICAL_CHANCE + BIPOLAR_CHANCE + PULSAR_CHANCE +
     SPIRAL_CHANCE + SYSTEM_CHANCE + STAR_CHANCE + PILLARS_CHANCE + BLACKHOLE_CHANCE +
     BINARY_CHANCE + EATEN_CHANCE + PULSARCLOSE_CHANCE + SUPERNOVA_CHANCE + SURFACE_CHANCE +
@@ -128,6 +128,29 @@ const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE 
     GIANT_CHANCE + MOON_CHANCE + RINGPLANE_CHANCE + CLIFFS_CHANCE + ORION_CHANCE + LAGOON_CHANCE +
     ROSETTE_CHANCE + HORSEHEAD_CHANCE + TARANTULA_CHANCE + VEIL_CHANCE + RHO_CHANCE +
     SHOWER_CHANCE;
+
+// Which of the full-screen nebulae (events/nebulae/) an event is - its style in forge.glsl - or -1.
+// A new nebula adds a line here and a branch in forge.glsl; its event id can be anything.
+int nebulaStyle(int ev) {
+    return ev == EV_CLIFFS ? 0
+         : ev == EV_ORION ? 1
+         : ev == EV_LAGOON ? 2
+         : ev == EV_ROSETTE ? 3
+         : ev == EV_HORSEHEAD ? 4
+         : ev == EV_TARANTULA ? 5
+         : ev == EV_VEIL ? 6
+         : ev == EV_RHO ? 7
+         : -1;
+}
+
+// Whether an event brings its own backdrop or fills the screen, so the background sky's clouds
+// (nebula, Milky Way, ...) fade out while it shows. The sky's stars still draw.
+bool replacesSky(int ev) {
+    return ev == EV_FIELD || ev == EV_PILLARS || ev == EV_RING || ev == EV_CRAB || ev == EV_BIPOLAR
+        || ev == EV_BIGCOMET || ev == EV_SURFACE || ev == EV_COLLISION || ev == EV_QUASAR
+        || ev == EV_ROGUE || ev == EV_HORIZON || ev == EV_CLUSTER || ev == EV_MOON
+        || ev == EV_RINGPLANE || nebulaStyle(ev) >= 0;
+}
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -151,8 +174,8 @@ int pickEvent(float roll) {
     if (roll < c) return EV_SPIRAL;
     c += ELLIPTICAL_CHANCE;
     if (roll < c) return EV_ELLIPTICAL;
-    c += COMETCLOSE_CHANCE;
-    if (roll < c) return EV_COMETCLOSE;
+    c += BIGCOMET_CHANCE;
+    if (roll < c) return EV_BIGCOMET;
     c += BINARY_CHANCE;
     if (roll < c) return EV_BINARY;
     c += EATEN_CHANCE;
