@@ -63,7 +63,11 @@ const float SHOW_UNTIL = 1.0e9;
 // Replaced at launch with the run's seed (0-999.99), so every launch has its own sky and events.
 const float RANDOM_SEED = 0.0;
 
-// The background sky gets a new random layout and nebula palette every hour, cross-faded.
+// Set to a sky kind (0 nebula clouds, 1 Milky Way, 2 deep field, 3 cirrus, 4 void) to always show
+// that background; space-wallpaper-preview does this for the sky names.
+const int FORCE_SKY = -1;
+
+// The background sky gets a new random kind and layout every hour, cross-faded.
 const float SKY_PERIOD = 3600.0;
 const float SKY_FADE = 60.0;
 

@@ -25,13 +25,19 @@ let
   # GLSL needs definitions before use, so the parts are joined in dependency order.
   spaceShader = pkgs.concatText "space.frag" [
     ./shaders/common.glsl
+    ./shaders/stars.glsl
+    ./shaders/skies/nebula.glsl
+    ./shaders/skies/milkyway.glsl
+    ./shaders/skies/deepfield.glsl
+    ./shaders/skies/cirrus.glsl
     ./shaders/sky.glsl
     ./shaders/bodies.glsl
     ./shaders/events/solar-system.glsl
     ./shaders/events/comet.glsl
     ./shaders/events/black-hole.glsl
     ./shaders/events/galaxy.glsl
-    ./shaders/events/nebula.glsl
+    ./shaders/events/pillars.glsl
+    ./shaders/events/ring-nebula.glsl
     ./shaders/events/crab.glsl
     ./shaders/events/bipolar.glsl
     ./shaders/events/comet-closeup.glsl
@@ -49,7 +55,16 @@ let
     ./shaders/events/asteroid-field.glsl
     ./shaders/events/moon.glsl
     ./shaders/events/ringplane.glsl
-    ./shaders/events/starforge.glsl
+    ./shaders/events/nebulae/field.glsl
+    ./shaders/events/nebulae/cliffs.glsl
+    ./shaders/events/nebulae/orion.glsl
+    ./shaders/events/nebulae/lagoon.glsl
+    ./shaders/events/nebulae/rosette.glsl
+    ./shaders/events/nebulae/horsehead.glsl
+    ./shaders/events/nebulae/tarantula.glsl
+    ./shaders/events/nebulae/veil.glsl
+    ./shaders/events/nebulae/rho.glsl
+    ./shaders/events/nebulae/forge.glsl
     ./shaders/meteors.glsl
     ./shaders/main.glsl
   ];
@@ -165,17 +180,32 @@ let
     done
   '';
 
-  # Show one event on demand instead of waiting for the random roll.
+  # Show one event, or one kind of background sky, on demand instead of waiting for the roll.
   preview = pkgs.writeShellScriptBin "space-wallpaper-preview" ''
+    skies="nebula milkyway deepfield cirrus void"
     events="hole star system comet field planet spiral pillars crab ring bipolar elliptical bigcomet binary eaten pulsar pulsarclose supernova surface collision quasar rogue horizon cluster giant moon ringplane cliffs orion lagoon rosette horsehead tarantula veil rho"
     if [ $# -lt 1 ]; then
-      echo "usage: space-wallpaper-preview <event> [output] [seconds] [seed]"
+      echo "usage: space-wallpaper-preview <event|sky> [output] [seconds] [seed]"
       echo "events: $events meteors"
+      echo "skies: $skies"
       exit 1
     fi
     id=0
     extra=""
-    if [ "$1" = meteors ]; then
+    sky=-1
+    for s in $skies; do
+      sky=$((sky + 1))
+      if [ "$s" = "$1" ]; then
+        # A background sky on its own, with no event.
+        name=$1
+        id=0
+        extra="s/const int FORCE_SKY = -1;/const int FORCE_SKY = $sky;/"
+        break
+      fi
+    done
+    if [ -n "$extra" ]; then
+      :
+    elif [ "$1" = meteors ]; then
       # Not a rolled event: plain sky with a meteor shower forced on from the start.
       name=meteors
       extra='s/const float SHOWER_CHANCE = 0.35;/const float SHOWER_CHANCE = 1.0;/; s/float showerStart = hash12(vec2(window, seed + 403.0)) \* (SHOWER_PERIOD - SHOWER_LENGTH);/float showerStart = 0.0;/'
@@ -186,7 +216,7 @@ let
       done
     fi
     if [ "$name" != "$1" ]; then
-      echo "unknown event '$1'; events: $events meteors"
+      echo "unknown event '$1'; events: $events meteors; skies: $skies"
       exit 1
     fi
     output=''${2:-DP-2}

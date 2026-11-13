@@ -15,7 +15,8 @@ moonscape, an orbital sunrise, and so on.
 | Restart | `systemctl --user restart 'space-wallpaper@*'` |
 
 **Preview.** `space-wallpaper-preview giant` shows the gas giant on DP-2 for 20 s. Run it with no
-arguments to list the scene names, and pass `meteors` for a meteor shower. It prints the seed it
+arguments to list the scene names, and pass `meteors` for a meteor shower. A sky name (`nebula`,
+`milkyway`, `deepfield`, `cirrus`, `void`) shows that background on its own. It prints the seed it
 used, so you can pass that seed back to get the same scene again.
 
 **Seeds.** Each launch picks a random seed (0–99999) and logs it. The seed decides the sky, which
@@ -57,14 +58,76 @@ renders at 20 fps; everything moves slowly enough that more frames only cost GPU
 
 ## Files
 
+Joined into `space.frag` in this order (GLSL needs everything defined before it's used):
+
 | File | What's in it |
 |---|---|
 | `common.glsl` | Settings (scene length, fades, odds), event ids, `pickEvent`, noise, hashes, helpers |
-| `sky.glsl` | The background: gradient, nebula (new layout and palette every hour), stars |
+| `stars.glsl` | Star layers (`starLayer`, `heatStars`), for the sky and for scenes with their own stars |
+| `skies/*.glsl` | One file per background kind: `nebula`, `milkyway`, `deepfield`, `cirrus` |
+| `sky.glsl` | `skyKind` (which kind this hour) and `sky` (gradient, that kind, stars); the void lives here |
 | `bodies.glsl` | Shared bodies: stars (`star`), small planets, black-hole accretion disk |
-| `events/*.glsl` | One file per scene (or a pair of related ones) |
+| `events/*.glsl` | One file per scene (or a pair of related ones, like `galaxy`, `pulsar`, `binary`) |
+| `events/giant.glsl` | The gas giant renderer, shared by `giant`, `planet`, `moon` and `ringplane` |
+| `events/nebulae/` | The eight full-screen nebulae: `field` (shared gas and dust), one file per nebula, then `forge` (picks one, adds the stars) |
 | `meteors.glsl` | Shooting stars and meteor showers, over every scene |
 | `main.glsl` | `mainImage`: picks the scene, draws the sky, composites the scene, meteors, tone map |
+
+## How it all ties together
+
+```mermaid
+flowchart TB
+    subgraph run["Running it (space-wallpaper.nix)"]
+        unit["systemd: space-wallpaper@#lt;output#gt;"] --> launch["space-wallpaper-launch<br/>seed · rolls each 30-min slot"]
+        launch -- "FORCE_EVENT, SHOW_FROM/UNTIL,<br/>SHADERBG_EPOCH" --> procs["one shaderbg per scene<br/>(old and next overlap in the gap)"]
+        preview["space-wallpaper-preview"] -- "FORCE_EVENT or FORCE_SKY" --> procs
+        pauser["space-wallpaper-pauser"] -. "SIGSTOP when a window is open" .-> procs
+        toggle["Super+Alt+W: toggle"] -. "start / stop" .-> unit
+    end
+
+    subgraph frag["space.frag: shaders/ joined top to bottom"]
+        common["common.glsl<br/>settings · event ids · pickEvent · noise"]
+        stars["stars.glsl"]
+        skies["skies/<br/>nebula · milkyway · deepfield · cirrus"]
+        skyf["sky.glsl<br/>skyKind · sky"]
+        bodies["bodies.glsl<br/>star · mini planets · accretion disk"]
+        events["events/*.glsl<br/>one per scene"]
+        giant["events/giant.glsl<br/>giantBodyEx"]
+        nebulae["events/nebulae/<br/>field → 8 nebulae → forge"]
+        meteors["meteors.glsl"]
+        main["main.glsl · mainImage"]
+        common --> stars --> skies --> skyf --> bodies --> events --> meteors --> main
+        events --- giant
+        events --- nebulae
+    end
+
+    launch -. "reads the *_CHANCE odds<br/>and scene names" .-> common
+    procs --> main
+
+    subgraph pixel["Every pixel, in mainImage"]
+        direction LR
+        pick["scene: FORCE_EVENT<br/>or pickEvent(slot)"] --> bg["sky(): this hour's kind,<br/>cross-faded each hour"]
+        bg --> gv["gas giant drawn once,<br/>from the scene's GiantView"]
+        gv --> scene["the scene, composited<br/>over the sky"]
+        scene --> met["meteors, behind<br/>anything solid"]
+        met --> tone["tone map + dither"]
+    end
+    main --> pixel
+```
+
+## Background skies
+
+Every hour the background changes to a new kind and layout, cross-fading over a minute. The kind
+is rolled in `skyKind` in `sky.glsl`, and each kind is drawn by its own file in `skies/`.
+Full-screen scenes hide it.
+
+| Preview name | Odds | Sky |
+|---|---|---|
+| `nebula` | 40% | Colourful nebula clouds, in one of four palettes |
+| `milkyway` | 20% | The Milky Way: a band of stars with a warm bulge, dark dust lanes, pink knots |
+| `deepfield` | 15% | Hubble Deep Field: tiny distant ellipticals, spirals and red specks |
+| `cirrus` | 15% | Faint grey-blue and brown dust wisps over sparse stars |
+| `void` | 10% | Deep black and sparse stars |
 
 ## Scenes
 
@@ -131,6 +194,11 @@ reads about a third lower at today's 20 fps.
    set `solid` if meteors shouldn't show (no air, or the scene fills the screen).
 4. In `space-wallpaper.nix`, add the file to the shader parts (after anything it calls) and the
    preview name to `events` (in id order).
+
+A new full-screen nebula is a file in `events/nebulae/` returning a `NebulaLook` from the shared
+`NebulaField`, plus a branch in `forge.glsl`; its id goes after `EV_RHO` so `ev - EV_CLIFFS` is its
+style. A new background sky is a file in `skies/`, a branch in `sky()`, its odds in `skyKind`, and
+its name in the preview's `skies`.
 5. Check its cost and its compile time (see Testing) before choosing a weight.
 
 ### Rules that save pain
