@@ -346,10 +346,6 @@ vec4 giantBodyEx(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, 
     return over(a, over(b, c3));
 }
 
-vec4 giantBody(vec2 uv, vec2 center, float R, vec3 L, float seed, float slot, float lt, out vec3 tint) {
-    return giantBodyEx(uv, center, R, L, seed, slot, lt, tint, vec4(0.0));
-}
-
 // Where a scene wants the giant drawn: screen centre and radius, sun direction in its view frame,
 // the giantBodyEx control vector, and whether to draw it at all. main renders the giant once from
 // this (each extra copy of the renderer in the shader multiplies the driver's compile time).
