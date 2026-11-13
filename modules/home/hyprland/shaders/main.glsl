@@ -43,6 +43,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool hasRing = ev == EV_RING;
     bool hasBipolar = ev == EV_BIPOLAR;
     bool hasCrab = ev == EV_CRAB;
+    bool hasShower = ev == EV_SHOWER;
 
     vec2 bgUv = uv;
     float shadow = 1.0;
@@ -87,8 +88,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // A nebula close-up replaces the background nebula the same way.
     float nebulaAmount = hasField || hasPillars || hasRing || hasCrab || hasBipolar || hasCometClose || hasSurface || hasCollision || hasQuasar || hasRogue || hasHorizon || hasCluster || hasMoon || hasRingPlane || hasStarForge ? 1.0 - fade : 1.0;
 
-    // A new random sky every SKY_PERIOD, cross-fading into the next one over the last SKY_FADE.
-    float hour = floor(t / SKY_PERIOD);
+    // A new random sky every day (SKY_PERIOD) at local midnight, cross-fading into the next one
+    // over the last SKY_FADE of the day.
+    float skyT = t + SKY_CLOCK;
+    float day = floor(skyT / SKY_PERIOD);
     // The gas giant renderer is big, so it's drawn from this one place for every scene that shows
     // a giant (each extra copy multiplies the GPU driver's compile time).
     GiantView gview = noGiant();
@@ -118,11 +121,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
     vec3 col = vec3(0.0);
     if (moonFg.a < 0.999) {
-        vec2 skySeedA = resSeed + hash22(vec2(hour, RANDOM_SEED)) * 100.0;
+        vec2 skySeedA = resSeed + hash22(vec2(SKY_DAY + day, 17.0)) * 100.0;
         col = sky(screen, bgUv, skySeedA, t, lens, nebulaAmount);
-        float skyBlend = smoothstep(SKY_PERIOD - SKY_FADE, SKY_PERIOD, t - hour * SKY_PERIOD);
+        float skyBlend = smoothstep(SKY_PERIOD - SKY_FADE, SKY_PERIOD, skyT - day * SKY_PERIOD);
         if (skyBlend > 0.0) {
-            vec2 skySeedB = resSeed + hash22(vec2(hour + 1.0, RANDOM_SEED)) * 100.0;
+            vec2 skySeedB = resSeed + hash22(vec2(SKY_DAY + day + 1.0, 17.0)) * 100.0;
             col = mix(col, sky(screen, bgUv, skySeedB, t, lens, nebulaAmount), skyBlend);
         }
     }
@@ -234,8 +237,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     col = col * shadow;
     col = col * (1.0 - holeOverlay.a) + holeOverlay.rgb;
 
-    // Shooting stars, behind anything solid in the scene.
-    col += meteors(uv, eventSeed, t) * (1.0 - clamp(max(solid, holeOverlay.a), 0.0, 1.0));
+    // Shooting stars, behind anything solid in the scene: the rare lone meteor, or a shower.
+    vec3 met = meteors(uv, eventSeed, t);
+    if (hasShower) {
+        met += meteorShower(uv, eventSeed, slot, t, fade);
+    }
+    col += met * (1.0 - clamp(max(solid, holeOverlay.a), 0.0, 1.0));
 
     vec2 c = screen - 0.5;
     col *= 1.0 - 0.35 * dot(c, c);

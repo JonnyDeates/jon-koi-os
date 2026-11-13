@@ -39,7 +39,7 @@ const int EV_CLUSTER = 24;
 const int EV_GIANT = 25;
 const int EV_MOON = 26;
 const int EV_RINGPLANE = 27;
-const int EV_CLIFFS = 28;      // the full-screen nebulae, in starforge.glsl
+const int EV_CLIFFS = 28;      // the full-screen nebulae, in events/nebulae/
 const int EV_ORION = 29;
 const int EV_LAGOON = 30;
 const int EV_ROSETTE = 31;
@@ -47,6 +47,7 @@ const int EV_HORSEHEAD = 32;
 const int EV_TARANTULA = 33;
 const int EV_VEIL = 34;
 const int EV_RHO = 35;
+const int EV_SHOWER = 36;
 
 // Set to an EV_* id to always show that event. The launcher does this: each scene runs as its own
 // shader with only that scene compiled in (one shader holding them all takes the GPU driver 20+
@@ -60,16 +61,21 @@ const float SWAP_GAP = 30.0;
 const float SHOW_FROM = -1.0e9;
 const float SHOW_UNTIL = 1.0e9;
 
-// Replaced at launch with the run's seed (0-999.99), so every launch has its own sky and events.
+// Replaced at launch with the run's seed (0-999.99), so every launch has its own events.
 const float RANDOM_SEED = 0.0;
 
 // Set to a sky kind (0 nebula clouds, 1 Milky Way, 2 deep field, 3 cirrus, 4 void) to always show
 // that background; space-wallpaper-preview does this for the sky names.
 const int FORCE_SKY = -1;
 
-// The background sky gets a new random kind and layout every hour, cross-faded.
-const float SKY_PERIOD = 3600.0;
-const float SKY_FADE = 60.0;
+// The background sky gets a new random kind and layout every day at midnight, cross-faded over
+// SKY_FADE. The launcher fills in SKY_DAY (the local date as a day number) and SKY_CLOCK (seconds
+// since local midnight when the clock started), so the sky stays the same all day, even across
+// restarts. The preview puts its seed in SKY_DAY instead, so each preview gets a different sky.
+const float SKY_PERIOD = 86400.0;
+const float SKY_FADE = 120.0;
+const float SKY_DAY = 0.0;
+const float SKY_CLOCK = 0.0;
 
 // Share of event slots that show just the plain sky, so there are quiet stretches between events.
 const float PLAIN_SKY_SHARE = 0.25;
@@ -112,6 +118,7 @@ const float VEIL_CHANCE = 0.02;       // +4%
 const float RHO_CHANCE = 0.02;        // +3%
 const float RINGPLANE_CHANCE = 0.03;  // ~0%
 const float MOON_CHANCE = 0.02;       // +15-20%
+const float SHOWER_CHANCE = 0.04;
 
 const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE + RING_CHANCE +
     PLANET_CHANCE + COMET_CHANCE + ELLIPTICAL_CHANCE + BIPOLAR_CHANCE + PULSAR_CHANCE +
@@ -119,7 +126,8 @@ const float EVENT_WEIGHT_TOTAL = FIELD_CHANCE + COMETCLOSE_CHANCE + CRAB_CHANCE 
     BINARY_CHANCE + EATEN_CHANCE + PULSARCLOSE_CHANCE + SUPERNOVA_CHANCE + SURFACE_CHANCE +
     COLLISION_CHANCE + QUASAR_CHANCE + ROGUE_CHANCE + HORIZON_CHANCE + CLUSTER_CHANCE +
     GIANT_CHANCE + MOON_CHANCE + RINGPLANE_CHANCE + CLIFFS_CHANCE + ORION_CHANCE + LAGOON_CHANCE +
-    ROSETTE_CHANCE + HORSEHEAD_CHANCE + TARANTULA_CHANCE + VEIL_CHANCE + RHO_CHANCE;
+    ROSETTE_CHANCE + HORSEHEAD_CHANCE + TARANTULA_CHANCE + VEIL_CHANCE + RHO_CHANCE +
+    SHOWER_CHANCE;
 
 int pickEvent(float roll) {
     if (FORCE_EVENT >= 0) {
@@ -187,6 +195,8 @@ int pickEvent(float roll) {
     if (roll < c) return EV_VEIL;
     c += RHO_CHANCE;
     if (roll < c) return EV_RHO;
+    c += SHOWER_CHANCE;
+    if (roll < c) return EV_SHOWER;
     c += CLUSTER_CHANCE;
     if (roll < c) return EV_CLUSTER;
     c += RING_CHANCE;

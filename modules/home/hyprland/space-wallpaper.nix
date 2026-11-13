@@ -66,6 +66,7 @@ let
     ./shaders/events/nebulae/rho.glsl
     ./shaders/events/nebulae/forge.glsl
     ./shaders/meteors.glsl
+    ./shaders/events/shower.glsl
     ./shaders/main.glsl
   ];
 
@@ -100,12 +101,19 @@ let
     dir="$XDG_RUNTIME_DIR/space-wallpaper"
     ${pkgs.coreutils}/bin/mkdir -p "$dir"
     base="$dir/$output.frag"
-    ${pkgs.gnused}/bin/sed -e "${seedSed}" ${spaceShader} > "$base"
+    # One clock for every scene's shader. The sky changes at local midnight: tell the shader today's
+    # date (as a day number) and how far into the day the clock starts.
+    export SHADERBG_EPOCH=''${EPOCHREALTIME%.*}
+    midnight=$(${pkgs.coreutils}/bin/date -d "$(${pkgs.coreutils}/bin/date -d @$SHADERBG_EPOCH +%F)" +%s)
+    ${pkgs.gnused}/bin/sed -e "${seedSed}" \
+      -e "s/const float SKY_DAY = 0.0;/const float SKY_DAY = $(( midnight / 86400 )).0;/" \
+      -e "s/const float SKY_CLOCK = 0.0;/const float SKY_CLOCK = $(( SHADERBG_EPOCH - midnight )).0;/" \
+      ${spaceShader} > "$base"
 
     # Event ids, odds and names, read from the shader: pickEvent pairs each *_CHANCE with an EV_*.
     table=$(${pkgs.gawk}/bin/awk '
       /^const int EV_[A-Z]+ = [0-9]+;/ { n = $3; sub(/^EV_/, "", n); v = $5; sub(/;/, "", v); id[n] = v }
-      /^const float [A-Z]+_CHANCE = / && $3 != "SHOWER_CHANCE" { w = $5; sub(/;/, "", w); ch[$3] = w }
+      /^const float [A-Z]+_CHANCE = / { w = $5; sub(/;/, "", w); ch[$3] = w }
       /^const float PLAIN_SKY_SHARE = / { p = $5; sub(/;/, "", p); print "plain", p }
       /^int pickEvent/ { inPick = 1 }
       inPick && /_CHANCE;/ { match($0, /[A-Z]+_CHANCE/); last = substr($0, RSTART, RLENGTH) }
@@ -133,7 +141,6 @@ let
     # Take the scene shaders down with this script, however it ends.
     trap 'kill $(jobs -p) 2>/dev/null' EXIT
     trap 'exit 0' TERM INT
-    export SHADERBG_EPOCH=''${EPOCHREALTIME%.*}
     cur=""
     curSlot=-1
     old=""
@@ -183,10 +190,10 @@ let
   # Show one event, or one kind of background sky, on demand instead of waiting for the roll.
   preview = pkgs.writeShellScriptBin "space-wallpaper-preview" ''
     skies="nebula milkyway deepfield cirrus void"
-    events="hole star system comet field planet spiral pillars crab ring bipolar elliptical bigcomet binary eaten pulsar pulsarclose supernova surface collision quasar rogue horizon cluster giant moon ringplane cliffs orion lagoon rosette horsehead tarantula veil rho"
+    events="hole star system comet field planet spiral pillars crab ring bipolar elliptical bigcomet binary eaten pulsar pulsarclose supernova surface collision quasar rogue horizon cluster giant moon ringplane cliffs orion lagoon rosette horsehead tarantula veil rho shower"
     if [ $# -lt 1 ]; then
       echo "usage: space-wallpaper-preview <event|sky> [output] [seconds] [seed]"
-      echo "events: $events meteors"
+      echo "events: $events"
       echo "skies: $skies"
       exit 1
     fi
@@ -205,10 +212,6 @@ let
     done
     if [ -n "$extra" ]; then
       :
-    elif [ "$1" = meteors ]; then
-      # Not a rolled event: plain sky with a meteor shower forced on from the start.
-      name=meteors
-      extra='s/const float SHOWER_CHANCE = 0.35;/const float SHOWER_CHANCE = 1.0;/; s/float showerStart = hash12(vec2(window, seed + 403.0)) \* (SHOWER_PERIOD - SHOWER_LENGTH);/float showerStart = 0.0;/'
     else
       for name in $events; do
         id=$((id + 1))
@@ -216,7 +219,7 @@ let
       done
     fi
     if [ "$name" != "$1" ]; then
-      echo "unknown event '$1'; events: $events meteors; skies: $skies"
+      echo "unknown event '$1'; events: $events; skies: $skies"
       exit 1
     fi
     output=''${2:-DP-2}
@@ -227,7 +230,8 @@ let
     trap 'rm -f "$frag"' EXIT
     ${pkgs.gnused}/bin/sed -e "s/const int FORCE_EVENT = -1;/const int FORCE_EVENT = $id;/" \
       -e 's/const float EVENT_FADE = 20.0;/const float EVENT_FADE = 0.001;/' \
-      -e "${seedSed}" -e "$extra" ${spaceShader} > "$frag"
+      -e "${seedSed}" -e "s/const float SKY_DAY = 0.0;/const float SKY_DAY = $seed.0;/" \
+      -e "$extra" ${spaceShader} > "$frag"
     ${pkgs.coreutils}/bin/timeout "$seconds" ${shaderbg}/bin/shaderbg --fps 20 --layer overlay "$output" "$frag"
     true
   '';

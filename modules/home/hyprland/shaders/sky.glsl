@@ -1,4 +1,4 @@
-// The background sky: which kind each hour gets (skyKind) and how they are layered (sky). The
+// The background sky: which kind each day gets (skyKind) and how they are layered (sky). The
 // kinds themselves are in skies/*.glsl; the void is just this gradient and fewer stars.
 
 // Which kind of sky skySeed gives: 0 nebula clouds, 1 Milky Way, 2 deep field, 3 cirrus, 4 void.
