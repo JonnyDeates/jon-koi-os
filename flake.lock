@@ -325,11 +325,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794607949,
-        "narHash": "sha256-QyaEb6LvLy0CmSui32VwNAT0VGNKI4ZetjEGS3Z3yU4=",
+        "lastModified": 1794840219,
+        "narHash": "sha256-4fg5dCy3SDs28HzM5wQ95TO1Ldfh8lGeuD49lxg0/zM=",
         "owner": "JonnyDeates",
         "repo": "nix-space-wallpaper",
-        "rev": "871a92c9d0b0e344ecaae9db579f4b405a066aaf",
+        "rev": "79ee14fc94bf4ebe1bc794b57b3c1dfc089f8ec0",
         "type": "github"
       },
       "original": {

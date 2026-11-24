@@ -69,7 +69,12 @@
       /run/current-system/sw/bin/systemctl disable steam-blocker, \
       /run/current-system/sw/bin/systemctl disable steam-blocker.timer, \
       /run/current-system/sw/bin/systemctl disable steam-blocker.service
-    ${username} ALL=(ALL) !BLOCKED_UNITS
+    # Block `sudo shutdown` with any arguments — closes the `sudo shutdown -c`
+    # escape. Normal shutdown/poweroff doesn't need sudo, and the postpone
+    # helper calls shutdown directly as root, so neither is affected.
+    # sudo matches by inode, so the store-path binary is covered too.
+    Cmnd_Alias BLOCKED_SHUTDOWN = /run/current-system/sw/bin/shutdown
+    ${username} ALL=(ALL) !BLOCKED_UNITS, !BLOCKED_SHUTDOWN
     ${username} ALL=(root) NOPASSWD: /run/current-system/sw/bin/shutdown-postpone-helper
   '';
 }

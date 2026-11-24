@@ -36,7 +36,7 @@ New files must be tracked by git (`git add`) before a flake rebuild can see them
 
 ## Discipline
 
-`modules/system/discipline/` enforces a nightly shutdown (22:30 Sun–Wed, 00:00 Thu–Sat) and
+`modules/system/discipline/` enforces a nightly shutdown (22:00 Sun–Wed, 00:00 Thu–Sat, postponable once to 01:00) and
 standing breaks. The units refuse manual stops, polkit and sudo block disabling them, and
 `nixos-rebuild` is shadowed by a guard that refuses to rebuild inside the shutdown window.
 `discipline-window-check --status` shows where you are. The oneshot services are marked

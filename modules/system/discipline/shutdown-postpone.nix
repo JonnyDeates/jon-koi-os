@@ -1,46 +1,31 @@
 { pkgs }:
 
-# User-facing postpone wrapper. Checks cooldown for a nice UX, then delegates
-# all privileged work to shutdown-postpone-helper via sudo NOPASSWD.
-# The helper re-enforces the cooldown as defense in depth.
+# User-facing postpone wrapper. All rules (Thu/Fri/Sat only, once per night,
+# never past 01:00) are enforced by shutdown-postpone-helper; this just
+# calls it via sudo NOPASSWD and turns its exit code into a friendly message.
 
 pkgs.writeShellScriptBin "shutdown-postpone" ''
-  LAST_FILE="/var/lib/shutdown-timer/postpone-last"
-  COOLDOWN_SECONDS=$((5 * 24 * 60 * 60))
-
-  NOW=$(date +%s)
-  LAST=0
-  if [ -s "$LAST_FILE" ]; then
-    LAST_RAW=$(cat "$LAST_FILE" 2>/dev/null || echo 0)
-    case "$LAST_RAW" in
-      '''|*[!0-9]*) LAST=0 ;;
-      *) LAST=$LAST_RAW ;;
-    esac
-  fi
-
-  ELAPSED=$((NOW - LAST))
-  if [ "$ELAPSED" -lt "$COOLDOWN_SECONDS" ]; then
-    REMAINING=$((COOLDOWN_SECONDS - ELAPSED))
-    NEXT_TIME=$(date -d "@$((NOW + REMAINING))" '+%a %H:%M')
-    echo "Postpone already used recently. Next available: $NEXT_TIME."
-    ${pkgs.libnotify}/bin/notify-send -u normal -a "Shutdown Postpone" \
-      "Already used recently. Next available $NEXT_TIME."
-    exit 1
-  fi
+  notify() {
+    ${pkgs.libnotify}/bin/notify-send -u "$1" -a "Shutdown Postpone" "$2"
+  }
 
   OUT=$(sudo /run/current-system/sw/bin/shutdown-postpone-helper 2>&1)
   RC=$?
+  case "$RC" in
+    0) ;;
+    2) MSG="Already postponed tonight. Shutdown stays at 01:00." ;;
+    5) MSG="Postpone is only available Thursday, Friday and Saturday nights." ;;
+    6) MSG="Too late. 01:00 is the latest you can stay up." ;;
+    *) MSG="Postpone failed (code $RC): $OUT" ;;
+  esac
   if [ "$RC" -ne 0 ]; then
-    echo "Postpone failed (helper exited $RC):"
-    echo "$OUT"
-    ${pkgs.libnotify}/bin/notify-send -u critical -a "Shutdown Postpone" \
-      "Postpone failed (code $RC). See terminal / journal."
+    echo "$MSG"
+    notify normal "$MSG"
     exit 1
   fi
 
   SNOOZE_UNTIL=$(echo "$OUT" | tail -n1)
   SNOOZE_TIME=$(date -d "@$SNOOZE_UNTIL" '+%H:%M')
-  echo "Shutdown postponed by 1 hour (until $SNOOZE_TIME). 5-day postpone used."
-  ${pkgs.libnotify}/bin/notify-send -u normal -a "Shutdown Postpone" \
-    "Shutdown pushed back 1 hour (until $SNOOZE_TIME). 5-day postpone used."
+  echo "Shutdown postponed by 1 hour (until $SNOOZE_TIME). That's the max for tonight."
+  notify normal "Shutdown pushed back 1 hour (until $SNOOZE_TIME). That's the max for tonight."
 ''

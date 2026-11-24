@@ -16,21 +16,21 @@ pkgs.writeShellScriptBin "system-settings" ''
 
     case "$NIGHT_DOW" in
       4|5|6) TONIGHT_DEADLINE="00:00" ;;
-      *)     TONIGHT_DEADLINE="22:30" ;;
+      *)     TONIGHT_DEADLINE="22:00" ;;
     esac
 
     POSTPONE_FILE="/var/lib/shutdown-timer/postpone-last"
-    POSTPONE_STATE="Available"
-    if [ -s "$POSTPONE_FILE" ]; then
-      LAST=$(cat "$POSTPONE_FILE" 2>/dev/null || echo 0)
-      NOW=$(date +%s)
-      ELAPSED=$((NOW - LAST))
-      COOLDOWN=$((5*24*3600))
-      if [ "$ELAPSED" -lt "$COOLDOWN" ]; then
-        NEXT=$((NOW + COOLDOWN - ELAPSED))
-        POSTPONE_STATE="Used (next $(date -d @$NEXT '+%a %H:%M'))"
-      fi
-    fi
+    case "$NIGHT_DOW" in
+      4|5|6)
+        if [ "$(cat "$POSTPONE_FILE" 2>/dev/null)" = "$NIGHT_DATE" ]; then
+          POSTPONE_STATE="Used (shutdown at 01:00)"
+          TONIGHT_DEADLINE="01:00"
+        else
+          POSTPONE_STATE="Available (+1h, to 01:00)"
+        fi
+        ;;
+      *) POSTPONE_STATE="Not available tonight" ;;
+    esac
 
     STEAM_STATE="Free"
     if { [ "$DAY" -le 4 ] && [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 17 ]; } || \
@@ -56,11 +56,11 @@ pkgs.writeShellScriptBin "system-settings" ''
     fi
 
     TEXT="━━━ Shutdown Schedule ━━━
-    Sun–Wed nights: 22:30
+    Sun–Wed nights: 22:00
     Thu–Sat nights: 00:00
 
     Tonight (''${NIGHT_LABEL}): ''${TONIGHT_DEADLINE}
-    Postpone (5-day): ''${POSTPONE_STATE}
+    Postpone (Thu–Sat): ''${POSTPONE_STATE}
 
   ━━━ Steam Block Schedule ━━━
     Mon–Thu: 06:00 – 17:00
@@ -81,7 +81,7 @@ pkgs.writeShellScriptBin "system-settings" ''
       --center --width=520 --fixed \
       --text="''${TEXT}" \
       --text-align=left \
-      --button="Postpone Shutdown (2h):200" \
+      --button="Postpone Shutdown (1h):200" \
       --button="Toggle DND:202" \
       --button="Open Notification Center:203" \
       --button="Toggle Idle Inhibitor:204" \

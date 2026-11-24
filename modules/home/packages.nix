@@ -26,6 +26,7 @@
     })
     (import ../../pkgs/zed-open.nix { inherit pkgs; })
     (import ../../pkgs/lot-map-window.nix { inherit pkgs; })
+    (pkgs.callPackage ../../pkgs/svgview/package.nix { })
     (import ../system/discipline/shutdown-postpone.nix { inherit pkgs; })
     pkgs.python3
   ];

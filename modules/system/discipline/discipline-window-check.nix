@@ -4,9 +4,9 @@
 # [deadline - 1h, deadline + 2h]. Used by nixos-rebuild-guard to block
 # flake rebuilds that would otherwise be used to disarm the shutdown units.
 #
-# Deadline rules mirror modules/shutdown-timer.nix (authoritative source):
+# Deadline rules mirror shutdown-timer.nix (authoritative source):
 #   Thu/Fri/Sat nights: 00:00 the next day
-#   Sun/Mon/Tue/Wed  : 22:30 that night
+#   Sun/Mon/Tue/Wed  : 22:00 that night
 #
 # Modes:
 #   (no args)         exit 1 if inside the window, exit 0 otherwise
@@ -25,7 +25,7 @@ pkgs.writeShellScriptBin "discipline-window-check" ''
     if [ "$dow" -ge 4 ] && [ "$dow" -le 6 ]; then
       date -d "$day +1 day 00:00" +%s
     else
-      date -d "$day 22:30" +%s
+      date -d "$day 22:00" +%s
     fi
   }
 

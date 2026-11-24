@@ -47,7 +47,8 @@ let
 
     # Determine deadline (epoch seconds)
     # Thursday (4), Friday (5) and Saturday (6) nights: midnight
-    # All other nights: 22:30
+    # (postponable once to 01:00 via shutdown-postpone)
+    # All other nights: 22:00
     if [ "$DOW" -eq 4 ] || [ "$DOW" -eq 5 ] || [ "$DOW" -eq 6 ]; then
       if [ "$HOUR" -ge 22 ]; then
         DEADLINE=$(date -d "tomorrow 00:00" +%s)
@@ -56,9 +57,9 @@ let
       fi
     else
       if [ "$HOUR" -ge 22 ]; then
-        DEADLINE=$(date -d "today 22:30" +%s)
+        DEADLINE=$(date -d "today 22:00" +%s)
       else
-        DEADLINE=$(date -d "yesterday 22:30" +%s)
+        DEADLINE=$(date -d "yesterday 22:00" +%s)
       fi
     fi
 
@@ -93,6 +94,7 @@ let
           exit 0
         else
           log "Snooze expired. Proceeding with shutdown."
+          [ "$SNOOZE_UNTIL" -gt "$DEADLINE" ] && DEADLINE=$SNOOZE_UNTIL
         fi
       fi
     fi
@@ -103,17 +105,24 @@ let
       exit 0
     fi
 
+    # Grace period is over (deadline + 5 min warning + 1 min slack) and no
+    # shutdown is pending: it was cancelled (`shutdown -c`, busctl, sudo -i,
+    # whatever) or the machine was rebooted to buy another 5 minutes.
+    # No second warning — power off now.
+    if [ "$NOW" -ge $((DEADLINE + 6 * 60)) ]; then
+      log "Past grace period with no pending shutdown (cancelled or rebooted). Powering off now."
+      ${pkgs.libnotify}/bin/notify-send -u critical -a "System Shutdown" \
+        "Shutdown was cancelled. Powering off now — go to bed."
+      shutdown -h now "Nightly shutdown enforcement — cancellation ignored"
+      exit 0
+    fi
+
     # Past deadline, no valid snooze, no pending shutdown — schedule one.
     # `shutdown -h +5` is queued by systemd-logind and survives
-    # `systemctl stop` on this service. Cancelling requires `sudo shutdown -c`.
+    # `systemctl stop` on this service. `sudo shutdown` is blocked in
+    # sudoers, and any other cancellation is caught by the grace check above.
     log "Past shutdown deadline. Scheduling shutdown in 5 minutes ($MODE)."
-    if [ "$MODE" = "warn" ]; then
-      warn 5
-    else
-      # Guard re-arm after a cancellation — notify so user knows escape failed.
-      ${pkgs.libnotify}/bin/notify-send -u critical -a "System Shutdown" \
-        "Shutdown re-armed. Cancellation ignored — go to bed."
-    fi
+    warn 5
     shutdown -h +5 "Nightly shutdown enforcement — go to bed"
   '';
 in
@@ -139,8 +148,8 @@ in
         fi
         chown ${username} ${keyFile}
         chmod 0400 ${keyFile}
-        # Root-owned cooldown state for shutdown-postpone. Keeping it in
-        # /var/lib means `rm` as the user cannot reset the 5-day counter.
+        # Root-owned "postponed on night X" state for shutdown-postpone.
+        # Keeping it in /var/lib means `rm` as the user cannot reset it.
         if [ ! -f /var/lib/shutdown-timer/postpone-last ]; then
           : > /var/lib/shutdown-timer/postpone-last
         fi
