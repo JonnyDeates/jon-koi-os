@@ -20,5 +20,21 @@ in
     iptables -D nixos-fw -p tcp -s ${vpnSubnet} --dport 5900 -j nixos-fw-accept 2>/dev/null || true
   '';
 
-  environment.systemPackages = [ pkgs.wayvnc ];
+  # Wake-on-LAN: keep the NIC listening for magic packets while powered off.
+  # pfSense (always on) sends the packet: Services > Wake-on-LAN, MAC of eno1.
+  # Also needs WoL enabled and ErP/deep-sleep disabled in the BIOS.
+  networking.interfaces.eno1.wakeOnLan.enable = true;
+
+  # Boot straight into Hyprland so wayvnc is up after a remote wake, and log
+  # back in automatically if the session crashes or is logged out.
+  services.displayManager = {
+    autoLogin = {
+      enable = true;
+      user = "jonkoi";
+    };
+    defaultSession = "hyprland";
+    sddm.autoLogin.relogin = true;
+  };
+
+  environment.systemPackages = [ pkgs.wayvnc pkgs.ethtool ];
 }

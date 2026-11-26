@@ -10,11 +10,6 @@
         after_sleep_cmd = hyprctl dispatch dpms on  # to avoid having to press a key twice to turn on the display.
     }
     listener {
-        timeout = 900
-        on-timeout = "hyprlock"
-    }
-
-    listener {
         timeout = 1800
         on-timeout = "hyprctl dispatch dpms off"
         on-resume = "hyprctl dispatch dpms on && systemctl --user restart waybar"
