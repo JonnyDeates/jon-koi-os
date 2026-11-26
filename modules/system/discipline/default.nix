@@ -22,6 +22,8 @@
     # below reroutes `sudo nixos-rebuild` through the guard.
     (import ./nixos-rebuild-guard.nix { inherit pkgs; })
     (import ./discipline-window-check.nix { inherit pkgs; })
+    # `discipline-paused` exits 0 while away mode (pause.nix) is active.
+    (import ./pause.nix { inherit pkgs; }).bin
     # Shadow /run/current-system/sw/bin/nixos-rebuild with a shim that
     # exec's the guard. hiPrio wins the buildEnv collision against the
     # real pkgs.nixos-rebuild. Closes the `sudo nixos-rebuild` bypass;

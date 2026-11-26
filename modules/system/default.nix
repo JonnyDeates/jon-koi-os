@@ -14,5 +14,6 @@
     ./nix-ld.nix
     ./vaultwarden.nix
     ./printer-test.nix
+    ./remote-access.nix
   ];
 }

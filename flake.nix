@@ -38,6 +38,7 @@
           r2modman = unstable.r2modman;
           claude-code = unstable.claude-code;
           blender = unstable.blender;
+          godot_4-mono = unstable.godot_4-mono; # 4.7.2, matches the Steam Audio fork
         };
     in
     {

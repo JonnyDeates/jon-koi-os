@@ -7,6 +7,7 @@
 }:
 
 let
+  pause = import ./pause.nix { inherit pkgs; };
   pythonWithDeps = pkgs.python312.withPackages (ps: [ ps.aioesphomeapi ]);
 
   deskControlScript = pkgs.writeScript "desk-control" ''
@@ -53,6 +54,11 @@ let
     log() {
       echo "[$LOG_TAG] $(date '+%Y-%m-%d %H:%M:%S') $1"
     }
+
+    if ${pause.check}; then
+      log "Discipline paused until ${pause.until}. Skipping."
+      exit 0
+    fi
 
     # Re-entrancy guard
     exec 200>"$LOCK_FILE"

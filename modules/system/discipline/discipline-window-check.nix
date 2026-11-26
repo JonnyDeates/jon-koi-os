@@ -13,7 +13,18 @@
 #   --status          print a one-line status (BLOCKED/OK + mins + time)
 #   --next-unlock     print the time when the current window ends, or "now"
 
+let
+  pause = import ./pause.nix { inherit pkgs; };
+in
 pkgs.writeShellScriptBin "discipline-window-check" ''
+  if ${pause.check}; then
+    case "''${1:-}" in
+      --status) echo "OK discipline paused until ${pause.until}" ;;
+      --next-unlock) echo "now" ;;
+    esac
+    exit 0
+  fi
+
   PRE_WINDOW=$((60 * 60))        # 1 hour before deadline
   POST_WINDOW=$((2 * 60 * 60))   # 2 hours after deadline
 

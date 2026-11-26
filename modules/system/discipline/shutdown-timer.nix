@@ -7,6 +7,7 @@
 }:
 
 let
+  pause = import ./pause.nix { inherit pkgs; };
   keyFile = "/var/lib/shutdown-timer/hmac.key";
 
   shutdownCheckScript = pkgs.writeShellScript "shutdown-check" ''
@@ -22,6 +23,11 @@ let
       ${pkgs.libnotify}/bin/notify-send -u critical -a "System Shutdown" \
         "Computer will shut down in $mins minute(s)."
     }
+
+    if ${pause.check}; then
+      log "Discipline paused until ${pause.until}. Exiting."
+      exit 0
+    fi
 
     HOUR=$(date +%-H)
     NOW=$(date +%s)

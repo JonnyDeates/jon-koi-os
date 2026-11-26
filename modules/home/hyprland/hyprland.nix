@@ -65,6 +65,7 @@ with lib;
           exec-once = nm-applet --indicator
           exec-once = lxqt-policykit-agent
           exec-once = sleep 2 && hypridle
+          exec-once = sleep 4 && wayvnc --output=DP-1 0.0.0.0 5900 # remote desktop, only reachable from the OpenVPN subnet (remote-access.nix)
           exec-once = sleep 3 && wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 && wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0
           monitor=,preferred,auto,1
           ${extraMonitorSettings}

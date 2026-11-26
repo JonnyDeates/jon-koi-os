@@ -22,7 +22,7 @@
 
     listener {
         timeout = 2700
-        on-timeout = "systemctl suspend"
+        on-timeout = "discipline-paused || systemctl suspend"  # stay awake for remote access while away
     }
   '';
 }
